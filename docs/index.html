@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HC NUBE | Inicio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { transform-origin: top center; }
+        .loader { 
+            border: 6px solid rgba(255, 255, 255, 0.1);
+            border-top: 6px solid #3b82f6; 
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spinner 1s linear infinite;
+        }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-slate-950 flex items-center justify-center min-h-screen p-2 scale-[1.03]">
+
+    <div id="modal-pass" class="hidden fixed inset-0 bg-slate-950/95 z-50 flex items-center justify-center">
+        <div class="bg-slate-900 p-8 rounded-3xl border border-slate-800 text-center shadow-2xl">
+            <h2 class="text-white text-xl font-black mb-6">AUTENTICACIÓN REQUERIDA</h2>
+            <input type="password" id="pass-input" class="bg-slate-800 text-white border-none p-4 rounded-xl mb-4 w-64 block mx-auto text-center" placeholder="Ingrese contraseña">
+            <button onclick="validar()" class="bg-blue-700 text-white px-8 py-3 rounded-full font-black text-xs hover:bg-blue-600 w-full">ACCEDER AL SISTEMA</button>
+        </div>
+    </div>
+  
+    <div id="loader-screen" class="text-center">
+        <div class="loader mb-4 mx-auto"></div>
+        <p class="text-slate-500 text-[10px] uppercase tracking-[0.3em]">Inicializando Nube...</p>
+    </div>
+
+    <div id="portal" class="hidden text-center fade-in w-full max-w-xl">
+        <div class="relative inline-block mb-10">
+            <img src="puerta.jpeg" alt="Logo" class="w-40 h-40 mx-auto rounded-full border-4 border-slate-900 shadow-2xl object-cover">
+        </div>
+
+        <h1 class="text-white text-4xl font-bold uppercase tracking-tighter mb-2">Historial Clínico Nube</h1>
+        <p class="text-slate-500 text-[12px] uppercase tracking-[0.4em] mb-14">Panel de Control de Acceso</p>
+
+        <div class="flex flex-wrap gap-10 justify-center items-start mb-10">
+            <div class="flex flex-col items-center">
+                <button onclick="location.href='lista_personal.html'" 
+                    class="w-52 py-12 bg-slate-900 rounded-[3rem] border border-slate-800 hover:border-blue-500 transition-all duration-500 group flex flex-col items-center shadow-2xl">
+                    <div class="text-5xl mb-5">👨‍⚕️/👩‍⚕️</div>
+                    <span class="text-[14px] font-bold text-slate-300 uppercase tracking-widest group-hover:text-blue-400">Médico</span>
+                </button>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <button onclick="location.href='enfermera.html'" 
+                    class="w-52 py-12 bg-slate-900 rounded-[3rem] border border-slate-800 hover:border-emerald-500 transition-all duration-500 group flex flex-col items-center shadow-2xl">
+                    <div class="text-5xl mb-5 text-emerald-500">⚕️</div>
+                    <span class="text-[14px] font-bold text-slate-300 uppercase tracking-widest group-hover:text-emerald-400">Enfermera</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex justify-center">
+            <button onclick="location.href='opciones_visor.html'"
+                class="flex items-center gap-3 px-8 py-3 bg-slate-900/50 border border-slate-800 rounded-full hover:bg-slate-800 hover:border-slate-700 transition-all duration-300 group">
+                <span class="text-lg opacity-60 group-hover:opacity-100 transition-opacity">🔍</span>
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-300">Visor de Historial</span>
+            </button>
+        </div>
+        <div class="mt-10">
+            <p class="text-slate-700 text-[10px] uppercase tracking-widest font-medium">__Sistema de Gestión Hospitalaria v2.0__</p>
+        </div>
+
+    </div>
+
+    <script>
+        const CLAVE = "2026"; 
+        // CAMBIO: Lógica del contador
+        // 1. Al cargar, mostramos el loader.
+        // 2. Después de 2 segundos, quitamos el loader y mostramos el modal de contraseña.
+        setTimeout(() => {
+            document.getElementById('loader-screen').classList.add('hidden');
+            document.getElementById('modal-pass').classList.remove('hidden');
+        }, 2000);
+
+        function validar() {
+            if(document.getElementById('pass-input').value === CLAVE) {
+                // 3. Si la clave es correcta, ocultamos el modal y mostramos el portal.
+                document.getElementById('modal-pass').classList.add('hidden');
+                document.getElementById('portal').classList.remove('hidden');
+            } else {
+                alert('Contraseña incorrecta');
+                document.getElementById('pass-input').value = "";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HC NUBE | Menú Enfermería</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏥</text></svg>">
+</head>
+<body class="bg-slate-950 flex flex-col items-center justify-center min-h-screen p-6 transform scale-[1.05] origin-top">
+
+    <a href="index.html" class="mb-14 text-[13px] font-bold text-slate-500 uppercase tracking-[0.3em] hover:text-blue-400 transition-colors">
+        ← Volver al Portal Principal
+    </a>
+
+    <div class="text-center w-full max-w-lg">
+        <h1 class="text-emerald-500 text-[34px] font-bold uppercase tracking-tighter mb-2 leading-none">Área de Enfermería</h1>
+        <p class="text-slate-500 text-[11px] uppercase tracking-[0.3em] mb-20">Seleccione la tarea a realizar</p>
+
+        <div class="flex flex-col gap-8 w-full max-w-sm mx-auto">
+            <button onclick="location.href='registro_paciente.html'" class="py-12 px-8 bg-slate-900 rounded-2xl border border-slate-800 hover:border-emerald-500 transition-all group flex flex-col items-center">
+                <span class="block text-5xl mb-3 group-hover:scale-110 transition-transform">📝</span>
+                <span class="text-[14px] font-bold text-slate-300 uppercase tracking-widest text-center leading-tight">Registro de Paciente</span>
+            </button>
+
+            <button onclick="location.href='d_menu.html'" class="py-12 px-8 bg-slate-900 rounded-2xl border border-slate-800 hover:border-blue-500 transition-all group flex flex-col items-center">
+                <span class="block text-5xl mb-3 group-hover:scale-110 transition-transform">📋</span>
+                <span class="text-[14px] font-bold text-slate-300 uppercase tracking-widest text-center leading-tight">Especialidades</span>
+            </button>
+        </div>
+
+        <div class="mt-20">
+            <p class="text-slate-700 text-[12px] uppercase tracking-widest font-medium">Sistema de Gestión Hospitalaria v2.0</p>
+        </div>
+    </div>
+</body>
+</html>
