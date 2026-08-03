@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HC NUBE | REGISTRO</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
+        
+        /* BARRA SUPERIOR ORIGINAL */
+        .top-bar { width: 100%; background: #212529; padding: 12px 20px; color: white; display: flex; align-items: center; font-size: 13px; font-weight: 800; text-transform: uppercase; }
+        .top-bar a { color: white; text-decoration: none; cursor: pointer; }
+
+        .card { background: white; padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); width: 100%; max-width: 480px; text-align: center; margin-top: 40px; }
+        
+        .logo-img { height: 50px; margin-bottom: 10px; }
+
+        h2 { color: #1e293b; font-size: 1.5rem; margin-bottom: 30px; text-transform: uppercase; font-weight: 900; letter-spacing: -0.5px; }
+        
+        .input-group { text-align: left; margin-bottom: 18px; }
+        label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; margin-left: 2px; }
+        
+        input { 
+            width: 100%; padding: 14px; margin-top: 6px; border: 2px solid #e2e8f0; 
+            border-radius: 12px; box-sizing: border-box; font-size: 16px; 
+            font-weight: 700; text-transform: uppercase; transition: 0.3s; color: #1e293b;
+        }
+        input:focus { border-color: #22c55e; outline: none; background: #fff; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1); }
+        input::placeholder { color: #cbd5e1; font-weight: 400; text-transform: none; }
+        
+        .codigo-box { 
+            background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 15px; 
+            padding: 20px; margin: 25px 0;
+        }
+        .cod-text { font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 800; margin-bottom: 5px; }
+        #display-codigo { font-size: 2.8rem; font-weight: 900; color: #1e293b; letter-spacing: 2px; }
+
+        .btn-guardar { 
+            width: 100%; background: #2ecc71; color: white; border: none; 
+            padding: 18px; border-radius: 12px; font-weight: 900; font-size: 16px; 
+            cursor: pointer; transition: 0.3s; text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.2);
+        }
+        .btn-guardar:hover { background: #27ae60; transform: translateY(-1px); }
+
+        .btn-consultar {
+            background: #007bff; color: white; border: none; padding: 14px 35px;
+            border-radius: 8px; font-weight: 800; margin-top: 25px; cursor: pointer;
+            font-size: 15px; text-transform: uppercase; transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+        }
+        .btn-consultar:hover { background: #0069d9; }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <a href="index.html">← VOLVER AL MENÚ PRINCIPAL</a>
+</div>
+
+<div class="card">
+    <div class="logo-container">
+        <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png" class="logo-img">
+    </div>
+    
+    <h2>REGISTRO DE PACIENTE</h2>
+
+    <div class="input-group">
+        <label>Nombres</label>
+        <input type="text" id="nombre" placeholder="EJ. ELMER" oninput="generarCodigo()">
+    </div>
+
+    <div class="input-group">
+        <label>Apellidos Paterno/Materno</label>
+        <input type="text" id="apellido" placeholder="EJ. HERMOSA" oninput="generarCodigo()">
+    </div>
+
+    <div class="input-group">
+        <label>Cédula de Identidad (CI)</label>
+        <input type="number" id="ci" placeholder="EJ. 2543253" oninput="generarCodigo()">
+    </div>
+
+    <div class="codigo-box">
+        <div class="cod-text">Código Generado</div>
+        <div id="display-codigo">----</div>
+    </div>
+
+    <button class="btn-guardar" onclick="enviarDatos()">GUARDAR REGISTRO FINAL</button>
+</div>
+
+<button class="btn-consultar" onclick="location.href='lista_historial.html'">CONSULTAR BASE DE DATOS</button>
+
+<script>
+    const API_URL = 'https://historial-clinico-nube.onrender.com';
+
+    function generarCodigo() {
+        const nom = document.getElementById('nombre').value.trim().toUpperCase();
+        const ape = document.getElementById('apellido').value.trim().toUpperCase();
+        const ciVal = document.getElementById('ci').value.trim();
+        const display = document.getElementById('display-codigo');
+
+        if (nom && ape && ciVal) {
+            const inicialN = nom.charAt(0);
+            const inicialA = ape.charAt(0);
+            const ultimos4 = ciVal.slice(-4);
+            const codigo = inicialN + inicialA + ultimos4;
+            display.innerText = codigo;
+            return codigo;
+        } else {
+            display.innerText = "----";
+            return "";
+        }
+    }
+
+    async function enviarDatos() {
+        const codigo = generarCodigo();
+        if (!codigo) { alert("COMPLETE TODOS LOS CAMPOS."); return; }
+
+        const datos = {
+            nombre: document.getElementById('nombre').value.toUpperCase(),
+            apellido: document.getElementById('apellido').value.toUpperCase(),
+            ci: document.getElementById('ci').value,
+            codigo_paciente: codigo
+        };
+
+        try {
+            // Limpieza total antes de iniciar nuevo flujo
+            localStorage.clear();
+
+            const response = await fetch(`${API_URL}/pacientes/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datos)
+            });
+
+            if (response.ok) {
+                const paciente = await response.json();
+                localStorage.setItem('p_id', paciente.id);
+                localStorage.setItem('p_nom', `${paciente.apellido} ${paciente.nombre}`);
+                localStorage.setItem('p_ci', paciente.ci);
+                localStorage.setItem('p_cod', paciente.codigo_paciente);
+                
+                alert("✅ REGISTRADO CON ÉXITO.");
+                window.location.href = 'declaracion_jurada_p1.html';
+            }
+        } catch (e) { alert("❌ ERROR DE CONEXIÓN CON RENDER."); }
+    }
+</script>
+</body>
+</html>

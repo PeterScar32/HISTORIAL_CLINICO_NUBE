@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>REPORTE MÉDICO OHS</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #525659; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .sheet { width: 210mm; min-height: 297mm; background: white; padding: 20mm; box-shadow: 0 0 10px rgba(0,0,0,0.5); box-sizing: border-box; }
+        .header { display: flex; align-items: center; border-bottom: 3px solid #22c55e; padding-bottom: 15px; margin-bottom: 25px; }
+        .logo { height: 60px; }
+        .header-title { flex: 1; text-align: center; }
+        
+        /* Encabezado destacado */
+        .header-main-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: center; margin-bottom: 25px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .header-main-info .val { font-size: 16px; color: #22c55e; display: block; font-weight: 800; }
+        
+        .section-title { background: #f1f5f9; padding: 8px; font-weight: 800; border-left: 6px solid #22c55e; margin: 20px 0 10px; text-transform: uppercase; font-size: 12px; }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px; }
+        .val { font-weight: 700; color: #1e293b; text-transform: uppercase; }
+        .btn-print { background: #22c55e; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <a href="lista_historial.html" class="mb-14 text-[13px] font-bold text-slate-500 uppercase tracking-[0.3em] hover:text-blue-400 transition-colors">
+        ← Volver al Portal Principal
+    </a><br><br><br>
+<div class="no-print" style="margin-bottom: 20px;">
+    <button class="btn-print" onclick="window.print()">IMPRIMIR REPORTE COMPLETO</button>
+</div>
+
+<div class="sheet">
+    <div class="header">
+        <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png" class="logo">
+        <div class="header-title"><h1>Historial Clínico Ocupacional</h1></div>
+    </div>
+
+    <div class="header-main-info" id="main_info"></div>
+
+    <div class="section-title">I. Afiliación del Trabajador (P1)</div>
+    <div class="data-grid" id="grid_p1"></div>
+
+    <div class="section-title">II. Antecedentes Patológicos (P2)</div>
+    <div class="data-grid" id="grid_p2"></div>
+
+    <div class="section-title">III. Hábitos y Estilos de Vida (P3)</div>
+    <div class="data-grid" id="grid_p3"></div>
+</div>
+
+<script>
+    const API = 'https://historial-clinico-nube.onrender.com';
+    const fields_p1 = ["ci", "edad", "sexo", "fecha_nacimiento", "lugar_nacimiento", "domicilio", "n_casa", "zona_barrio", "ciudad", "telefono", "estado_civil", "profesion_oficio"];
+    const fields_p2 = ["vista","auditivo","respiratorio","cardio","digestivos","sangre","genitourinario","sistema_nervioso","psiquiatricos","osteomusculares","reumatologicos","dermatologicas","alergias","cirugias","infecciones","acc_personales","acc_trabajo","medicamentos","endocrino","familiares","otros_especificos","generales"];
+    const fields_p3 = ["fuma","fuma_cantidad","alcohol","alcohol_frecuencia","drogas","drogas_tipo","coca","deporte","deporte_detalle","grupo_sanguineo","historia_laboral","riesgos_expuestos","observaciones"];
+
+    window.onload = async () => {
+        const p_id = localStorage.getItem('p_id_reporte');
+        if (!p_id) return;
+        
+        try {
+            const resp = await fetch(`${API}/api/paciente-completo/${p_id}`);
+            const data = await resp.json();
+            
+            const p = data.paciente;
+            const f1 = data.filiacion || {};
+            const ant = data.antecedentes || {};
+            const hab = data.habitos || {};
+
+            // Bloque superior
+            document.getElementById('main_info').innerHTML = `
+                <div>PACIENTE: <span class="val">${p.nombre || ''} ${p.apellido || ''}</span></div>
+                <div>CÓDIGO PACIENTE: <span class="val">${p.codigo_paciente || '---'}</span></div>
+            `;
+
+            // Filtrar CI de la lista para no duplicarlo, pero incluirlo al inicio de la rejilla
+            const campos_p1_filtrados = fields_p1.filter(f => f !== 'ci');
+            const containerP1 = document.getElementById('grid_p1');
+            containerP1.innerHTML = `<div>CI: <span class="val">${p.ci || '---'}</span></div>` + 
+                campos_p1_filtrados.map(f => `
+                    <div>${f.replace('_',' ').toUpperCase()}: <span class="val">${f1[f] || '---'}</span></div>
+                `).join('');
+
+            // Mapeo P2
+            document.getElementById('grid_p2').innerHTML = fields_p2.map(f => `
+                <div>${f.replace('_',' ').toUpperCase()}: <span class="val">${ant[f] || 'SIN HALLAZGOS'}</span></div>
+            `).join('');
+
+            // Mapeo P3
+            document.getElementById('grid_p3').innerHTML = fields_p3.map(f => `
+                <div>${f.replace('_',' ').toUpperCase()}: <span class="val">${hab[f] || '---'}</span></div>
+            `).join('');
+
+        } catch (e) {
+            console.error("Error:", e);
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Evaluación Trabajo en Altura - HISTORIAL_CLINICO_NUBE</title>
+    <style>
+        :root { --emerald: #00a651; }
+        @page { size: letter; margin: 0.5in; }
+        body { font-family: Arial, sans-serif; font-size: 10px; margin: 0; padding: 0; color: #000; background: #f0f0f0; }
+        .container { width: 100%; max-width: 800px; margin: auto; background: white; padding: 30px; border: 1px solid #ddd; box-shadow: 0 0 10px rgba(0,0,0,0.1); box-sizing: border-box; }
+
+        .top-nav { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .btn { padding: 8px 15px; border: none; cursor: pointer; color: white; font-weight: bold; border-radius: 4px; font-size: 11px; }
+        .btn-volver { background-color: #6c757d; }
+        .btn-imprimir { background-color: #343a40; }
+        
+        .header-content { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--emerald); padding-bottom: 10px; margin-bottom: 20px; }
+        .header-content img { height: 50px; }
+        .title-area { text-align: right; }
+        .title-area h1 { font-size: 18px; margin: 0; color: #000; font-weight: 800; }
+        .title-area p { font-size: 11px; margin: 0; color: var(--emerald); font-weight: 800; }
+
+        .code-box { margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; background: #fafafa; font-weight: bold; font-size: 12px; display: flex; align-items: center; }
+        .code-box input { border: none; border-bottom: 1px solid #000; margin-left: 10px; padding: 5px; width: 200px; outline: none; font-size: 12px; }
+
+        h2.main-title { text-align: center; font-size: 14px; margin-bottom: 15px; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 5px; }
+        
+        table { border-collapse: collapse; width: 100%; margin-bottom: 10px; }
+        td, th { border: 1px solid #000; padding: 4px; text-align: left; }
+        th { background-color: #e0e0e0; text-align: center; font-weight: bold; }
+        
+        .section-title { background-color: #333; color: #fff; font-weight: bold; padding: 4px; margin: 10px 0; font-size: 11px; }
+        .observaciones { height: 60px; width: 100%; border: 1px solid #000; margin-top: 5px; padding: 5px; box-sizing: border-box; }
+        
+        .signature-section { margin-top: 30px; display: flex; justify-content: space-between; }
+        .signature-line { border-top: 1px solid black; width: 40%; text-align: center; padding-top: 5px; font-weight: bold; }
+        
+        .save-btn { width: 100%; background: #007bff; color: white; padding: 15px; border: none; font-size: 16px; cursor: pointer; margin-top: 20px; font-weight: bold; }
+
+        @media print {
+            @page { size: letter; margin: 10mm; }
+            body { background: #fff; padding: 0; }
+            .container { width: 100%; margin: 0; padding: 0; box-shadow: none; border: none; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-nav no-print">
+        <button class="btn btn-volver" onclick="history.back()">← VOLVER AL MENÚ</button>
+        <button class="btn btn-imprimir" onclick="window.print()">🖨️ IMPRIMIR</button>
+    </div>
+
+    <div class="header-content">
+        <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png" alt="Logo">
+        <div class="title-area">
+            <h1>FICHA DE TRABAJO CON ALTURA</h1>
+            <p>SALUD OCUPACIONAL - DOCUMENTO LEGAL</p>
+        </div>
+    </div>
+
+    <div class="code-box">
+        CÓDIGO PACIENTE: 
+        <input type="text" id="codigo_paciente" oninput="this.value = this.value.toUpperCase()" placeholder="INGRESE CÓDIGO">
+    </div>
+
+    <h2 class="main-title">EVALUACIÓN MÉDICA PARA TRABAJO EN ALTURA</h2>
+
+    <div class="section-title">ANTECEDENTES Y ENTREVISTA CON EL TRABAJADOR</div>
+    <table>
+        <tr>
+            <th width="35%">Antecedente</th><th width="5%">SI</th><th width="5%">NO</th>
+            <th width="35%">Antecedente</th><th width="5%">SI</th><th width="5%">NO</th>
+        </tr>
+        <tr>
+            <td>Agorafobia</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>Diabetes mellitus o hipoglicemia no controlada</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>Acrofobia</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>Insuficiencia cardiaca, enfermedad coronaria, porta marcapaso</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>Arritmia cardiaca/Soplo cardiaco</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>Hipertensión arterial no controlada</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>Consumo de drogas, alcohol, etc.</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>Alteraciones del equilibrio (S. Meniere)</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>Portador enfermedad psiquiátrico</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>Ametropía no corregida de lejos</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>Ant. De trauma encéfalo craneano</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>Esteropsis alterada</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>Convulsiones o epilepsia</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>Asma bronquial no controlado</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>Vértigo/mareos</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>Hipoacusia severa con afección conversacional</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>Sincope</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>Accidentes y fracturas</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>Mioclonias</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>Deformidades en extremidades y columna</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>Cefaleas/Migrañas</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td colspan="3"></td>
+        </tr>
+    </table>
+    <strong>OBSERVACIONES:</strong>
+    <textarea class="observaciones"></textarea>
+
+    <div class="section-title">EXAMEN MÉDICO DIRIGIDO</div>
+    <table>
+        <tr>
+            <th>POS(+) NEG(-)</th><th>(-)</th><th>(+)</th>
+            <th>NORMAL(N) ANORMAL(A)</th><th>N</th><th>A</th>
+        </tr>
+        <tr>
+            <td>SOPLO CARDIACO</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>SUSTENTACION EN UN PIE POR 15 SEGUNDOS</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>ARRITMIAS CARDIACAS</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>CAMINA LIBRE SIN DESVIO</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>NISTAGMUS</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>ADIACOCINESIA DIRECTA E INDIRECTA</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>TEST DE ROMBERG</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>AUDICION</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>TEST DE LOS INDICES DE BARANY</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>MARCHA EN EL MISMO LUGAR CON OJOS CERRADOS</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+        <tr>
+            <td>TEST DE BABINSKY (marcha ojos cerrados adelante y atrás)</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+            <td>EXTREMIDADES INFERIORES Y SUPERIOR</td><td><input type="checkbox"></td><td><input type="checkbox"></td>
+        </tr>
+    </table>
+    <strong>OBSERVACIONES:</strong>
+    <textarea class="observaciones"></textarea>
+
+    <div class="signature-section">
+        <div class="signature-line">FIRMA Y SELLO MÉDICO</div>
+        <div class="signature-line">FIRMA DEL PACIENTE</div>
+    </div>
+
+    <button class="save-btn no-print">GUARDAR EVALUACIÓN</button>
+</div>
+
+<script>
+    const API_URL = "https://historial-clinico-nube.onrender.com";
+
+    document.querySelector('.save-btn').addEventListener('click', async () => {
+        const codigoInput = document.getElementById('codigo_paciente');
+        const codigo = codigoInput.value.trim().toUpperCase();
+        
+        if (!codigo) {
+            alert("EL CÓDIGO DEL PACIENTE ES OBLIGATORIO");
+            return;
+        }
+
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const data = {
+            codigo_paciente: codigo,
+            agorafobia: checkboxes[0].checked ? "SI" : "NO",
+            diabetes: checkboxes[2].checked ? "SI" : "NO",
+            acrofobia: checkboxes[4].checked ? "SI" : "NO",
+            insuficiencia_cardiaca: checkboxes[6].checked ? "SI" : "NO",
+            arritmia: checkboxes[8].checked ? "SI" : "NO",
+            hipertension: checkboxes[10].checked ? "SI" : "NO",
+            consumo_drogas: checkboxes[12].checked ? "SI" : "NO",
+            meniere: checkboxes[14].checked ? "SI" : "NO",
+            enfermedad_psiquiatrica: checkboxes[16].checked ? "SI" : "NO",
+            ametropia: checkboxes[18].checked ? "SI" : "NO",
+            trauma_encefalo: checkboxes[20].checked ? "SI" : "NO",
+            esteropsis: checkboxes[22].checked ? "SI" : "NO",
+            convulsiones: checkboxes[24].checked ? "SI" : "NO",
+            asma_bronquial: checkboxes[26].checked ? "SI" : "NO",
+            vertigo: checkboxes[28].checked ? "SI" : "NO",
+            hipoacusia: checkboxes[30].checked ? "SI" : "NO",
+            sincope: checkboxes[32].checked ? "SI" : "NO",
+            accidentes_fracturas: checkboxes[34].checked ? "SI" : "NO",
+            mioclonias: checkboxes[36].checked ? "SI" : "NO",
+            deformidades: checkboxes[38].checked ? "SI" : "NO",
+            cefaleas: checkboxes[40].checked ? "SI" : "NO",
+            obs_antecedentes: document.querySelectorAll('.observaciones')[0].value,
+            
+            soplo_cardiaco: checkboxes[42].checked ? "SI" : "NO",
+            sustentacion_pie: checkboxes[44].checked ? "SI" : "NO",
+            arritmias_cardiacas: checkboxes[46].checked ? "SI" : "NO",
+            camina_libre: checkboxes[48].checked ? "SI" : "NO",
+            nistagmus: checkboxes[50].checked ? "SI" : "NO",
+            adiacocinesia: checkboxes[52].checked ? "SI" : "NO",
+            test_romberg: checkboxes[54].checked ? "SI" : "NO",
+            audicion: checkboxes[56].checked ? "SI" : "NO",
+            test_barany: checkboxes[58].checked ? "SI" : "NO",
+            marcha_ojos_cerrados: checkboxes[60].checked ? "SI" : "NO",
+            test_babinsky: checkboxes[62].checked ? "SI" : "NO",
+            extremidades: checkboxes[64].checked ? "SI" : "NO",
+            obs_examen: document.querySelectorAll('.observaciones')[1].value
+        };
+
+        try {
+            const response = await fetch(`${API_URL}/guardar-altura`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert("FICHA GUARDADA EXITOSAMENTE");
+            } else {
+                const errorData = await response.json();
+                alert("ERROR AL GUARDAR: " + (errorData.detail || "DESCONOCIDO"));
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("ERROR DE CONEXIÓN CON EL SERVIDOR");
+        }
+    });
+</script>
+    
+</body>
+</html>
