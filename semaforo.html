@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OHS | Semáforo de alertas</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚦</text></svg>">
+    <style>
+        :root {
+            --fondo: #020617; --panel: #0f172a; --borde: #1e293b; --texto: #e2e8f0; --tenue: #94a3b8;
+            --rojo: #ef4444; --amarillo: #f59e0b; --verde: #22c55e; --gris: #64748b;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--fondo); color: var(--texto); font-family: "Segoe UI", system-ui, sans-serif; padding: 24px 16px 60px; }
+        .contenedor { max-width: 1180px; margin: 0 auto; }
+        a.volver { color: var(--tenue); font-size: 12px; font-weight: 700; letter-spacing: .25em; text-transform: uppercase; text-decoration: none; }
+        a.volver:hover { color: #60a5fa; }
+        h1 { margin: 18px 0 4px; font-size: 26px; letter-spacing: -.01em; }
+        .sub { color: var(--tenue); font-size: 13px; margin: 0 0 22px; }
+        .filtros { display: grid; grid-template-columns: 2fr 1fr 1fr auto auto; gap: 12px; align-items: end; background: var(--panel); border: 1px solid var(--borde); border-radius: 16px; padding: 16px; }
+        .filtros label { display: block; font-size: 10px; font-weight: 800; letter-spacing: .15em; color: var(--tenue); text-transform: uppercase; margin-bottom: 6px; }
+        .filtros select, .filtros input[type=date] { width: 100%; background: #1e293b; color: var(--texto); border: 1px solid #334155; border-radius: 10px; padding: 10px; font-size: 14px; }
+        .check { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--tenue); padding-bottom: 10px; white-space: nowrap; }
+        button { cursor: pointer; border: none; border-radius: 10px; font-weight: 800; font-size: 13px; padding: 12px 18px; letter-spacing: .04em; }
+        .btn-buscar { background: #2563eb; color: #fff; }
+        .btn-buscar:hover { background: #1d4ed8; }
+        .btn-sec { background: #1e293b; color: var(--texto); border: 1px solid #334155; }
+        .alerta { display: none; margin: 18px 0 0; padding: 16px 20px; border-radius: 14px; background: #450a0a; border: 2px solid var(--rojo); color: #fecaca; font-weight: 800; font-size: 15px; animation: latido 1s ease-in-out infinite; }
+        @keyframes latido { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, .6); } 50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } }
+        .tarjetas { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 18px 0; }
+        .tarjeta { background: var(--panel); border: 1px solid var(--borde); border-radius: 14px; padding: 14px 16px; cursor: pointer; text-align: left; color: var(--texto); }
+        .tarjeta.activa { outline: 2px solid #60a5fa; }
+        .tarjeta .n { font-size: 30px; font-weight: 900; display: block; font-variant-numeric: tabular-nums; }
+        .tarjeta .t { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--tenue); display: flex; align-items: center; gap: 8px; }
+        .punto { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex: none; }
+        .ROJO { background: var(--rojo); } .AMARILLO { background: var(--amarillo); } .VERDE { background: var(--verde); } .GRIS { background: var(--gris); }
+        .tabla-caja { background: var(--panel); border: 1px solid var(--borde); border-radius: 16px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--tenue); padding: 12px 14px; border-bottom: 1px solid var(--borde); white-space: nowrap; }
+        td { padding: 12px 14px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+        tr.fila-ROJO td { background: rgba(239, 68, 68, .08); }
+        tr.fila-ROJO td:first-child { border-left: 4px solid var(--rojo); }
+        tr.fila-AMARILLO td:first-child { border-left: 4px solid var(--amarillo); }
+        tr.fila-VERDE td:first-child { border-left: 4px solid var(--verde); }
+        tr.fila-GRIS td:first-child { border-left: 4px solid var(--gris); }
+        .estado { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 12px; }
+        .motivo { color: var(--tenue); font-size: 12px; margin-top: 4px; }
+        .comp { font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .barra { height: 6px; background: #1e293b; border-radius: 3px; margin-top: 6px; width: 90px; overflow: hidden; }
+        .barra span { display: block; height: 100%; background: #60a5fa; }
+        .btn-ver { background: #1e293b; color: #93c5fd; padding: 8px 12px; font-size: 11px; border: 1px solid #334155; }
+        .vacio { padding: 40px; text-align: center; color: var(--tenue); }
+        .nota { color: var(--tenue); font-size: 12px; margin-top: 14px; line-height: 1.5; }
+        details { margin-top: 18px; background: var(--panel); border: 1px solid var(--borde); border-radius: 14px; padding: 12px 16px; }
+        summary { cursor: pointer; font-weight: 800; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--tenue); }
+        .reglas td { font-size: 12px; }
+        .encabezado-impresion { display: none; }
+        @media (max-width: 860px) {
+            .filtros { grid-template-columns: 1fr 1fr; }
+            .tarjetas { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media print {
+            body { background: #fff; color: #000; padding: 0; }
+            .no-print, .alerta, details { display: none !important; }
+            .encabezado-impresion { display: block; margin-bottom: 12px; }
+            .tarjeta, .tabla-caja { background: #fff; border-color: #ccc; color: #000; }
+            .tarjeta .t, th, .motivo { color: #333; }
+            tr.fila-ROJO td { background: #fee2e2; }
+            .tarjetas { grid-template-columns: repeat(5, 1fr); }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+    <script src="config.js?v=3"></script>
+</head>
+<body>
+<div class="contenedor">
+    <a class="volver no-print" href="index.html">← Volver al portal</a>
+    <div class="encabezado-impresion">
+        <img src="logo.png" style="height:48px"><br>
+        <strong>INFORME CONSOLIDADO DE EVALUACIONES — SEMÁFORO DE ALERTAS</strong><br>
+        <span id="impresion-filtros"></span>
+    </div>
+    <h1 class="no-print">🚦 Semáforo de alertas</h1>
+    <p class="sub no-print">Estado de las evaluaciones por trabajador y por empresa (campaña).</p>
+
+    <div class="filtros no-print">
+        <div>
+            <label for="empresa">Empresa / campaña</label>
+            <select id="empresa"><option value="">TODAS LAS EMPRESAS</option></select>
+        </div>
+        <div>
+            <label for="desde">Desde</label>
+            <input type="date" id="desde">
+        </div>
+        <div>
+            <label for="hasta">Hasta</label>
+            <input type="date" id="hasta">
+        </div>
+        <label class="check"><input type="checkbox" id="solo_ultima" checked> Última evaluación de cada trabajador</label>
+        <div style="display:flex; gap:8px;">
+            <button class="btn-buscar" id="btn-buscar" onclick="buscar(true)">BUSCAR</button>
+            <button class="btn-sec" onclick="window.print()">🖨️</button>
+        </div>
+    </div>
+
+    <div class="alerta" id="alerta" role="alert"></div>
+
+    <div class="tarjetas" id="tarjetas"></div>
+
+    <div class="tabla-caja">
+        <table>
+            <thead>
+                <tr>
+                    <th>Estado</th>
+                    <th>CI</th>
+                    <th>Trabajador</th>
+                    <th>Empresa / puesto</th>
+                    <th>Fecha</th>
+                    <th>Fichas</th>
+                    <th class="no-print"></th>
+                </tr>
+            </thead>
+            <tbody id="filas"><tr><td colspan="7" class="vacio">Cargando…</td></tr></tbody>
+        </table>
+    </div>
+
+    <p class="nota">El color refleja la conclusión que el profesional registró en cada ficha (aptitud, aptitud física, psicología, osteomuscular e historia clínica), según las reglas de abajo. El sistema no emite diagnósticos ni decide la aptitud. Gris: todavía no hay conclusión registrada.</p>
+
+    <details>
+        <summary>Reglas del semáforo vigentes</summary>
+        <table class="reglas">
+            <thead><tr><th>Prioridad</th><th>Si el resultado</th><th>Color</th><th>Descripción</th></tr></thead>
+            <tbody id="reglas"></tbody>
+        </table>
+    </details>
+</div>
+
+<script>
+    const API = CONFIG.API_BASE;
+    const ETIQUETA = { ROJO: "Alerta prioritaria", AMARILLO: "Requiere revisión", VERDE: "Sin alerta", GRIS: "Pendiente" };
+    let datos = { items: [], resumen: {} };
+    let filtroColor = "";
+    let sonidoPendiente = false;
+    document.addEventListener("click", () => { if (sonidoPendiente) { sonidoPendiente = false; sonarAlerta(); } });
+
+    function sonarAlerta() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            [0, 0.35, 0.7].forEach(t => {
+                [1318.5, 1760].forEach((f, i) => {
+                    const o = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    o.type = "sine";
+                    o.frequency.value = f;
+                    const ini = ctx.currentTime + t + i * 0.12;
+                    g.gain.setValueAtTime(0.0001, ini);
+                    g.gain.exponentialRampToValueAtTime(0.35, ini + 0.01);
+                    g.gain.exponentialRampToValueAtTime(0.0001, ini + 0.25);
+                    o.connect(g).connect(ctx.destination);
+                    o.start(ini);
+                    o.stop(ini + 0.3);
+                });
+            });
+        } catch (e) {}
+    }
+
+    function pintarTarjetas() {
+        const r = datos.resumen || {};
+        const total = datos.total || 0;
+        const tarjeta = (clave, n, texto, color) => `
+            <button class="tarjeta ${filtroColor === clave ? 'activa' : ''}" onclick="filtrarColor('${clave}')">
+                <span class="n">${n}</span>
+                <span class="t">${color ? `<span class="punto ${color}"></span>` : ''}${texto}</span>
+            </button>`;
+        document.getElementById("tarjetas").innerHTML =
+            tarjeta("", total, "Total evaluados", "") +
+            ["ROJO", "AMARILLO", "VERDE", "GRIS"].map(c => tarjeta(c, r[c] || 0, ETIQUETA[c], c)).join("");
+    }
+
+    function pintarFilas() {
+        const peso = { ROJO: 0, AMARILLO: 1, GRIS: 2, VERDE: 3 };
+        const items = datos.items.filter(i => !filtroColor || i.color === filtroColor)
+            .sort((a, b) => (peso[a.color] - peso[b.color]) || a.nombre.localeCompare(b.nombre));
+        const tbody = document.getElementById("filas");
+        if (!items.length) {
+            tbody.innerHTML = `<tr><td colspan="7" class="vacio">No hay evaluaciones para estos filtros.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = items.map(i => {
+            const c = i.completitud;
+            const pct = Math.round(100 * c.hechas / c.total);
+            return `
+            <tr class="fila-${esc(i.color)}">
+                <td>
+                    <span class="estado"><span class="punto ${esc(i.color)}"></span>${esc(ETIQUETA[i.color] || i.color)}</span>
+                    <div class="motivo">${esc(i.motivo)}</div>
+                </td>
+                <td>${esc(i.ci)}</td>
+                <td><strong>${esc(i.nombre)}</strong></td>
+                <td>${esc(i.empresa || "—")}<div class="motivo">${esc(i.puesto || "")}</div></td>
+                <td>${esc(i.fecha)}<div class="motivo">${esc(i.tipo || "")}</div></td>
+                <td class="comp" title="Faltan: ${esc(c.faltantes.join(", "))}">${c.hechas} / ${c.total}<div class="barra"><span style="width:${pct}%"></span></div></td>
+                <td class="no-print"><button class="btn-ver" onclick="verReporte(${parseInt(i.paciente_id)}, ${parseInt(i.evaluacion_id)})">VER REPORTE</button></td>
+            </tr>`;
+        }).join("");
+    }
+
+    function pintarAlerta(conSonido) {
+        const rojos = (datos.resumen || {}).ROJO || 0;
+        const caja = document.getElementById("alerta");
+        if (rojos > 0) {
+            caja.style.display = "block";
+            caja.textContent = `⚠ ${rojos} TRABAJADOR${rojos > 1 ? "ES" : ""} CON ALERTA PRIORITARIA (CONCLUSIÓN NO APTO REGISTRADA). REVISE LAS FILAS EN ROJO.`;
+            if (conSonido) sonarAlerta(); else sonidoPendiente = true;
+        } else {
+            caja.style.display = "none";
+        }
+    }
+
+    function filtrarColor(c) {
+        filtroColor = filtroColor === c ? "" : c;
+        pintarTarjetas();
+        pintarFilas();
+    }
+
+    function verReporte(pacienteId, evaluacionId) {
+        try {
+            localStorage.setItem("p_id", pacienteId);
+            localStorage.setItem("p_id_reporte", pacienteId);
+            localStorage.setItem("p_eval", evaluacionId);
+        } catch (e) {}
+        location.href = "generar_reporte.html";
+    }
+
+    async function buscar(conSonido) {
+        const params = new URLSearchParams();
+        const empresa = document.getElementById("empresa").value;
+        const desde = document.getElementById("desde").value;
+        const hasta = document.getElementById("hasta").value;
+        if (empresa) params.set("empresa", empresa);
+        if (desde) params.set("desde", desde);
+        if (hasta) params.set("hasta", hasta);
+        params.set("solo_ultima", document.getElementById("solo_ultima").checked);
+        document.getElementById("impresion-filtros").textContent =
+            `Empresa: ${empresa || "todas"} · Desde: ${desde || "—"} · Hasta: ${hasta || "—"} · Impreso: ${new Date().toLocaleString()}`;
+        try {
+            const r = await fetch(`${API}/semaforo?${params}`);
+            if (!r.ok) throw new Error();
+            datos = await r.json();
+        } catch (e) {
+            document.getElementById("filas").innerHTML = `<tr><td colspan="7" class="vacio">No se pudo conectar con el servidor.</td></tr>`;
+            return;
+        }
+        pintarTarjetas();
+        pintarFilas();
+        pintarAlerta(conSonido);
+    }
+
+    async function cargarEmpresas() {
+        try {
+            const lista = await (await fetch(`${API}/empresas`)).json();
+            const sel = document.getElementById("empresa");
+            lista.forEach(e => { const o = document.createElement("option"); o.value = e; o.textContent = e; sel.appendChild(o); });
+        } catch (e) {}
+    }
+
+    async function cargarReglas() {
+        try {
+            const reglas = await (await fetch(`${API}/reglas-semaforo`)).json();
+            document.getElementById("reglas").innerHTML = reglas.filter(r => r.activo).map(r => `
+                <tr><td>${esc(r.prioridad)}</td><td>${r.tipo === "IGUAL" ? "es exactamente" : "contiene"} «${esc(r.patron)}»</td>
+                <td><span class="estado"><span class="punto ${esc(r.color)}"></span>${esc(r.color)}</span></td><td>${esc(r.descripcion || "")}</td></tr>`).join("")
+                + `<tr><td>—</td><td>cualquier otro valor</td><td><span class="estado"><span class="punto AMARILLO"></span>AMARILLO</span></td><td>Valor sin regla definida: requiere revisión</td></tr>`;
+        } catch (e) {}
+    }
+
+    window.addEventListener("load", async () => {
+        await cargarEmpresas();
+        cargarReglas();
+        buscar(false);
+    });
+</script>
+</body>
+</html>

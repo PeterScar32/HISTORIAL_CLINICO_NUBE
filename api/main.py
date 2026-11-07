@@ -5,14 +5,19 @@ from api.models import FichaElectroencefalograma, Paciente
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from .database import SessionLocal, engine, Base
-from .crud import create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
+from .crud import crear_evaluacion, evaluacion_vigente, create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
 import os
 from . import models
 from .models import FichaAptitudFisica 
 from .database import get_db
 from sqlalchemy import desc
 
+from . import semaforo
 Base.metadata.create_all(bind=engine)
+from .migraciones import aplicar_migraciones
+aplicar_migraciones(engine)
+with SessionLocal() as _db:
+    semaforo.sembrar_reglas(_db)
 app = FastAPI()
 
 ORIGENES = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
@@ -31,6 +36,17 @@ def get_db():
     finally: db.close()
 
 
+FICHAS_EVALUACION = {
+    "declaracion": models.DeclaracionJurada, "antecedentes": models.AntecedentesP2,
+    "habitos": models.HabitosRiesgosP3, "oftalmologia": models.FichaOftalmologica,
+    "psicologia": models.FichaPsicologia, "espirometria": models.FichaEspirometria,
+    "cardiologia": models.FichaCardiologia, "altura": models.FichaAltura,
+    "electroencefalograma": models.FichaElectroencefalograma, "aptitud": models.FichaAptitud,
+    "aptitud_fisica": models.FichaAptitudFisica, "historial_clinico": models.HistorialClinico,
+    "osteomuscular": models.FichaOsteomuscular,
+}
+
+
 def paciente_o_404(db, codigo):
     p = buscar_paciente(db, codigo)
     if not p:
@@ -42,7 +58,10 @@ def ultimo(db, modelo, paciente_id):
     return db.query(modelo).filter(modelo.paciente_id == paciente_id).order_by(desc(modelo.id)).first()
 
 
-@app.get("/")
+app.include_router(semaforo.router)
+
+
+@app.api_route("/", methods=["GET", "HEAD"])
 def estado_api():
     return {"status": "ok"}
 
@@ -55,14 +74,29 @@ def guardar_filiacion(data: dict, db: Session = Depends(get_db)):
 
 @app.get("/api/paciente-completo/{paciente_id}")
 @app.get("/api/reporte-unificado/{paciente_id}")
-def obtener_paciente_completo(paciente_id: int, db: Session = Depends(get_db)):
+def obtener_paciente_completo(paciente_id: int, evaluacion_id: int = None, db: Session = Depends(get_db)):
     paciente = db.query(models.Paciente).filter(models.Paciente.id == paciente_id).first()
     if not paciente: raise HTTPException(status_code=404, detail="Paciente no encontrado")
+    ev = evaluacion_vigente(db, paciente_id, evaluacion_id)
+    db.commit()
+    db.refresh(paciente)
+    db.refresh(ev)
+
+    def de_ev(modelo):
+        return db.query(modelo).filter(modelo.paciente_id == paciente_id, modelo.evaluacion_id == ev.id).order_by(desc(modelo.id)).first()
+
+    filiacion = de_ev(models.DeclaracionJurada)
+    heredada = False
+    if not filiacion:
+        filiacion = ultimo(db, models.DeclaracionJurada, paciente_id)
+        heredada = filiacion is not None
     return {
         "paciente": paciente,
-        "filiacion": ultimo(db, models.DeclaracionJurada, paciente_id),
-        "antecedentes": ultimo(db, models.AntecedentesP2, paciente_id),
-        "habitos": ultimo(db, models.HabitosRiesgosP3, paciente_id)
+        "evaluacion": ev,
+        "filiacion": filiacion,
+        "filiacion_heredada": heredada,
+        "antecedentes": de_ev(models.AntecedentesP2),
+        "habitos": de_ev(models.HabitosRiesgosP3)
     }
     
 @app.get("/verificar_estado_paciente/{paciente_id}")
@@ -97,7 +131,27 @@ def listar_pacientes(db: Session = Depends(get_db)):
 def registrar_paciente(data: dict, db: Session = Depends(get_db)):
     if not str(data.get("ci") or "").strip():
         raise HTTPException(status_code=400, detail="El CI es obligatorio")
-    return create_paciente(db, data)
+    existente = buscar_paciente(db, data.get("ci")) is not None
+    p = create_paciente(db, data)
+    return {**{c.name: getattr(p, c.name) for c in models.Paciente.__table__.columns}, "existente": existente}
+
+@app.post("/evaluaciones/")
+def nueva_evaluacion(data: dict, db: Session = Depends(get_db)):
+    pid = data.get("paciente_id")
+    if not pid or not db.query(models.Paciente).filter(models.Paciente.id == int(pid)).first():
+        raise HTTPException(status_code=400, detail="Paciente no válido")
+    return crear_evaluacion(db, data)
+
+@app.get("/pacientes/{paciente_id}/evaluaciones")
+def listar_evaluaciones(paciente_id: int, db: Session = Depends(get_db)):
+    evs = db.query(models.Evaluacion).filter(models.Evaluacion.paciente_id == paciente_id).order_by(desc(models.Evaluacion.id)).all()
+    res = []
+    for ev in evs:
+        fichas = {}
+        for nombre, modelo in FICHAS_EVALUACION.items():
+            fichas[nombre] = db.query(modelo.id).filter(modelo.evaluacion_id == ev.id).first() is not None
+        res.append({"id": ev.id, "fecha": ev.fecha, "empresa": ev.empresa, "puesto": ev.puesto, "tipo": ev.tipo, "fichas": fichas})
+    return res
 
 @app.get("/pacientes/buscar/{ci}")
 def buscar_paciente_ci(ci: str, db: Session = Depends(get_db)):

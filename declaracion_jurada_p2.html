@@ -24,7 +24,7 @@
         .btn-next { background: var(--ohs-green); color: white; border: none; padding: 20px; border-radius: 15px; width: 100%; font-weight: 800; text-transform: uppercase; margin-top: 30px; font-size: 15px; transition: 0.3s; cursor: pointer; box-shadow: 0 8px 20px rgba(34, 197, 94, 0.2); }
         .btn-next:hover { background: #16a34a; transform: translateY(-3px); }
     </style>
-    <script src="config.js"></script>
+    <script src="config.js?v=3"></script>
 </head>
 <body>
 
@@ -88,7 +88,7 @@
     window.onload = async () => {
         const id_p = localStorage.getItem('p_id');
         if (!id_p) return;
-        const resp = await fetch(`${API}/api/paciente-completo/${id_p}`);
+        const resp = await fetch(urlPacienteCompleto(id_p));
         const data = await resp.json();
         if (data.paciente) {
             document.getElementById('b_paciente').innerText = `${data.paciente.apellido} ${data.paciente.nombre}`;
@@ -114,6 +114,7 @@
             dataP2[f.id] = isSi ? document.getElementById(`d_${f.id}`).value.toUpperCase() : "NORMAL";
         });
 
+        dataP2.evaluacion_id = evaluacionActual();
         try {
             const res = await fetch(`${API}/p2/`, {
                 method: 'POST',

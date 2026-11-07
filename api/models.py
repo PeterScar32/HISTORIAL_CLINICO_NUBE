@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Text, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, Boolean, Date, DateTime, func
 from .database import Base
 
 class Paciente(Base):
@@ -9,10 +9,23 @@ class Paciente(Base):
     ci = Column(String, unique=True, index=True)
     codigo_paciente = Column(String, index=True)
 
+class Evaluacion(Base):
+    __tablename__ = "evaluaciones"
+    id = Column(Integer, primary_key=True, index=True)
+    paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"), nullable=False, index=True)
+    fecha = Column(Date, server_default=func.current_date())
+    empresa = Column(String)
+    puesto = Column(String)
+    tipo = Column(String)
+    observaciones = Column(String)
+    creado_en = Column(DateTime, server_default=func.now())
+
+
 class DeclaracionJurada(Base):
     __tablename__ = "declaraciones_p1"
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
     edad = Column(String); sexo = Column(String)
     fecha_nacimiento = Column(String); lugar_nacimiento = Column(String)
     domicilio = Column(String); n_casa = Column(String)
@@ -24,6 +37,7 @@ class AntecedentesP2(Base):
     __tablename__ = "antecedentes_p2"
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
     vista = Column(String); auditivo = Column(String); respiratorio = Column(String)
     cardio = Column(String); digestivos = Column(String); sangre = Column(String)
     genitourinario = Column(String); sistema_nervioso = Column(String)
@@ -38,6 +52,7 @@ class HabitosRiesgosP3(Base):
     __tablename__ = "habitos_p3"
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
     fuma = Column(String); fuma_cantidad = Column(String)
     alcohol = Column(String); alcohol_frecuencia = Column(String)
     drogas = Column(String); drogas_tipo = Column(String)
@@ -64,6 +79,7 @@ class FichaOftalmologica(Base):
     __tablename__ = "ficha_oftalmologica"
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
     lentes = Column(String); daltonismo = Column(String); diabetes = Column(String)
     estrabismo = Column(String); infecciones = Column(String); presion_alta = Column(String)
     obs_ant = Column(Text); anamnesis = Column(String); ana_obs = Column(Text)
@@ -81,6 +97,7 @@ class FichaPsicologia(Base):
     __tablename__ = "fichas_psicologia"
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
     historia_familiar = Column(String)
     personalidad = Column(String)
     conducta_sexual = Column(String)
@@ -100,6 +117,7 @@ class FichaEspirometria(Base):
     __tablename__ = "ficha_espirometria"
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
     
     # Criterios de Exclusión (5 preguntas)
     criterios_exclusion_1 = Column(String); criterios_exclusion_2 = Column(String)
@@ -124,6 +142,7 @@ class FichaCardiologia(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"), nullable=False)
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
     
     ninez = Column(String)
     tabaquismo = Column(String)
@@ -158,6 +177,7 @@ class FichaAltura(Base):
     __tablename__ = "ficha_altura"
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
     # Antecedentes
     agorafobia = Column(String)
     diabetes = Column(String)
@@ -200,6 +220,7 @@ class FichaElectroencefalograma(Base):
     __tablename__ = "ficha_electroencefalograma"
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
     
     # Antecedentes
     cefaleas = Column(String); epilepsia = Column(String); convulsiones = Column(String)
@@ -226,6 +247,7 @@ class FichaAptitud(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"), nullable=False)
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
     
     razon_social = Column(String) 
     actividad_economica = Column(String) 
@@ -257,6 +279,7 @@ class FichaAptitudFisica(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
     codigo_paciente = Column(String, nullable=False)
     razon_social = Column(String)
     actividad_economica = Column(String)
@@ -286,6 +309,7 @@ class HistorialClinico(Base):
     __tablename__ = "historial_clinico"
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
     codigo_paciente = Column(String, index=True) # Clave para el mapeo y búsqueda (Punto 5)
 
     # SECCION I: DATOS GENERALES
@@ -369,6 +393,7 @@ class FichaOsteomuscular(Base):
     __tablename__ = "ficha_osteomuscular"
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="CASCADE"), index=True)
 
     codigo_paciente = Column(String)
     nombre_completo = Column(String)
