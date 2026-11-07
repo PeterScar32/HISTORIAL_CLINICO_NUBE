@@ -5,7 +5,7 @@ from api.models import FichaElectroencefalograma, Paciente
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from .database import SessionLocal, engine, Base
-from .crud import crear_evaluacion, evaluacion_vigente, create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
+from .crud import PROFESIONAL_ACTUAL, crear_evaluacion, evaluacion_vigente, create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
 import os
 from . import models
 from .models import FichaAptitudFisica 
@@ -59,6 +59,15 @@ def ultimo(db, modelo, paciente_id):
 
 
 app.include_router(semaforo.router)
+
+
+@app.middleware("http")
+async def profesional_de_la_peticion(request, call_next):
+    token = PROFESIONAL_ACTUAL.set(request.headers.get("x-profesional"))
+    try:
+        return await call_next(request)
+    finally:
+        PROFESIONAL_ACTUAL.reset(token)
 
 
 @app.api_route("/", methods=["GET", "HEAD"])

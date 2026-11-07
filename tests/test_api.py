@@ -191,24 +191,67 @@ def test_semaforo_colores(client):
     assert col(a)["color"] == "AMARILLO"
     rr = col(r)
     assert rr["color"] == "ROJO" and "Osteomuscular" in rr["motivo"]
-    assert any(d["regla_id"] for d in rr["detalle"] if d["color"] == "ROJO")
+    assert any(d["regla_id"] for d in rr["conclusiones"] if d["color"] == "ROJO")
     gg = col(g)
-    assert gg["color"] == "GRIS" and gg["completitud"]["hechas"] == 0 and len(gg["completitud"]["faltantes"]) == 13
+    assert gg["color"] == "GRIS" and gg["completitud"]["registradas"] == 0 and gg["completitud"]["requeridas"] == 5
+    assert gg["completitud"]["estado"] == "INCOMPLETA" and len(gg["completitud"]["faltantes"]) == 5
     assert col(h)["color"] == "AMARILLO"
-    assert col(v)["completitud"]["hechas"] == 2
+    vv = col(v)
+    assert vv["completitud"]["registradas"] == 1 and vv["completitud"]["estado"] == "INCOMPLETA"
+    assert vv["completitud"]["adicionales"] == ["Osteomuscular"]
+    assert vv["conclusion_sin_profesional"] == ["Aptitud ocupacional", "Osteomuscular"]
 
     panel = client.get("/semaforo", params={"empresa": "cementos andinos"}).json()
     assert panel["total"] == 3
     assert panel["resumen"] == {"ROJO": 1, "AMARILLO": 1, "VERDE": 1, "GRIS": 0}
+    assert panel["cumplimiento"] == {"COMPLETA": 0, "INCOMPLETA": 3}
+    osteo = next(e for e in panel["por_especialidad"] if e["clave"] == "osteomuscular")
+    assert (osteo["ROJO"], osteo["VERDE"]) == (1, 1)
+    apt = next(e for e in panel["por_especialidad"] if e["clave"] == "aptitud")
+    assert (apt["VERDE"], apt["AMARILLO"], apt["PENDIENTE"]) == (2, 1, 0)
     assert set(client.get("/empresas").json()) == {"CEMENTOS ANDINOS", "OTRA EMPRESA"}
 
 
 def test_semaforo_valor_sin_regla_y_reglas_configurables(client):
     ev = _evaluar(client, "S6", "RARO", "X", aptitud="PENDIENTE DE ESTUDIOS")
     d = client.get(f"/semaforo/evaluacion/{ev['id']}").json()
-    assert d["color"] == "AMARILLO" and d["detalle"][0]["regla_id"] is None
+    assert d["color"] == "AMARILLO" and d["conclusiones"][0]["regla_id"] is None
     r = client.post("/reglas-semaforo", json={"patron": "PENDIENTE", "color": "rojo", "prioridad": 5, "descripcion": "Pendiente"}).json()
     assert client.get(f"/semaforo/evaluacion/{ev['id']}").json()["color"] == "ROJO"
     client.post("/reglas-semaforo", json={"id": r["id"], "patron": "PENDIENTE", "color": "ROJO", "activo": False})
     assert client.get(f"/semaforo/evaluacion/{ev['id']}").json()["color"] == "AMARILLO"
     assert client.post("/reglas-semaforo", json={"patron": "X", "color": "AZUL"}).status_code == 400
+
+
+def test_fichas_requeridas_y_completitud(client):
+    p = client.post("/pacientes/", json={"nombre": "LUZ", "apellido": "PRUEBA", "ci": "R1"}).json()
+    ev = client.post("/evaluaciones/", json={"paciente_id": p["id"], "fichas_requeridas": ["aptitud", "oftalmologia"]}).json()
+    d = client.get(f"/semaforo/evaluacion/{ev['id']}").json()
+    assert d["completitud"]["requeridas"] == 2 and d["completitud"]["requeridas_por_defecto"] is False
+    client.post("/guardar-aptitud", json={"codigo_paciente": "R1", "resultado": "APTO"})
+    client.post("/ficha-oftalmo/", json={"paciente_id": p["id"], "lentes": "NO"})
+    d = client.get(f"/semaforo/evaluacion/{ev['id']}").json()
+    assert d["completitud"]["estado"] == "COMPLETA" and d["completitud"]["porcentaje"] == 100
+    assert d["color"] == "VERDE"
+    r = client.put(f"/evaluaciones/{ev['id']}/fichas-requeridas", json={"fichas_requeridas": ["aptitud", "oftalmologia", "cardiologia"]})
+    assert r.status_code == 200
+    d = client.get(f"/semaforo/evaluacion/{ev['id']}").json()
+    assert d["completitud"]["estado"] == "INCOMPLETA" and d["completitud"]["faltantes"] == ["Cardiología"]
+    assert client.put(f"/evaluaciones/{ev['id']}/fichas-requeridas", json={"fichas_requeridas": ["nada"]}).status_code == 400
+    cat = client.get("/catalogo-fichas").json()
+    assert len(cat) == 13 and sum(c["por_defecto"] for c in cat) == 5
+
+
+def test_profesional_responsable_y_fecha(client):
+    doc = client.post("/doctores/", json={"ci_doc": "D9", "nombre_doc": "MARTA", "appaterno_doc": "ROJAS", "especialidad": "MEDICINA OCUPACIONAL"}).json()
+    p = client.post("/pacientes/", json={"nombre": "TITO", "apellido": "PRUEBA", "ci": "R2"}).json()
+    ev = client.post("/evaluaciones/", json={"paciente_id": p["id"]}).json()
+    client.post("/guardar-aptitud", json={"codigo_paciente": "R2", "resultado": "NO APTO"}, headers={"X-Profesional": f"doc:{doc['id_doc']}"})
+    d = client.get(f"/semaforo/evaluacion/{ev['id']}").json()
+    c = d["conclusiones"][0]
+    assert c["profesional"] == "DR(A). MARTA ROJAS · MEDICINA OCUPACIONAL"
+    assert c["fecha"] is not None
+    assert d["conclusion_sin_profesional"] == []
+    client.post("/filiacion/", json={"paciente_id": p["id"], "edad": "40"}, headers={"X-Profesional": "doc:999"})
+    f = next(x for x in client.get(f"/semaforo/evaluacion/{ev['id']}").json()["fichas"] if x["clave"] == "declaracion")
+    assert f["estado"] == "REGISTRADA" and f["profesional"] is None

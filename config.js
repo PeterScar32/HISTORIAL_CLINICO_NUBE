@@ -71,7 +71,7 @@ function barraNavegacion() {
         #barra-nav button { background: rgba(15,23,42,.92); color: #e2e8f0; border: 1px solid #334155; border-radius: 999px;
             padding: 8px 14px; font: 700 12px system-ui, sans-serif; cursor: pointer; letter-spacing: .03em; }
         #barra-nav button:hover { border-color: #60a5fa; color: #93c5fd; }
-        @media print { #barra-nav { display: none !important; } }
+        @media print { #barra-nav, #caja-profesional, #aviso-servidor { display: none !important; } }
     `;
     document.head.appendChild(estilo);
     const barra = document.createElement("nav");
@@ -118,8 +118,49 @@ function vincularCampoPaciente() {
     }
 }
 
+function profesionalActual() {
+    try { return localStorage.getItem("prof_actual") || ""; } catch (e) { return ""; }
+}
+
+const _fetchOriginal = window.fetch.bind(window);
+window.fetch = (url, opciones = {}) => {
+    const metodo = String(opciones.method || "GET").toUpperCase();
+    const prof = profesionalActual();
+    if (prof && ["POST", "PUT"].includes(metodo) && String(url).startsWith(CONFIG.API_BASE)) {
+        const h = new Headers(opciones.headers || {});
+        h.set("X-Profesional", prof);
+        opciones = { ...opciones, headers: h };
+    }
+    return _fetchOriginal(url, opciones);
+};
+
+async function selectorProfesional() {
+    if (!/(doc_|declaracion_jurada_)/.test(location.pathname)) return;
+    const caja = document.createElement("div");
+    caja.id = "caja-profesional";
+    caja.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:9997;background:rgba(15,23,42,.94);border:1px solid #334155;border-radius:12px;padding:8px 12px;font:700 11px system-ui,sans-serif;color:#cbd5e1;display:flex;gap:8px;align-items:center;max-width:calc(100vw - 24px)";
+    caja.innerHTML = `<label for="sel-profesional">PROFESIONAL RESPONSABLE:</label><select id="sel-profesional" style="background:#1e293b;color:#fff;border:1px solid #475569;border-radius:8px;padding:6px;font:600 12px system-ui;max-width:260px"><option value="">— SIN IDENTIFICAR —</option></select>`;
+    document.body.appendChild(caja);
+    const sel = caja.querySelector("select");
+    sel.addEventListener("change", () => {
+        try { localStorage.setItem("prof_actual", sel.value); } catch (e) {}
+        caja.style.borderColor = sel.value ? "#334155" : "#f59e0b";
+    });
+    try {
+        const p = await (await _fetchOriginal(`${CONFIG.API_BASE}/personal/`)).json();
+        const opciones = [
+            ...(p.doctores || []).map(d => [`doc:${d.id_doc}`, `DR(A). ${d.nombre_doc || ""} ${d.appaterno_doc || ""} · ${d.especialidad || ""}`]),
+            ...(p.enfermeras || []).map(e => [`enf:${e.id_enfe}`, `LIC. ${e.nombre_enfe || ""} ${e.appaterno_enfe || ""} · ENFERMERÍA`])
+        ];
+        sel.innerHTML += opciones.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("");
+        sel.value = opciones.some(([v]) => v === profesionalActual()) ? profesionalActual() : "";
+    } catch (e) {}
+    caja.style.borderColor = sel.value ? "#334155" : "#f59e0b";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     barraNavegacion();
+    selectorProfesional();
     vincularCampoPaciente();
     despertarServidor();
 });

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from . import models
 
+import contextvars
 from sqlalchemy import func, or_, event
 
 FICHAS_POR_ID = [
@@ -41,6 +42,8 @@ def evaluacion_vigente(db: Session, paciente_id: int, evaluacion_id=None):
 
 
 def crear_evaluacion(db: Session, data: dict):
+    if isinstance(data.get("fichas_requeridas"), (list, tuple)):
+        data["fichas_requeridas"] = ",".join(str(x) for x in data["fichas_requeridas"])
     data = filtrar(models.Evaluacion, data, ("id", "creado_en"))
     for k in ("empresa", "puesto", "tipo", "observaciones"):
         if data.get(k):
@@ -179,7 +182,38 @@ def upsert_electro(db: Session, data: dict):
     return db_obj
 
 
+PROFESIONAL_ACTUAL = contextvars.ContextVar("profesional_actual", default=None)
+
+
+def nombre_profesional(connection, clave):
+    try:
+        tipo, ident = str(clave).split(":", 1)
+        ident = int(ident)
+    except (ValueError, TypeError):
+        return None
+    if tipo == "doc":
+        t = models.Doctor.__table__
+        f = connection.execute(t.select().where(t.c.id_doc == ident)).mappings().first()
+        if f:
+            return " ".join(x for x in ["DR(A).", f["nombre_doc"], f["appaterno_doc"], f["apmaterno_doc"]] if x) + (f" · {f['especialidad']}" if f["especialidad"] else "")
+    if tipo == "enf":
+        t = models.Enfermera.__table__
+        f = connection.execute(t.select().where(t.c.id_enfe == ident)).mappings().first()
+        if f:
+            return " ".join(x for x in ["LIC.", f["nombre_enfe"], f["appaterno_enfe"], f["apmaterno_enfe"]] if x) + " · ENFERMERÍA"
+    return None
+
+
+def registrar_profesional(mapper, connection, target):
+    clave = PROFESIONAL_ACTUAL.get()
+    if clave:
+        nombre = nombre_profesional(connection, clave)
+        if nombre:
+            target.registrado_por = nombre
+
+
 def asignar_evaluacion(mapper, connection, target):
+    registrar_profesional(mapper, connection, target)
     if getattr(target, "evaluacion_id", None) or not getattr(target, "paciente_id", None):
         return
     tabla = models.Evaluacion.__table__
@@ -195,3 +229,4 @@ def asignar_evaluacion(mapper, connection, target):
 for _modelo in FICHAS_POR_ID:
     if _modelo is not models.Evaluacion:
         event.listen(_modelo, "before_insert", asignar_evaluacion)
+        event.listen(_modelo, "before_update", registrar_profesional)
