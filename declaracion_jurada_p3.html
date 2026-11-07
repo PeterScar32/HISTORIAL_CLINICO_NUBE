@@ -28,7 +28,7 @@
         .btn-save { background: var(--ohs-green); color: white; width: 100%; padding: 18px; border-radius: 15px; border: none; font-weight: 800; font-size: 15px; margin-top: 30px; text-transform: uppercase; transition: 0.3s; box-shadow: 0 8px 20px rgba(34, 197, 94, 0.2); }
         .btn-save:hover { background: #16a34a; transform: translateY(-3px); }
     </style>
-    <script src="config.js"></script>
+    <script src="config.js?v=3"></script>
 </head>
 <body>
 <div class="form-container">
@@ -106,7 +106,7 @@
     window.onload = async () => {
         if(!id_p) return;
         try {
-            const r = await fetch(`${API}/api/paciente-completo/${id_p}`);
+            const r = await fetch(urlPacienteCompleto(id_p));
             const d = await r.json();
             if(d.paciente) {
                 document.getElementById('b_paciente').innerText = `${d.paciente.apellido} ${d.paciente.nombre}`;
@@ -178,7 +178,7 @@
         };
 
         try {
-            // ENVÍO P3
+            payloadP3.evaluacion_id = evaluacionActual();
             const resP3 = await fetch(`${API}/p3/`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},

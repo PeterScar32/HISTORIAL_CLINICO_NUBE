@@ -19,9 +19,24 @@ function pacienteActual() {
     }
 }
 
+function evaluacionActual() {
+    try {
+        const v = localStorage.getItem("p_eval");
+        return v ? parseInt(v) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function urlPacienteCompleto(id) {
+    const ev = evaluacionActual();
+    return `${CONFIG.API_BASE}/api/paciente-completo/${id}` + (ev ? `?evaluacion_id=${ev}` : "");
+}
+
 function fijarPacienteActual(p) {
     try {
         localStorage.removeItem("p_id_edicion");
+        if (String(localStorage.getItem("p_id")) !== String(p.id)) localStorage.removeItem("p_eval");
         localStorage.setItem("p_id", p.id);
         localStorage.setItem("p_ci", p.ci || "");
         localStorage.setItem("p_cod", p.codigo_paciente || p.ci || "");

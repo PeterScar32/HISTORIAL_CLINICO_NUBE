@@ -1,14 +1,14 @@
 from sqlalchemy.orm import Session
 from . import models
 
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, event
 
 FICHAS_POR_ID = [
     models.DeclaracionJurada, models.AntecedentesP2, models.HabitosRiesgosP3,
     models.FichaOftalmologica, models.FichaPsicologia, models.FichaEspirometria,
     models.FichaCardiologia, models.FichaAltura, models.FichaElectroencefalograma,
     models.FichaAptitud, models.FichaAptitudFisica, models.HistorialClinico,
-    models.FichaOsteomuscular,
+    models.FichaOsteomuscular, models.Evaluacion,
 ]
 FICHAS_POR_CODIGO = [models.FichaAptitudFisica, models.FichaOsteomuscular, models.HistorialClinico]
 
@@ -24,6 +24,50 @@ def filtrar(modelo, data: dict, excluir=("id",)):
 
 def normalizar_ci(valor) -> str:
     return str(valor or "").strip().upper()
+
+
+def evaluacion_vigente(db: Session, paciente_id: int, evaluacion_id=None):
+    q = db.query(models.Evaluacion).filter(models.Evaluacion.paciente_id == paciente_id)
+    if evaluacion_id:
+        ev = q.filter(models.Evaluacion.id == int(evaluacion_id)).first()
+        if ev:
+            return ev
+    ev = q.order_by(models.Evaluacion.id.desc()).first()
+    if not ev:
+        ev = models.Evaluacion(paciente_id=paciente_id, tipo="INICIAL")
+        db.add(ev)
+        db.flush()
+    return ev
+
+
+def crear_evaluacion(db: Session, data: dict):
+    data = filtrar(models.Evaluacion, data, ("id", "creado_en"))
+    for k in ("empresa", "puesto", "tipo", "observaciones"):
+        if data.get(k):
+            data[k] = str(data[k]).strip().upper()
+    if not data.get("fecha"):
+        data.pop("fecha", None)
+    ev = models.Evaluacion(**data)
+    db.add(ev)
+    db.commit()
+    db.refresh(ev)
+    return ev
+
+
+def _upsert_por_evaluacion(db: Session, modelo, data: dict):
+    data = filtrar(modelo, data)
+    p_id = int(data["paciente_id"])
+    ev = evaluacion_vigente(db, p_id, data.get("evaluacion_id"))
+    data["evaluacion_id"] = ev.id
+    existente = db.query(modelo).filter(modelo.paciente_id == p_id, modelo.evaluacion_id == ev.id).order_by(modelo.id.desc()).first()
+    if existente:
+        for key, value in data.items(): setattr(existente, key, value)
+    else:
+        existente = modelo(**data)
+        db.add(existente)
+    db.commit()
+    db.refresh(existente)
+    return existente
 
 
 def get_paciente_by_ci(db: Session, ci: str):
@@ -59,46 +103,16 @@ def create_paciente(db: Session, data: dict):
     return db_obj
 
 def upsert_filiacion(db: Session, data: dict):
-    data = filtrar(models.DeclaracionJurada, data)
-    p_id = data.get("paciente_id")
-    existente = db.query(models.DeclaracionJurada).filter(models.DeclaracionJurada.paciente_id == p_id).first()
-    if existente:
-        for key, value in data.items(): setattr(existente, key, value)
-    else:
-        existente = models.DeclaracionJurada(**data)
-        db.add(existente)
-    db.commit()
-    db.refresh(existente)
-    return existente
+    return _upsert_por_evaluacion(db, models.DeclaracionJurada, data)
+
 
 def upsert_p2(db: Session, data: dict):
-    p_id = data.get("paciente_id")
-    # Filtro de seguridad para evitar errores de columnas no existentes en BD
-    data_filtered = filtrar(models.AntecedentesP2, data)
-    
-    existente = db.query(models.AntecedentesP2).filter(models.AntecedentesP2.paciente_id == p_id).first()
-    if existente:
-        for key, value in data_filtered.items(): setattr(existente, key, value)
-    else:
-        existente = models.AntecedentesP2(**data_filtered)
-        db.add(existente)
-    db.commit()
-    db.refresh(existente)
-    return existente
+    return _upsert_por_evaluacion(db, models.AntecedentesP2, data)
+
 
 def upsert_p3(db: Session, data: dict):
-    p_id = data.get("paciente_id")
-    data_filtered = filtrar(models.HabitosRiesgosP3, data)
-    
-    existente = db.query(models.HabitosRiesgosP3).filter(models.HabitosRiesgosP3.paciente_id == p_id).first()
-    if existente:
-        for key, value in data_filtered.items(): setattr(existente, key, value)
-    else:
-        existente = models.HabitosRiesgosP3(**data_filtered)
-        db.add(existente)
-    db.commit()
-    db.refresh(existente)
-    return existente
+    return _upsert_por_evaluacion(db, models.HabitosRiesgosP3, data)
+
 
 def create_enfermera(db: Session, data: dict):
     data = filtrar(models.Enfermera, data, ("id_enfe",))
@@ -163,3 +177,21 @@ def upsert_electro(db: Session, data: dict):
     db.commit()
     db.refresh(db_obj)
     return db_obj
+
+
+def asignar_evaluacion(mapper, connection, target):
+    if getattr(target, "evaluacion_id", None) or not getattr(target, "paciente_id", None):
+        return
+    tabla = models.Evaluacion.__table__
+    fila = connection.execute(
+        tabla.select().with_only_columns(tabla.c.id).where(tabla.c.paciente_id == target.paciente_id).order_by(tabla.c.id.desc()).limit(1)
+    ).first()
+    if fila:
+        target.evaluacion_id = fila[0]
+    else:
+        target.evaluacion_id = connection.execute(tabla.insert().values(paciente_id=target.paciente_id, tipo="INICIAL").returning(tabla.c.id)).scalar()
+
+
+for _modelo in FICHAS_POR_ID:
+    if _modelo is not models.Evaluacion:
+        event.listen(_modelo, "before_insert", asignar_evaluacion)

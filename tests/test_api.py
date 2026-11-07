@@ -33,6 +33,7 @@ def test_declaracion_jurada_actualiza_sin_duplicar(client, paciente):
     assert client.post("/p2/", json={"paciente_id": pid, "vista": "USA LENTES", "cardio": "NORMAL"}).status_code == 200
     assert client.post("/p3/", json={"paciente_id": pid, "fuma": "NO", "campo_inexistente": "x"}).status_code == 200
     d = client.get(f"/api/paciente-completo/{pid}").json()
+    assert d["paciente"]["ci"] == "9999001" and d["paciente"]["apellido"] == "PEREZ QUISPE"
     assert d["filiacion"]["edad"] == "31"
     assert d["filiacion"]["ciudad"] == "EL ALTO"
     assert d["antecedentes"]["vista"] == "USA LENTES"
@@ -119,3 +120,49 @@ def test_personal(client):
     assert len(p["doctores"]) == 1 and len(p["enfermeras"]) == 1
     did = p["doctores"][0]["id_doc"]
     assert client.put(f"/doctores/{did}", json={"turno_doc": "NOCHE", "id_doc": 999}).json()["id_doc"] == did
+
+
+def test_registro_avisa_si_existe(client, paciente):
+    assert paciente["existente"] is False
+    r = client.post("/pacientes/", json={"nombre": "Juan", "apellido": "Perez Quispe", "ci": "9999001"}).json()
+    assert r["existente"] is True and r["id"] == paciente["id"]
+
+
+def test_segunda_evaluacion_conserva_la_primera(client, paciente):
+    pid, ci = paciente["id"], paciente["ci"]
+    ev1 = client.post("/evaluaciones/", json={"paciente_id": pid, "empresa": "cementos andinos", "puesto": "operario", "tipo": "PREOCUPACIONAL", "fecha": "2026-11-05"}).json()
+    client.post("/filiacion/", json={"paciente_id": pid, "evaluacion_id": ev1["id"], "edad": "34"})
+    client.post("/p2/", json={"paciente_id": pid, "evaluacion_id": ev1["id"], "vista": "NORMAL"})
+    client.post("/guardar-cardiologia", json={"codigo_paciente": ci, "hta": "NO"})
+
+    ev2 = client.post("/evaluaciones/", json={"paciente_id": pid, "empresa": "cementos andinos", "tipo": "PERIODICO"}).json()
+    assert ev2["id"] != ev1["id"] and ev2["empresa"] == "CEMENTOS ANDINOS"
+    d = client.get(f"/api/paciente-completo/{pid}").json()
+    assert d["evaluacion"]["id"] == ev2["id"]
+    assert d["filiacion_heredada"] is True and d["filiacion"]["edad"] == "34"
+    assert d["antecedentes"] is None
+
+    client.post("/filiacion/", json={"paciente_id": pid, "evaluacion_id": ev2["id"], "edad": "35"})
+    client.post("/p2/", json={"paciente_id": pid, "evaluacion_id": ev2["id"], "vista": "USA LENTES"})
+    client.post("/guardar-cardiologia", json={"codigo_paciente": ci, "hta": "SI"})
+
+    d1 = client.get(f"/api/paciente-completo/{pid}", params={"evaluacion_id": ev1["id"]}).json()
+    d2 = client.get(f"/api/paciente-completo/{pid}", params={"evaluacion_id": ev2["id"]}).json()
+    assert (d1["filiacion"]["edad"], d1["antecedentes"]["vista"]) == ("34", "NORMAL")
+    assert (d2["filiacion"]["edad"], d2["antecedentes"]["vista"]) == ("35", "USA LENTES")
+    assert d2["filiacion_heredada"] is False
+
+    evs = client.get(f"/pacientes/{pid}/evaluaciones").json()
+    assert [e["id"] for e in evs] == [ev2["id"], ev1["id"]]
+    assert evs[0]["fichas"]["cardiologia"] and evs[1]["fichas"]["cardiologia"]
+    assert evs[1]["fecha"] == "2026-11-05"
+
+
+def test_ficha_sin_evaluacion_crea_una(client, paciente):
+    client.post("/guardar-psicologia", json={"codigo_paciente": paciente["ci"]})
+    evs = client.get(f"/pacientes/{paciente['id']}/evaluaciones").json()
+    assert len(evs) == 1 and evs[0]["fichas"]["psicologia"]
+
+
+def test_evaluacion_paciente_invalido(client):
+    assert client.post("/evaluaciones/", json={"paciente_id": 999}).status_code == 400

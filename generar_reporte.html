@@ -20,13 +20,15 @@
         .btn-print { background: #22c55e; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
         @media print { .no-print { display: none; } }
     </style>
-    <script src="config.js"></script>
+    <script src="config.js?v=3"></script>
 </head>
 <body>
     <a href="lista_historial.html" class="mb-14 text-[13px] font-bold text-slate-500 uppercase tracking-[0.3em] hover:text-blue-400 transition-colors">
         ← Volver al Portal Principal
     </a><br><br><br>
 <div class="no-print" style="margin-bottom: 20px;">
+    <label style="font-weight:700;font-size:13px;margin-right:8px;">EVALUACIÓN:</label>
+    <select id="sel_evaluacion" style="padding:8px;border-radius:5px;margin-right:12px;" onchange="cambiarEvaluacion(this.value)"></select>
     <button class="btn-print" onclick="window.print()">IMPRIMIR REPORTE COMPLETO</button>
 </div>
 
@@ -54,12 +56,21 @@
     const fields_p2 = ["vista","auditivo","respiratorio","cardio","digestivos","sangre","genitourinario","sistema_nervioso","psiquiatricos","osteomusculares","reumatologicos","dermatologicas","alergias","cirugias","infecciones","acc_personales","acc_trabajo","medicamentos","endocrino","familiares","otros_especificos","generales"];
     const fields_p3 = ["fuma","fuma_cantidad","alcohol","alcohol_frecuencia","drogas","drogas_tipo","coca","deporte","deporte_detalle","grupo_sanguineo","historia_laboral","riesgos_expuestos","observaciones"];
 
+    function cambiarEvaluacion(id) {
+        try { localStorage.setItem('p_eval', id); } catch (e) {}
+        location.reload();
+    }
+
     window.onload = async () => {
         const p_id = localStorage.getItem('p_id_reporte');
         if (!p_id) return;
         
         try {
-            const resp = await fetch(`${API}/api/paciente-completo/${p_id}`);
+            const evs = await (await fetch(`${API}/pacientes/${p_id}/evaluaciones`)).json();
+            const sel = document.getElementById('sel_evaluacion');
+            const actual = evaluacionActual();
+            sel.innerHTML = evs.map(e => `<option value="${e.id}" ${e.id === actual ? 'selected' : ''}>${esc(e.fecha)} · ${esc(e.tipo || '')} ${e.empresa ? '· ' + esc(e.empresa) : ''}</option>`).join('');
+            const resp = await fetch(urlPacienteCompleto(p_id));
             const data = await resp.json();
             
             const p = data.paciente;
@@ -71,7 +82,9 @@
             document.getElementById('main_info').innerHTML = `
                 <div>PACIENTE: <span class="val">${p.nombre || ''} ${p.apellido || ''}</span></div>
                 <div>CÓDIGO PACIENTE: <span class="val">${p.codigo_paciente || '---'}</span></div>
+                <div>EVALUACIÓN: <span class="val">${esc(data.evaluacion.fecha)} ${esc(data.evaluacion.tipo || '')} ${data.evaluacion.empresa ? '· ' + esc(data.evaluacion.empresa) : ''}</span></div>
             `;
+            document.getElementById('sel_evaluacion').value = data.evaluacion.id;
 
             // Filtrar CI de la lista para no duplicarlo, pero incluirlo al inicio de la rejilla
             const campos_p1_filtrados = fields_p1.filter(f => f !== 'ci');

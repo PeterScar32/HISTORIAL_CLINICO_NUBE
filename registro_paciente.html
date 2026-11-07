@@ -18,9 +18,10 @@
         h2 { color: #1e293b; font-size: 1.5rem; margin-bottom: 30px; text-transform: uppercase; font-weight: 900; letter-spacing: -0.5px; }
         
         .input-group { text-align: left; margin-bottom: 18px; }
+        .input-group select { width: 100%; box-sizing: border-box; }
         label { font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; margin-left: 2px; }
         
-        input { 
+        input, select { 
             width: 100%; padding: 14px; margin-top: 6px; border: 2px solid #e2e8f0; 
             border-radius: 12px; box-sizing: border-box; font-size: 16px; 
             font-weight: 700; text-transform: uppercase; transition: 0.3s; color: #1e293b;
@@ -51,7 +52,7 @@
         }
         .btn-consultar:hover { background: #0069d9; }
     </style>
-    <script src="config.js"></script>
+    <script src="config.js?v=3"></script>
 </head>
 <body>
 
@@ -78,12 +79,40 @@
 
     <div class="input-group">
         <label>Cédula de Identidad (CI)</label>
-        <input type="text" id="ci" placeholder="EJ. 2543253" oninput="this.value=this.value.toUpperCase().replace(/\s+/g,''); generarCodigo()">
+        <input type="text" id="ci" placeholder="EJ. 2543253" oninput="this.value=this.value.toUpperCase().replace(/\s+/g,''); generarCodigo()" onchange="verificarExistente()">
     </div>
 
     <div class="codigo-box">
         <div class="cod-text">Código Generado</div>
         <div id="display-codigo">----</div>
+    </div>
+    <div id="aviso-existente" style="display:none;margin:-6px 0 18px;padding:12px;border-radius:10px;background:#fef3c7;color:#92400e;font-weight:700;font-size:13px;text-align:left;"></div>
+
+    <div class="cod-text" style="text-align:left;margin-bottom:10px;">Datos de esta evaluación</div>
+
+    <div class="input-group">
+        <label>Empresa</label>
+        <input type="text" id="empresa" placeholder="EJ. EMPRESA CONTRATANTE">
+    </div>
+
+    <div class="input-group">
+        <label>Puesto de trabajo</label>
+        <input type="text" id="puesto" placeholder="EJ. OPERARIO DE PLANTA">
+    </div>
+
+    <div class="input-group">
+        <label>Tipo de evaluación</label>
+        <select id="tipo_eval">
+            <option value="PREOCUPACIONAL">PREOCUPACIONAL (INGRESO)</option>
+            <option value="PERIODICO">PERIÓDICO</option>
+            <option value="RETIRO">RETIRO</option>
+            <option value="OTRO">OTRO</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label>Fecha de evaluación</label>
+        <input type="date" id="fecha_eval">
     </div>
 
     <button class="btn-guardar" onclick="enviarDatos()">GUARDAR REGISTRO FINAL</button>
@@ -110,41 +139,85 @@
         }
     }
 
+    let pacienteExistente = null;
+
+    document.getElementById('fecha_eval').value = new Date().toLocaleDateString('en-CA');
+
+    async function verificarExistente() {
+        const ci = document.getElementById('ci').value.trim().toUpperCase();
+        const aviso = document.getElementById('aviso-existente');
+        pacienteExistente = null;
+        aviso.style.display = 'none';
+        if (!ci) return;
+        try {
+            const r = await fetch(`${API_URL}/pacientes/buscar/${encodeURIComponent(ci)}`);
+            if (!r.ok) return;
+            pacienteExistente = await r.json();
+            aviso.textContent = `⚠ ESTE CI YA ESTÁ REGISTRADO COMO ${pacienteExistente.apellido} ${pacienteExistente.nombre}. AL GUARDAR SE INICIARÁ UNA NUEVA EVALUACIÓN EN SU MISMO EXPEDIENTE.`;
+            aviso.style.display = 'block';
+            if (!document.getElementById('nombre').value) document.getElementById('nombre').value = pacienteExistente.nombre;
+            if (!document.getElementById('apellido').value) document.getElementById('apellido').value = pacienteExistente.apellido;
+            generarCodigo();
+        } catch (e) {}
+    }
+
     async function enviarDatos() {
         const codigo = generarCodigo();
         if (!codigo) { alert("COMPLETE TODOS LOS CAMPOS."); return; }
 
-        const datos = {
-            nombre: document.getElementById('nombre').value.toUpperCase(),
-            apellido: document.getElementById('apellido').value.toUpperCase(),
-            ci: document.getElementById('ci').value.trim().toUpperCase(),
-            codigo_paciente: codigo
-        };
+        await verificarExistente();
+        let paciente = pacienteExistente;
+
+        if (paciente) {
+            const nueva = confirm(`EL CI ${paciente.ci} YA ESTÁ REGISTRADO COMO ${paciente.apellido} ${paciente.nombre}.\n\nACEPTAR: INICIAR UNA NUEVA EVALUACIÓN EN SU EXPEDIENTE.\nCANCELAR: VER SU EXPEDIENTE SIN CREAR NADA.`);
+            if (!nueva) {
+                fijarPacienteActual(paciente);
+                localStorage.setItem('p_id_reporte', paciente.id);
+                window.location.href = 'generar_reporte.html';
+                return;
+            }
+        }
 
         try {
-            // Limpieza total antes de iniciar nuevo flujo
-            localStorage.clear();
+            if (!paciente) {
+                const response = await fetch(`${API_URL}/pacientes/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nombre: document.getElementById('nombre').value.toUpperCase(),
+                        apellido: document.getElementById('apellido').value.toUpperCase(),
+                        ci: document.getElementById('ci').value.trim().toUpperCase()
+                    })
+                });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    alert("❌ NO SE PUDO REGISTRAR: " + (err.detail || response.status));
+                    return;
+                }
+                paciente = await response.json();
+            }
 
-            const response = await fetch(`${API_URL}/pacientes/`, {
+            const rEv = await fetch(`${API_URL}/evaluaciones/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(datos)
+                body: JSON.stringify({
+                    paciente_id: paciente.id,
+                    empresa: document.getElementById('empresa').value,
+                    puesto: document.getElementById('puesto').value,
+                    tipo: document.getElementById('tipo_eval').value,
+                    fecha: document.getElementById('fecha_eval').value || null
+                })
             });
+            if (!rEv.ok) { alert("❌ NO SE PUDO CREAR LA EVALUACIÓN."); return; }
+            const ev = await rEv.json();
 
-            if (response.ok) {
-                const paciente = await response.json();
-                localStorage.setItem('p_id', paciente.id);
-                localStorage.setItem('p_nom', `${paciente.apellido} ${paciente.nombre}`);
-                localStorage.setItem('p_ci', paciente.ci);
-                localStorage.setItem('p_cod', paciente.codigo_paciente);
-                
-                alert("✅ REGISTRADO CON ÉXITO.");
-                window.location.href = 'declaracion_jurada_p1.html';
-            } else {
-                const err = await response.json().catch(() => ({}));
-                alert("❌ NO SE PUDO REGISTRAR: " + (err.detail || response.status));
-            }
-        } catch (e) { alert("❌ ERROR DE CONEXIÓN CON RENDER."); }
+            localStorage.clear();
+            fijarPacienteActual(paciente);
+            localStorage.setItem('p_eval', ev.id);
+
+            alert(pacienteExistente ? "✅ NUEVA EVALUACIÓN INICIADA." : "✅ REGISTRADO CON ÉXITO.");
+            window.location.href = 'declaracion_jurada_p1.html';
+        } catch (e) { alert("❌ ERROR DE CONEXIÓN CON EL SERVIDOR."); }
     }
 </script>
 </body>

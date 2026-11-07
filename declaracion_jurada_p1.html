@@ -20,7 +20,7 @@
         .btn-next:hover { background: #16a34a; transform: translateY(-2px); }
         @media (max-width: 768px) { .form-container { padding: 20px 15px; border-radius: 20px; } .header-ohs img { height: 40px; } .title-center h2 { font-size: 1rem; } .data-banner { flex-direction: column; align-items: flex-start; } .form-control, .form-select { padding: 16px; font-size: 16px; } }
     </style>
-    <script src="config.js"></script>
+    <script src="config.js?v=3"></script>
 </head>
 <body>
 
@@ -87,7 +87,7 @@
         }
 
         try {
-            const resp = await fetch(`${API}/api/paciente-completo/${id_trabajo}`, {
+            const resp = await fetch(urlPacienteCompleto(id_trabajo), {
                 method: 'GET',
                 headers: { 
                     'Accept': 'application/json',
@@ -152,6 +152,7 @@
             profesion_oficio: document.getElementById('profesion').value
         };
 
+        payload.evaluacion_id = evaluacionActual();
         try {
             const r = await fetch(`${API}/filiacion/`, {
                 method: 'POST',
