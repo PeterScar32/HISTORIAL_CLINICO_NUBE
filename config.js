@@ -62,6 +62,28 @@ async function despertarServidor() {
     aviso.remove();
 }
 
+function barraNavegacion() {
+    if (document.getElementById("barra-nav")) return;
+    const esInicio = /(^|\/)(index\.html)?$/.test(location.pathname);
+    const estilo = document.createElement("style");
+    estilo.textContent = `
+        #barra-nav { position: fixed; top: 10px; right: 12px; z-index: 9998; display: flex; gap: 6px; }
+        #barra-nav button { background: rgba(15,23,42,.92); color: #e2e8f0; border: 1px solid #334155; border-radius: 999px;
+            padding: 8px 14px; font: 700 12px system-ui, sans-serif; cursor: pointer; letter-spacing: .03em; }
+        #barra-nav button:hover { border-color: #60a5fa; color: #93c5fd; }
+        @media print { #barra-nav { display: none !important; } }
+    `;
+    document.head.appendChild(estilo);
+    const barra = document.createElement("nav");
+    barra.id = "barra-nav";
+    barra.setAttribute("aria-label", "Navegación");
+    barra.innerHTML = `
+        <button type="button" title="Atrás" onclick="history.back()">← Atrás</button>
+        <button type="button" title="Adelante" onclick="history.forward()">Adelante →</button>
+        ${esInicio ? "" : '<button type="button" title="Inicio" onclick="location.href=\'index.html\'">🏠 Inicio</button>'}`;
+    document.body.appendChild(barra);
+}
+
 function vincularCampoPaciente() {
     const campo = document.querySelector("#codigo_paciente, form#oftalmoForm #paciente_id");
     if (!campo || !location.pathname.includes("doc_")) return;
@@ -97,6 +119,7 @@ function vincularCampoPaciente() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    barraNavegacion();
     vincularCampoPaciente();
     despertarServidor();
 });
