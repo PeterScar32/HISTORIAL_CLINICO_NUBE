@@ -20,12 +20,13 @@
         .btn-next:hover { background: #16a34a; transform: translateY(-2px); }
         @media (max-width: 768px) { .form-container { padding: 20px 15px; border-radius: 20px; } .header-ohs img { height: 40px; } .title-center h2 { font-size: 1rem; } .data-banner { flex-direction: column; align-items: flex-start; } .form-control, .form-select { padding: 16px; font-size: 16px; } }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
 <div class="form-container">
     <div class="header-ohs">
-        <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png" height="50">
+        <img src="logo.png" height="50">
         <div class="title-center"><h2>1. Datos de Filiación</h2></div>
         <div id="modo-indicador" style="font-size: 10px; font-weight: 800; color: #22c55e; text-align: right;">NUEVO REGISTRO</div>
     </div>
@@ -72,7 +73,7 @@
 </div>
 
 <script>
-    const API = 'https://historial-clinico-nube.onrender.com';
+    const API = CONFIG.API_BASE;
 
     window.onload = async () => {
         const p_id_edicion = localStorage.getItem('p_id_edicion');
@@ -104,7 +105,7 @@
             // Renderizado de Banner Principal
             document.getElementById('p_nombre').innerText = `${data.paciente.apellido} ${data.paciente.nombre}`;
             document.getElementById('p_ci').innerText = data.paciente.ci;
-            document.getElementById('p_codigo').innerText = data.paciente.codigo_paciente;
+            document.getElementById('p_codigo').innerText = data.paciente.ci || data.paciente.codigo_paciente;
 
             // Lógica de llenado para modo edición
             if (data.filiacion && data.filiacion.paciente_id) {

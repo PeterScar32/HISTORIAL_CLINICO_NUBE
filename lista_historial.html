@@ -24,6 +24,7 @@
         .top-bar a { color: white; text-decoration: none; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; }
         .contador-badge { background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin-left: 10px; vertical-align: middle; }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
@@ -56,7 +57,7 @@
 </div>
 
 <script>
-    const API = 'https://historial-clinico-nube.onrender.com';
+    const API = CONFIG.API_BASE;
 
     async function cargarPacientes() {
         const tabla = document.getElementById('listaPacientes');
@@ -74,16 +75,19 @@
             }
             
             contador.innerText = `TOTAL: ${pacientes.length}`;
+            window._pacientes = {};
             pacientes.forEach(p => {
+                window._pacientes[p.id] = p;
+                const id = parseInt(p.id);
                 tabla.innerHTML += `
                     <tr>
-                        <td class="ps-4">${p.apellido || ''} ${p.nombre || ''}</td>
-                        <td>${p.ci || 'S/N'}</td>
-                        <td><span class="badge bg-light text-dark border">${p.codigo_paciente || '---'}</span></td>
+                        <td class="ps-4">${esc(p.apellido)} ${esc(p.nombre)}</td>
+                        <td>${esc(p.ci) || 'S/N'}</td>
+                        <td><span class="badge bg-light text-dark border">${esc(p.codigo_paciente) || '---'}</span></td>
                         <td class="text-center">
-                            <button class="btn-action btn-reporte" title="REPORTE" onclick="verReporte('${p.id}')">📄</button>
-                            <button class="btn-action btn-editar" title="EDITAR" onclick="editarPaciente('${p.id}')">✏️</button>
-                            <button class="btn-action btn-borrar" title="BORRAR" onclick="eliminarPaciente('${p.id}')">🗑️</button>
+                            <button class="btn-action btn-reporte" title="REPORTE" onclick="verReporte(${id})">📄</button>
+                            <button class="btn-action btn-editar" title="EDITAR" onclick="editarPaciente(${id})">✏️</button>
+                            <button class="btn-action btn-borrar" title="BORRAR" onclick="eliminarPaciente(${id})">🗑️</button>
                         </td>
                     </tr>`;
             });
@@ -94,11 +98,14 @@
     }
 
     function verReporte(id) {
+        if (window._pacientes && window._pacientes[id]) fijarPacienteActual(window._pacientes[id]);
         localStorage.setItem('p_id_reporte', id);
         window.location.href = "generar_reporte.html";
     }
 
     function editarPaciente(id) {
+        if (window._pacientes && window._pacientes[id]) fijarPacienteActual(window._pacientes[id]);
+        localStorage.removeItem('p_id_edicion');
         localStorage.setItem('edit_modo', 'true');
         localStorage.setItem('p_id', id); 
         window.location.href = "declaracion_jurada_p1.html";

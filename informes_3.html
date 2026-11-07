@@ -30,6 +30,7 @@
             .footer-print { margin-top: 60px; text-align: center; font-size: 11px; }
         }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 <div class="container">
@@ -84,7 +85,7 @@
 </div>
 
 <script>
-    const API = 'https://historial-clinico-nube.onrender.com';
+    const API = CONFIG.API_BASE;
 
     function normalizar(texto) {
         return (texto || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().trim();
@@ -156,7 +157,7 @@
                         ${encontrados.map((p, i) => `
                             <tr>
                                 <td class="col-num">${i + 1}</td>
-                                <td>${p.tipo}</td>
+                                <td>${esc(p.tipo)}</td>
                                 <td class="col-nom">${p.nombre.toUpperCase()}</td>
                                 <td>${p.especialidad.toUpperCase()}</td>
                                 <td>${p.turno.toUpperCase()}</td>

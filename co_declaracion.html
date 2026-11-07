@@ -19,6 +19,7 @@
         th { background: #334155; color: white; }
         @media print { .no-print { display: none; } }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
@@ -81,7 +82,7 @@
 </div>
 
 <script>
-    const API = 'https://historial-clinico-nube.onrender.com';
+    const API = CONFIG.API_BASE;
 
     async function filtrar() {
         const campo = document.getElementById('patologiaSelect').value;
@@ -99,7 +100,7 @@
             // 2. Iterar sobre cada paciente para traer su ficha completa
             for (let p of pacientes) {
                 try {
-                    const resDetalle = await fetch(`${API}/api/paciente-completo/${p.id}`);
+                    const resDetalle = await fetch(`${API}/api/paciente-completo/${esc(p.id)}`);
                     const detalle = await resDetalle.json();
 
                     // 'detalle.antecedentes' es donde está la P2
@@ -110,7 +111,7 @@
                         tbody.innerHTML += `
                             <tr>
                                 <td>${detalle.paciente.codigo_paciente || '---'}</td>
-                                <td>${detalle.paciente.apellido} ${detalle.paciente.nombre}</td>
+                                <td>${esc(detalle.paciente.apellido)} ${esc(detalle.paciente.nombre)}</td>
                                 <td>${detalle.filiacion?.edad || '---'}</td>
                                 <td>${detalle.filiacion?.profesion_oficio || '---'}</td>
                                 <td>${valor}</td>

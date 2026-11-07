@@ -20,6 +20,7 @@
         .btn-print { background: #22c55e; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
         @media print { .no-print { display: none; } }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
     <a href="lista_historial.html" class="mb-14 text-[13px] font-bold text-slate-500 uppercase tracking-[0.3em] hover:text-blue-400 transition-colors">
@@ -31,7 +32,7 @@
 
 <div class="sheet">
     <div class="header">
-        <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png" class="logo">
+        <img src="logo.png" class="logo">
         <div class="header-title"><h1>Historial Clínico Ocupacional</h1></div>
     </div>
 
@@ -48,7 +49,7 @@
 </div>
 
 <script>
-    const API = 'https://historial-clinico-nube.onrender.com';
+    const API = CONFIG.API_BASE;
     const fields_p1 = ["ci", "edad", "sexo", "fecha_nacimiento", "lugar_nacimiento", "domicilio", "n_casa", "zona_barrio", "ciudad", "telefono", "estado_civil", "profesion_oficio"];
     const fields_p2 = ["vista","auditivo","respiratorio","cardio","digestivos","sangre","genitourinario","sistema_nervioso","psiquiatricos","osteomusculares","reumatologicos","dermatologicas","alergias","cirugias","infecciones","acc_personales","acc_trabajo","medicamentos","endocrino","familiares","otros_especificos","generales"];
     const fields_p3 = ["fuma","fuma_cantidad","alcohol","alcohol_frecuencia","drogas","drogas_tipo","coca","deporte","deporte_detalle","grupo_sanguineo","historia_laboral","riesgos_expuestos","observaciones"];

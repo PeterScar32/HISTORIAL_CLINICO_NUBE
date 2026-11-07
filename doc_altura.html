@@ -44,6 +44,7 @@
             .no-print { display: none !important; }
         }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
@@ -54,7 +55,7 @@
     </div>
 
     <div class="header-content">
-        <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png" alt="Logo">
+        <img src="logo.png" alt="Logo">
         <div class="title-area">
             <h1>FICHA DE TRABAJO CON ALTURA</h1>
             <p>SALUD OCUPACIONAL - DOCUMENTO LEGAL</p>
@@ -165,7 +166,7 @@
 </div>
 
 <script>
-    const API_URL = "https://historial-clinico-nube.onrender.com";
+    const API_URL = CONFIG.API_BASE;
 
     document.querySelector('.save-btn').addEventListener('click', async () => {
         const codigoInput = document.getElementById('codigo_paciente');

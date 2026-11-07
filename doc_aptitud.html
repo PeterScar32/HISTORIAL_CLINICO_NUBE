@@ -28,6 +28,7 @@
             .patient-section { border: none; background: none; }
         }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
@@ -115,7 +116,7 @@ async function guardarDatos() {
         recomendacion_4: document.getElementById('rec4').value
     };
 
-    const response = await fetch('https://historial-clinico-nube.onrender.com/guardar-aptitud', {
+    const response = await fetch(CONFIG.API_BASE + '/guardar-aptitud', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)

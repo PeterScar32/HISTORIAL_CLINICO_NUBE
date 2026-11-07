@@ -1,13 +1,18 @@
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # Obtener URL de Render
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+if not DATABASE_URL:
+    raise RuntimeError("Falta la variable de entorno DATABASE_URL")
+
+for prefijo in ("postgres://", "postgresql://"):
+    if DATABASE_URL.startswith(prefijo):
+        DATABASE_URL = "postgresql+psycopg2://" + DATABASE_URL[len(prefijo):]
+        break
 
 # Configuración optimizada para Render y PostgreSQL
 engine = create_engine(

@@ -39,6 +39,7 @@
         }
         .btn-guardar:hover { background: #2563eb; transform: translateY(-1px); }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
@@ -47,7 +48,7 @@
 </div>
 
 <div class="card">
-    <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png" class="logo-img">
+    <img src="logo.png" class="logo-img">
     <h2>REGISTRO DE ENFERMERÍA</h2>
 
     <div class="input-group">
@@ -92,7 +93,7 @@
 </div>
 
 <script>
-    const API_URL = 'https://historial-clinico-936s.onrender.com';
+    const API_URL = CONFIG.API_BASE;
 
     async function guardarEnfermera() {
         const datos = {

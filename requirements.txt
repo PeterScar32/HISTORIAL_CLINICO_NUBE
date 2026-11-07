@@ -1,6 +1,6 @@
-fastapi
-uvicorn
-sqlalchemy
-psycopg2-binary
-pydantic
+fastapi==0.162.2
+uvicorn==0.54.0
+sqlalchemy==2.1.8
+psycopg2-binary==2.9.13
+pydantic==2.13.5
 python-multipart

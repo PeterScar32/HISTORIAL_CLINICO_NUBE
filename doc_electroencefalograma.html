@@ -25,6 +25,7 @@
         .btn-guardar { width: 100%; padding: 15px; background-color: #1976d2; color: white; font-size: 16px; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; margin-top: 20px; }
         @media print { .top-nav, .btn-guardar, .no-print { display: none !important; } .container { width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border: none !important; } }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
@@ -35,7 +36,7 @@
     </div>
 
     <div class="header-content">
-        <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png" alt="Logo">
+        <img src="logo.png" alt="Logo">
         <div class="title-area">
             <h1>FICHA DE ELECTROENCEFALOGRAMA</h1>
             <p>SALUD OCUPACIONAL - DOCUMENTO LEGAL</p>
@@ -130,7 +131,7 @@ async function guardarFichaElectro() {
             diagnostico_recomendaciones: document.getElementById('diagnostico_recomendaciones').value
         };
 
-        const response = await fetch('https://historial-clinico-nube.onrender.com/guardar-electro', {
+        const response = await fetch(CONFIG.API_BASE + '/guardar-electro', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)

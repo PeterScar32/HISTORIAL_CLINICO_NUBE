@@ -24,12 +24,13 @@
         .btn-next { background: var(--ohs-green); color: white; border: none; padding: 20px; border-radius: 15px; width: 100%; font-weight: 800; text-transform: uppercase; margin-top: 30px; font-size: 15px; transition: 0.3s; cursor: pointer; box-shadow: 0 8px 20px rgba(34, 197, 94, 0.2); }
         .btn-next:hover { background: #16a34a; transform: translateY(-3px); }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
 <div class="form-container">
     <div class="header-ohs">
-        <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png" height="45">
+        <img src="logo.png" height="45">
         <div class="title-center"><h2>2. ANTECEDENTES PATOLÓGICOS</h2></div>
         <div style="font-size: 10px; font-weight: 800; color: #94a3b8;">PARTE 2 / 3</div>
     </div>
@@ -45,7 +46,7 @@
 </div>
 
 <script>
-    const API = 'https://historial-clinico-nube.onrender.com';
+    const API = CONFIG.API_BASE;
     const fields = [
         {id:"vista", n:"1. VISTA"}, {id:"auditivo", n:"2. AUDITIVO"}, {id:"respiratorio", n:"3. RESPIRATORIO"},
         {id:"cardio", n:"4. CARDIOVASCULARES"}, {id:"digestivos", n:"5. DIGESTIVOS"}, {id:"sangre", n:"6. SANGRE"},
@@ -91,14 +92,23 @@
         const data = await resp.json();
         if (data.paciente) {
             document.getElementById('b_paciente').innerText = `${data.paciente.apellido} ${data.paciente.nombre}`;
-            document.getElementById('b_codigo').innerText = data.paciente.codigo_paciente;
+            document.getElementById('b_codigo').innerText = data.paciente.ci || data.paciente.codigo_paciente;
         }
+        const ant = data.antecedentes || {};
+        fields.forEach(f => {
+            const v = ant[f.id];
+            if (v && v !== 'NORMAL') {
+                document.getElementById(`s_${f.id}`).value = 'SI';
+                const inp = document.getElementById(`d_${f.id}`);
+                inp.value = v; inp.style.color = "#1e293b";
+            }
+        });
     };
 
     document.getElementById('formP2').onsubmit = async (e) => {
         e.preventDefault();
         const id_p = localStorage.getItem('p_id');
-        const dataP2 = { paciente_id: id_p };
+        const dataP2 = { paciente_id: parseInt(id_p) };
         fields.forEach(f => {
             const isSi = document.getElementById(`s_${f.id}`).value === "SI";
             dataP2[f.id] = isSi ? document.getElementById(`d_${f.id}`).value.toUpperCase() : "NORMAL";

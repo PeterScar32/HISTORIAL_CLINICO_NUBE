@@ -19,6 +19,7 @@
         th { background: #334155; color: white; }
         @media print { .no-print { display: none; } }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
@@ -60,7 +61,7 @@
 </div>
 
 <script>
-    const API = 'https://historial-clinico-nube.onrender.com';
+    const API = CONFIG.API_BASE;
 
     async function filtrar() {
         const estadoFiltro = document.getElementById('estadoSelect').value;
