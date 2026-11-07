@@ -30,6 +30,7 @@
             #footerFirma { display: block !important; }
         }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
@@ -80,13 +81,13 @@
         if(!codigo) return;
 
         try {
-            const response = await fetch(`https://historial-clinico-nube.onrender.com/api/informe-consolidado/${codigo}`);
+            const response = await fetch(`${CONFIG.API_BASE}/api/informe-consolidado/${codigo}`);
             const data = await response.json();
             
             document.getElementById('infoPaciente').innerHTML = `
                 <div class="ficha-paciente">
-                    <div><span class="label-dato">PACIENTE</span><div class="valor-dato">${data.datos_generales.nombre}</div></div>
-                    <div><span class="label-dato">CÓDIGO</span><div class="valor-dato">${data.datos_generales.codigo}</div></div>
+                    <div><span class="label-dato">PACIENTE</span><div class="valor-dato">${esc(data.datos_generales.nombre)}</div></div>
+                    <div><span class="label-dato">CÓDIGO</span><div class="valor-dato">${esc(data.datos_generales.codigo)}</div></div>
                 </div>`;
             
             const body = document.getElementById('resultadosBody');
@@ -125,7 +126,7 @@
                 const valorDisplay = esInvalido ? "SIN EXAMEN" : String(val).toUpperCase();
                 const icono = esInvalido ? '<span class="status-icon text-red">✘</span>' : '<span class="status-icon text-green">✔</span>';
                 
-                body.innerHTML += `<tr><td>${f[0]}</td><td style="text-align: center">${valorDisplay}</td><td style="text-align: center">${icono}</td></tr>`;
+                body.innerHTML += `<tr><td>${esc(f[0])}</td><td style="text-align: center">${valorDisplay}</td><td style="text-align: center">${icono}</td></tr>`;
             });
             
             document.getElementById('tablaInforme').style.display = 'table';

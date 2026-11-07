@@ -30,6 +30,7 @@
             .footer-print { margin-top: 60px; text-align: center; font-size: 11px; }
         }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 <div class="container">
@@ -52,7 +53,7 @@
 </div>
 
 <script>
-    const API = 'https://historial-clinico-nube.onrender.com';
+    const API = CONFIG.API_BASE;
     async function buscarPacientes() {
         const container = document.getElementById('resultadosContainer');
         container.innerHTML = "BUSCANDO...";
@@ -61,13 +62,13 @@
             const pacientes = await resp.json();
             let encontrados = [];
             for (let p of pacientes) {
-                const det = await fetch(`${API}/api/paciente-completo/${p.id}`).then(r => r.json());
+                const det = await fetch(`${API}/api/paciente-completo/${esc(p.id)}`).then(r => r.json());
                 const f = det.filiacion || {};
                 if ((!document.getElementById('sexo').value || f.sexo === document.getElementById('sexo').value) &&
                     (!document.getElementById('lugar').value || (f.lugar_nacimiento && f.lugar_nacimiento.includes(document.getElementById('lugar').value.toUpperCase()))) &&
                     (!document.getElementById('est_civil').value || f.estado_civil === document.getElementById('est_civil').value) &&
                     (!document.getElementById('profesion').value || (f.profesion_oficio && f.profesion_oficio.includes(document.getElementById('profesion').value.toUpperCase())))) {
-                    encontrados.push({ nombre: `${det.paciente.nombre} ${det.paciente.apellido}`, codigo: det.paciente.codigo_paciente });
+                    encontrados.push({ nombre: `${esc(det.paciente.nombre)} ${esc(det.paciente.apellido)}`, codigo: det.paciente.codigo_paciente });
                 }
             }
 

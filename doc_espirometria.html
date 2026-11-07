@@ -25,6 +25,7 @@
         .caption { font-weight: bold; background: #f2f2f2; }
         .btn-guardar { width: 100%; padding: 15px; background-color: #1976d2; color: white; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 <div class="container">
@@ -35,7 +36,7 @@
     </div>
         <!----------------------------------------> 
     <div class="header-content">
-        <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png" height="50" alt="Logo">
+        <img src="logo.png" height="50" alt="Logo">
         <div class="title-area">
             <h1>FICHA DE EVALUACIÓN ESPIROMETRÍA</h1>
             <p>SALUD OCUPACIONAL - DOCUMENTO LEGAL</p>
@@ -117,7 +118,7 @@ async function guardarFicha() {
     };
 
     try {
-        const response = await fetch('https://historial-clinico-nube.onrender.com/guardar-espirometria', {
+        const response = await fetch(CONFIG.API_BASE + '/guardar-espirometria', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)

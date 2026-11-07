@@ -1,15 +1,13 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Text, Boolean
 from .database import Base
-from pydantic import BaseModel
-from typing import Optional
 
 class Paciente(Base):
     __tablename__ = "pacientes"
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String)
     apellido = Column(String)
-    ci = Column(String, unique=True)
-    codigo_paciente = Column(String)
+    ci = Column(String, unique=True, index=True)
+    codigo_paciente = Column(String, index=True)
 
 class DeclaracionJurada(Base):
     __tablename__ = "declaraciones_p1"
@@ -25,7 +23,7 @@ class DeclaracionJurada(Base):
 class AntecedentesP2(Base):
     __tablename__ = "antecedentes_p2"
     id = Column(Integer, primary_key=True, index=True)
-    paciente_id = Column(Integer, ForeignKey("pacientes.id"))
+    paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
     vista = Column(String); auditivo = Column(String); respiratorio = Column(String)
     cardio = Column(String); digestivos = Column(String); sangre = Column(String)
     genitourinario = Column(String); sistema_nervioso = Column(String)
@@ -82,7 +80,7 @@ class FichaOftalmologica(Base):
 class FichaPsicologia(Base):
     __tablename__ = "fichas_psicologia"
     id = Column(Integer, primary_key=True, index=True)
-    paciente_id = Column(Integer)
+    paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
     historia_familiar = Column(String)
     personalidad = Column(String)
     conducta_sexual = Column(String)
@@ -125,7 +123,7 @@ class FichaCardiologia(Base):
     __tablename__ = "ficha_cardiologia"
     
     id = Column(Integer, primary_key=True, index=True)
-    paciente_id = Column(Integer, ForeignKey("pacientes.id"), nullable=False)
+    paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"), nullable=False)
     
     ninez = Column(String)
     tabaquismo = Column(String)
@@ -159,7 +157,7 @@ class FichaCardiologia(Base):
 class FichaAltura(Base):
     __tablename__ = "ficha_altura"
     id = Column(Integer, primary_key=True, index=True)
-    paciente_id = Column(Integer)
+    paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
     # Antecedentes
     agorafobia = Column(String)
     diabetes = Column(String)
@@ -258,7 +256,8 @@ class FichaAptitudFisica(Base):
     __tablename__ = "ficha_aptitud_fisica"
     
     id = Column(Integer, primary_key=True, index=True)
-    codigo_paciente = Column(String, nullable=False) # ID clave para el mapeo
+    paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+    codigo_paciente = Column(String, nullable=False)
     razon_social = Column(String)
     actividad_economica = Column(String)
     dia = Column(String)
@@ -369,7 +368,8 @@ class HistorialClinico(Base):
 class FichaOsteomuscular(Base):
     __tablename__ = "ficha_osteomuscular"
     id = Column(Integer, primary_key=True, index=True)
-    
+    paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"))
+
     codigo_paciente = Column(String)
     nombre_completo = Column(String)
     edad = Column(Integer)
@@ -530,9 +530,3 @@ class FichaOsteomuscular(Base):
     observaciones_final = Column(Text)
     restricciones = Column(Text)
     fecha_firma = Column(String)
-
-
-
-
-
-

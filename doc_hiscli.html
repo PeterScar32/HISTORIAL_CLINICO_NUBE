@@ -31,12 +31,13 @@
         .btn-guardar { width: 100%; padding: 15px; background: #28a745; color: white; border: none; font-size: 16px; margin-top: 20px; cursor: pointer; }
         #anamnesis_desc { display: none; margin-top: 5px; }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
 <div class="ficha-container">
     <div class="header-top">
-        <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png">
+        <img src="logo.png">
 	
         <div class="titulo-legal">
             <h2>FICHA HISTORIA CLÍNICA</h2>
@@ -427,7 +428,7 @@
 		}
 
         // ------- ENVIO AL BACKEND ---------------
-        fetch('https://historial-clinico-nube.onrender.com/guardar-historial-clinico', {
+        fetch(CONFIG.API_BASE + '/guardar-historial-clinico', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)

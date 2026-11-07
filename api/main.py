@@ -5,7 +5,8 @@ from api.models import FichaElectroencefalograma, Paciente
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from .database import SessionLocal, engine, Base
-from .crud import create_doctor, create_enfermera
+from .crud import create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
+import os
 from . import models
 from .models import FichaAptitudFisica 
 from .database import get_db
@@ -14,10 +15,12 @@ from sqlalchemy import desc
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
+ORIGENES = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=ORIGENES,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -28,75 +31,116 @@ def get_db():
     finally: db.close()
 
 
+def paciente_o_404(db, codigo):
+    p = buscar_paciente(db, codigo)
+    if not p:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+    return p
+
+
+def ultimo(db, modelo, paciente_id):
+    return db.query(modelo).filter(modelo.paciente_id == paciente_id).order_by(desc(modelo.id)).first()
+
+
+@app.get("/")
+def estado_api():
+    return {"status": "ok"}
+
+
 # ----------- BLOQUE P1: FILIACION -----------
 @app.post("/filiacion/")
 def guardar_filiacion(data: dict, db: Session = Depends(get_db)):
-    nueva = models.DeclaracionJurada(**data); db.add(nueva); db.commit(); db.refresh(nueva); return nueva
+    if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    return upsert_filiacion(db, data)
 
 @app.get("/api/paciente-completo/{paciente_id}")
+@app.get("/api/reporte-unificado/{paciente_id}")
 def obtener_paciente_completo(paciente_id: int, db: Session = Depends(get_db)):
     paciente = db.query(models.Paciente).filter(models.Paciente.id == paciente_id).first()
     if not paciente: raise HTTPException(status_code=404, detail="Paciente no encontrado")
     return {
         "paciente": paciente,
-        "filiacion": db.query(models.DeclaracionJurada).filter(models.DeclaracionJurada.paciente_id == paciente_id).first(),
-        "antecedentes": db.query(models.AntecedentesP2).filter(models.AntecedentesP2.paciente_id == paciente_id).first(),
-        "habitos": db.query(models.HabitosRiesgosP3).filter(models.HabitosRiesgosP3.paciente_id == paciente_id).first()
+        "filiacion": ultimo(db, models.DeclaracionJurada, paciente_id),
+        "antecedentes": ultimo(db, models.AntecedentesP2, paciente_id),
+        "habitos": ultimo(db, models.HabitosRiesgosP3, paciente_id)
     }
     
 @app.get("/verificar_estado_paciente/{paciente_id}")
 def verificar_estado_paciente(paciente_id: int, db: Session = Depends(get_db)):
-    return {
-        "aptitud": db.query(models.Aptitud).filter(models.Aptitud.paciente_id == paciente_id).first() is not None,
-        "oftalmo": db.query(models.Oftalmologia).filter(models.Oftalmologia.paciente_id == paciente_id).first() is not None,
-        "psicologia": db.query(models.Psicologia).filter(models.Psicologia.paciente_id == paciente_id).first() is not None,
-        "laboratorio": db.query(models.Laboratorio).filter(models.Laboratorio.paciente_id == paciente_id).first() is not None,
-        "radiografia": db.query(models.Radiografia).filter(models.Radiografia.paciente_id == paciente_id).first() is not None,
-        "odontologia": db.query(models.Odontologia).filter(models.Odontologia.paciente_id == paciente_id).first() is not None,
-        "otorrino": db.query(models.Otorrino).filter(models.Otorrino.paciente_id == paciente_id).first() is not None,
-        "neurologia": db.query(models.Neurologia).filter(models.Neurologia.paciente_id == paciente_id).first() is not None,
-        "cardiologia": db.query(models.Cardiologia).filter(models.Cardiologia.paciente_id == paciente_id).first() is not None,
-        "traumatologia": db.query(models.Traumatologia).filter(models.Traumatologia.paciente_id == paciente_id).first() is not None,
-        "medicina": db.query(models.Medicina).filter(models.Medicina.paciente_id == paciente_id).first() is not None
+    fichas = {
+        "declaracion": models.DeclaracionJurada, "antecedentes": models.AntecedentesP2,
+        "habitos": models.HabitosRiesgosP3, "oftalmologia": models.FichaOftalmologica,
+        "psicologia": models.FichaPsicologia, "espirometria": models.FichaEspirometria,
+        "cardiologia": models.FichaCardiologia, "altura": models.FichaAltura,
+        "electroencefalograma": models.FichaElectroencefalograma, "aptitud": models.FichaAptitud,
+        "aptitud_fisica": models.FichaAptitudFisica, "historial_clinico": models.HistorialClinico,
+        "osteomuscular": models.FichaOsteomuscular,
     }
+    return {k: ultimo(db, m, paciente_id) is not None for k, m in fichas.items()}
 # ----------- BLOQUE P2 y P3 -----------
 @app.post("/p2/")
 def guardar_p2(data: dict, db: Session = Depends(get_db)):
-    nueva = models.AntecedentesP2(**data); db.add(nueva); db.commit(); db.refresh(nueva); return nueva
+    if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    return upsert_p2(db, data)
 
 @app.post("/p3/")
 def guardar_p3(data: dict, db: Session = Depends(get_db)):
-    nueva = models.HabitosRiesgosP3(**data); db.add(nueva); db.commit(); db.refresh(nueva); return nueva
+    if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    return upsert_p3(db, data)
 
 # ----------- GESTION PACIENTES -----------
 @app.get("/pacientes/")
 def listar_pacientes(db: Session = Depends(get_db)):
-    return db.query(models.Paciente).all()
+    return db.query(models.Paciente).order_by(models.Paciente.apellido, models.Paciente.nombre).all()
 
 @app.post("/pacientes/")
 def registrar_paciente(data: dict, db: Session = Depends(get_db)):
-    nuevo = models.Paciente(**data); db.add(nuevo); db.commit(); db.refresh(nuevo); return nuevo
+    if not str(data.get("ci") or "").strip():
+        raise HTTPException(status_code=400, detail="El CI es obligatorio")
+    return create_paciente(db, data)
+
+@app.get("/pacientes/buscar/{ci}")
+def buscar_paciente_ci(ci: str, db: Session = Depends(get_db)):
+    return paciente_o_404(db, ci)
+
+@app.delete("/api/pacientes/{paciente_id}")
+def eliminar_paciente(paciente_id: int, db: Session = Depends(get_db)):
+    if not delete_paciente(db, paciente_id):
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+    return {"message": "Eliminado"}
 
 @app.get("/buscar-id-por-codigo/{codigo}")
 def buscar_id_por_codigo(codigo: str, db: Session = Depends(get_db)):
-    # Usamos func.upper para normalizar la búsqueda contra el modelo
-    p = db.query(models.Paciente).filter(func.upper(models.Paciente.codigo_paciente) == codigo.upper().strip()).first()
-    
-    if not p: 
-        raise HTTPException(status_code=404, detail="Paciente no encontrado")
-    
-    return {"id": p.id}
+    return {"id": paciente_o_404(db, codigo).id}
 
 # ----------- FICHA MÉDICA -----------
 @app.post("/ficha-oftalmo/")
 def guardar_ficha_oftalmo(data: dict, db: Session = Depends(get_db)):
-    nueva = models.FichaOftalmologica(**data); db.add(nueva); db.commit(); db.refresh(nueva); return nueva
+    if not data.get("paciente_id") and data.get("codigo_paciente"):
+        data["paciente_id"] = paciente_o_404(db, data["codigo_paciente"]).id
+    if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    nueva = models.FichaOftalmologica(**filtrar(models.FichaOftalmologica, data)); db.add(nueva); db.commit(); db.refresh(nueva); return nueva
 
 @app.get("/ficha-oftalmo/{paciente_id}")
 def obtener_ficha_oftalmo(paciente_id: int, db: Session = Depends(get_db)):
-    ficha = db.query(models.FichaOftalmologica).filter(models.FichaOftalmologica.paciente_id == paciente_id).first()
+    ficha = ultimo(db, models.FichaOftalmologica, paciente_id)
     if not ficha: raise HTTPException(status_code=404, detail="Ficha no encontrada")
     return ficha
+
+@app.get("/filtrar-oftalmo/{campo}")
+def filtrar_oftalmo(campo: str, db: Session = Depends(get_db)):
+    permitidos = {"lentes", "estrabismo", "daltonismo", "infecciones", "diabetes", "presion_alta"}
+    if campo not in permitidos: return []
+    columna = getattr(models.FichaOftalmologica, campo)
+    filas = db.query(models.FichaOftalmologica, models.Paciente).join(
+        models.Paciente, models.FichaOftalmologica.paciente_id == models.Paciente.id
+    ).filter(func.upper(columna) == "SI").all()
+    vistos, res = set(), []
+    for f, p in filas:
+        if p.id in vistos: continue
+        vistos.add(p.id)
+        res.append({"codigo": p.codigo_paciente, "nombre": f"{p.apellido} {p.nombre}", "estado": campo.upper()})
+    return res
 
 # ----------- FICHA PSICOLOGICA -----------
 @app.post("/guardar-psicologia")
@@ -106,9 +150,7 @@ async def guardar_psicologia(data: dict, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="El código del paciente es obligatorio")
 
     # Búsqueda normalizada
-    paciente = db.query(models.Paciente).filter(
-        func.upper(models.Paciente.codigo_paciente) == codigo_input
-    ).first()
+    paciente = buscar_paciente(db, codigo_input)
     
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente no encontrado en el sistema")
@@ -135,13 +177,15 @@ async def guardar_psicologia(data: dict, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(nueva_ficha)
         return {"message": "GUARDADO EXITOSAMENTE"}
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error al guardar: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/ficha-psicologia/{paciente_id}")
 def obtener_ficha_psicologia(paciente_id: int, db: Session = Depends(get_db)):
-    ficha = db.query(models.FichaPsicologia).filter(models.FichaPsicologia.paciente_id == paciente_id).first()
+    ficha = ultimo(db, models.FichaPsicologia, paciente_id)
     if not ficha: raise HTTPException(status_code=404, detail="Ficha no encontrada")
     return ficha
 
@@ -179,7 +223,7 @@ def obtener_doctor(id_doc: int, db: Session = Depends(get_db)):
 def actualizar_doctor(id_doc: int, data: dict, db: Session = Depends(get_db)):
     d = db.query(models.Doctor).filter(models.Doctor.id_doc == id_doc).first()
     if not d: raise HTTPException(status_code=404, detail="No encontrado")
-    for k, v in data.items(): setattr(d, k, v)
+    for k, v in filtrar(models.Doctor, data, ("id_doc",)).items(): setattr(d, k, v)
     db.commit(); db.refresh(d); return d
 
 @app.delete("/doctores/{id_doc}")
@@ -202,7 +246,7 @@ def obtener_enfermera(id_enfe: int, db: Session = Depends(get_db)):
 def actualizar_enfermera(id_enfe: int, data: dict, db: Session = Depends(get_db)):
     e = db.query(models.Enfermera).filter(models.Enfermera.id_enfe == id_enfe).first()
     if not e: raise HTTPException(status_code=404, detail="No encontrada")
-    for k, v in data.items(): setattr(e, k, v)
+    for k, v in filtrar(models.Enfermera, data, ("id_enfe",)).items(): setattr(e, k, v)
     db.commit(); db.refresh(e); return e
 
 @app.delete("/enfermeras/{id_enfe}")
@@ -216,7 +260,7 @@ def borrar_enfermera(id_enfe: int, db: Session = Depends(get_db)):
 @app.post("/guardar-cardiologia")
 async def guardar_cardiologia(data: dict, db: Session = Depends(get_db)):
     codigo_input = str(data.get("codigo_paciente", "")).strip().upper()
-    paciente = db.query(models.Paciente).filter(func.upper(models.Paciente.codigo_paciente) == codigo_input).first()
+    paciente = buscar_paciente(db, codigo_input)
     
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
@@ -260,7 +304,7 @@ async def guardar_cardiologia(data: dict, db: Session = Depends(get_db)):
 
 @app.get("/ficha-cardiologia/{paciente_id}")
 def obtener_ficha_cardiologia(paciente_id: int, db: Session = Depends(get_db)):
-    ficha = db.query(models.FichaCardiologia).filter(models.FichaCardiologia.paciente_id == paciente_id).first()
+    ficha = ultimo(db, models.FichaCardiologia, paciente_id)
     if not ficha: raise HTTPException(status_code=404, detail="Ficha no encontrada")
     return ficha
 
@@ -294,7 +338,7 @@ async def filtrar_cardiologia(query: str, db: Session = Depends(get_db)):
     return [
         {
             "codigo_paciente": p.codigo_paciente,
-            "nombre_paciente": p.nombre_completo,
+            "nombre_paciente": f"{p.apellido} {p.nombre}",
             "diagnostico": f.diagnostico_recomendaciones
         } for f, p in resultados
     ]
@@ -332,7 +376,7 @@ async def buscar_cardiologia(antecedente: str, db: Session = Depends(get_db)):
 async def guardar_espirometria(data: dict, db: Session = Depends(get_db)):
     try:
         codigo = str(data.get("codigo_paciente", "")).strip().upper()
-        paciente = db.query(models.Paciente).filter(func.upper(models.Paciente.codigo_paciente) == codigo).first()
+        paciente = buscar_paciente(db, codigo)
         
         if not paciente:
             raise HTTPException(status_code=404, detail="Paciente no encontrado")
@@ -369,6 +413,8 @@ async def guardar_espirometria(data: dict, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(nueva_ficha)
         return {"status": "success", "message": "GUARDADO EXITOSAMENTE"}
+    except HTTPException:
+        raise
     except Exception as e:
         # Esto imprimirá el error real en los logs de Render
         print(f"ERROR DETALLADO: {str(e)}") 
@@ -377,12 +423,12 @@ async def guardar_espirometria(data: dict, db: Session = Depends(get_db)):
 @app.get("/consultar-espirometria/{codigo_paciente}")
 async def consultar_espirometria(codigo_paciente: str, db: Session = Depends(get_db)):
     # Buscamos al paciente
-    paciente = db.query(models.Paciente).filter(func.upper(models.Paciente.codigo_paciente) == codigo_paciente.upper().strip()).first()
+    paciente = buscar_paciente(db, codigo_paciente)
     if not paciente:
         return {"status": "error", "message": "Paciente no encontrado"}
     
     # Buscamos la ficha en la tabla correcta
-    ficha = db.query(models.FichaEspirometria).filter(models.FichaEspirometria.paciente_id == paciente.id).first()
+    ficha = ultimo(db, models.FichaEspirometria, paciente.id)
     if not ficha:
         return {"status": "error", "message": "Ficha no encontrada"}
         
@@ -390,14 +436,12 @@ async def consultar_espirometria(codigo_paciente: str, db: Session = Depends(get
 
 # -------
 @app.get("/listar-espirometria")
-async def listar_espirometria(filtro: str = ""):
-    try:
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM espirometria WHERE codigo_paciente LIKE ?", (f"%{filtro.strip().upper()}%",))
-        return [dict(row) for row in cursor.fetchall()]
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+def listar_espirometria(filtro: str = "", db: Session = Depends(get_db)):
+    q = db.query(models.FichaEspirometria, models.Paciente).join(
+        models.Paciente, models.FichaEspirometria.paciente_id == models.Paciente.id)
+    if filtro.strip():
+        q = q.filter(models.Paciente.codigo_paciente.ilike(f"%{filtro.strip().upper()}%"))
+    return [{"codigo": p.codigo_paciente, "nombre": f"{p.apellido} {p.nombre}", "ficha_id": f.id} for f, p in q.all()]
 
 # ----------- ENDPOINT PARA CONSULTA FILTRADA ESPIROMETRÍA -----------
 @app.get("/espirometria-filtrada/{sintoma}")
@@ -435,7 +479,7 @@ def obtener_espirometria_por_sintoma(sintoma: str, db: Session = Depends(get_db)
 async def guardar_altura(data: dict, db: Session = Depends(get_db)):
     try:
         codigo = str(data.get("codigo_paciente", "")).strip().upper()
-        paciente = db.query(models.Paciente).filter(func.upper(models.Paciente.codigo_paciente) == codigo).first()
+        paciente = buscar_paciente(db, codigo)
         
         if not paciente:
             raise HTTPException(status_code=404, detail="Paciente no encontrado")
@@ -482,16 +526,18 @@ async def guardar_altura(data: dict, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(nueva_ficha)
         return {"status": "success", "message": "GUARDADO EXITOSAMENTE"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/consultar-altura/{codigo_paciente}")
 async def consultar_altura(codigo_paciente: str, db: Session = Depends(get_db)):
-    paciente = db.query(models.Paciente).filter(func.upper(models.Paciente.codigo_paciente) == codigo_paciente.upper().strip()).first()
+    paciente = buscar_paciente(db, codigo_paciente)
     if not paciente:
         return {"status": "error", "message": "Paciente no encontrado"}
     
-    ficha = db.query(models.FichaAltura).filter(models.FichaAltura.paciente_id == paciente.id).first()
+    ficha = ultimo(db, models.FichaAltura, paciente.id)
     if not ficha:
         return {"status": "error", "message": "Ficha no encontrada"}
         
@@ -524,7 +570,7 @@ def filtrar_altura(campo: str, db: Session = Depends(get_db)):
 async def guardar_electro(data: dict, db: Session = Depends(get_db)):
     # 1. Buscar paciente primero
     codigo = str(data.get("codigo_paciente", "")).strip().upper()
-    paciente = db.query(models.Paciente).filter(func.upper(models.Paciente.codigo_paciente) == codigo).first()
+    paciente = buscar_paciente(db, codigo)
     
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
@@ -566,6 +612,10 @@ async def guardar_electro(data: dict, db: Session = Depends(get_db)):
         db.refresh(nueva_ficha)
         return {"status": "success"}
         
+    except HTTPException:
+        
+        raise
+        
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -595,7 +645,7 @@ async def guardar_aptitud(data: dict, db: Session = Depends(get_db)):
     try:
         # Validación: buscar paciente
         codigo = str(data.get("codigo_paciente", "")).strip().upper()
-        paciente = db.query(models.Paciente).filter(func.upper(models.Paciente.codigo_paciente) == codigo).first()
+        paciente = buscar_paciente(db, codigo)
         if not paciente:
             return {"status": "error", "message": "Paciente no encontrado"}
 
@@ -626,17 +676,19 @@ async def guardar_aptitud(data: dict, db: Session = Depends(get_db)):
         db.add(nueva_ficha)
         db.commit()
         return {"status": "success"}
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"ERROR: {e}")
         return {"status": "error", "message": str(e)}
 
 @app.get("/consultar-aptitud/{codigo_paciente}")
 async def consultar_aptitud(codigo_paciente: str, db: Session = Depends(get_db)):
-    paciente = db.query(models.Paciente).filter(func.upper(models.Paciente.codigo_paciente) == codigo_paciente.upper().strip()).first()
+    paciente = buscar_paciente(db, codigo_paciente)
     if not paciente:
         return {"status": "error", "message": "Paciente no encontrado"}
     
-    ficha = db.query(models.FichaAptitud).filter(models.FichaAptitud.paciente_id == paciente.id).first()
+    ficha = ultimo(db, models.FichaAptitud, paciente.id)
     if not ficha:
         return {"status": "error", "message": "Ficha no encontrada"}
         
@@ -662,14 +714,15 @@ def filtrar_aptitud_por_resultado(resultado: str, db: Session = Depends(get_db))
 @app.post("/guardar-aptitud-fisica")
 def guardar_aptitud_fisica(data: dict, db: Session = Depends(get_db)):
     # Verificación de existencia del paciente para evitar registros huérfanos
-    paciente_existente = db.query(Paciente).filter(Paciente.codigo_paciente == data.get("codigo_paciente")).first()
+    paciente_existente = buscar_paciente(db, data.get("codigo_paciente"))
     
     if not paciente_existente:
         raise HTTPException(status_code=404, detail="El Código del Paciente no existe en la base de datos.")
     
     try:
         nueva_ficha = FichaAptitudFisica(
-            codigo_paciente=data.get("codigo_paciente"),
+            paciente_id=paciente_existente.id,
+            codigo_paciente=paciente_existente.codigo_paciente,
             razon_social=data.get("razon_social"),
             actividad_economica=data.get("actividad_economica"),
             dia=data.get("dia"),
@@ -698,13 +751,18 @@ def guardar_aptitud_fisica(data: dict, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(nueva_ficha)
         return {"status": "success", "id": nueva_ficha.id}
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/buscar-aptitud-fisica/{codigo_paciente}")
 def buscar_aptitud_fisica(codigo_paciente: str, db: Session = Depends(get_db)):
-    ficha = db.query(FichaAptitudFisica).filter(FichaAptitudFisica.codigo_paciente == codigo_paciente).order_by(FichaAptitudFisica.id.desc()).first()
+    p = paciente_o_404(db, codigo_paciente)
+    ficha = db.query(FichaAptitudFisica).filter(
+        (FichaAptitudFisica.paciente_id == p.id) | (FichaAptitudFisica.codigo_paciente == p.codigo_paciente)
+    ).order_by(FichaAptitudFisica.id.desc()).first()
     if not ficha:
         raise HTTPException(status_code=404, detail="No se encontró registro para este código.")
     return ficha
@@ -734,35 +792,17 @@ async def guardar_historial_clinico(data: dict, db: Session = Depends(get_db)):
         if not codigo:
             raise HTTPException(status_code=400, detail="Código paciente es obligatorio")
         
-        paciente = db.query(models.Paciente).filter(func.upper(models.Paciente.codigo_paciente) == codigo).first()
+        paciente = buscar_paciente(db, codigo)
         if not paciente:
             raise HTTPException(status_code=404, detail="Paciente no encontrado")
 
-        campos_permitidos = {
-            "empresa", "nombre", "fecha", "ci", "sexo", "edad", "puesto", "area", "anos", "riesgos",
-            "ruido", "radiacion", "vibracion", "mecanicos", "temp_ext", "otros_fis", "polvo", "humos",
-            "gases", "metales", "otros_quim", "mov_rep", "lev_carga", "otros_erg", "psicologicos", "biologicos", 
-            "altura", "confinados", "antecedentes_det", "enf1", "si1", "no1", "fecha1", "dias1", "enf2", "si2", 
-            "no2", "fecha2", "dias2", "hab_anamnesis", "anamnesis_det", "ta_m", "ta_cm", "fc", "peso", "talla", 
-            "imc", "sat", "pam", "piel_n", "piel_a", "piel_d", "cabello_n", "cabello_a", "cabello_d", "ojos_n", 
-            "ojos_a", "ojos_d", "oidos_n", "oidos_a", "oidos_d", "nariz_n", "nariz_a", "nariz_d", "boca_n", 
-            "boca_d", "faringe_a", "faringe_d", "cuello_n", "cuello_a", "cuello_d", "resp_n", "resp_a", "resp_d", 
-            "cardio_n", "cardio_a", "cardio_d", "dig_n", "dig_a", "dig_d", "gen_n", "gen_a", "gen_d", "loc_n", 
-            "loc_a", "loc_d", "col_n", "col_a", "col_d", "linf_n", "linf_a", "linf_d", "nerv_n", "nerv_a", 
-            "nerv_d", "hem_n", "hem_a", "hem_d", "glu_na", "glu_n", "glu_a", "glu_d", "ure_na", "ure_n", 
-            "ure_a", "ure_d", "aur_na", "aur_n", "aur_a", "cre_na", "cre_n", "cre_a", "cre_d", "per_na", 
-            "per_n", "per_a", "per_d", "vdr_na", "vdr_n", "vdr_a", "vdr_d", "cha_na", "cha_n", "cha_a", 
-            "cha_d", "ego_na", "ego_n", "ego_a", "ego_d", "psa_na", "psa_n", "psa_a", "psa_d", "rxt_na", 
-            "rxt_n", "rxt_a", "rxt_d", "ecg_na", "ecg_n", "ecg_a", "ecg_d", "esp_na", "esp_n", "esp_a", 
-            "esp_d", "aud_na", "aud_n", "aud_a", "aud_d", "teq_na", "teq_n", "teq_a", "teq_d", "diag1", 
-            "diag2", "diag3", "diag4", "diag5", "diag6", "diag7", "aptitud_apto", "aptitud_no_apto", 
-            "aptitud_restriccion", "observaciones", "rec_nutricion", "rec_especialidad", "rec_laboratorio", 
-            "rec_otras", "medidas_higiene", "codigo_paciente"
-        }
+        campos_permitidos = {c.name for c in models.HistorialClinico.__table__.columns} - {"id", "paciente_id"}
+        alias = {"psicologicos": "psico", "biologicos": "bio"}
+        data = {alias.get(k, k): v for k, v in data.items()}
 
         # Filtrar datos y asegurar que el código paciente siempre esté presente
         datos_a_guardar = {k: v for k, v in data.items() if k in campos_permitidos}
-        datos_a_guardar["codigo_paciente"] = codigo
+        datos_a_guardar["codigo_paciente"] = paciente.codigo_paciente
         datos_a_guardar["paciente_id"] = paciente.id
 
         nueva_ficha = models.HistorialClinico(**datos_a_guardar)
@@ -771,6 +811,8 @@ async def guardar_historial_clinico(data: dict, db: Session = Depends(get_db)):
         db.refresh(nueva_ficha)
         
         return {"status": "success", "message": "HISTORIAL CLÍNICO GUARDADO EXITOSAMENTE"}
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -786,7 +828,9 @@ async def filtrar_historial(estado: str, db: Session = Depends(get_db)):
     elif estado == "aptitud_no_apto":
         query = query.filter(models.HistorialClinico.aptitud_no_apto == 'NO APTO')
     elif estado == "aptitud_restriccion":
-        query = query.filter(models.HistorialClinico.aptitud_restriccion == 'APTO CON RESTRICCIÓN')
+        query = query.filter(models.HistorialClinico.aptitud_restriccion.ilike('APTO CON RESTRIC%'))
+    else:
+        return []
 
     resultados = query.all()
     
@@ -798,13 +842,14 @@ async def filtrar_historial(estado: str, db: Session = Depends(get_db)):
 async def guardar_osteomuscular(data: dict, db: Session = Depends(get_db)):
     try:
         codigo = str(data.get("codigo_paciente", "")).strip().upper()
-        paciente = db.query(models.Paciente).filter(func.upper(models.Paciente.codigo_paciente) == codigo).first()
+        paciente = buscar_paciente(db, codigo)
         
         if not paciente:
             raise HTTPException(status_code=404, detail="Paciente no encontrado")
 
         nueva_ficha = models.FichaOsteomuscular(
-            codigo_paciente=codigo,
+            paciente_id=paciente.id,
+            codigo_paciente=paciente.codigo_paciente,
             nombre_completo=data.get("nombre_completo"),
             edad=data.get("edad"),
             sexo=data.get("sexo"),
@@ -970,6 +1015,8 @@ async def guardar_osteomuscular(data: dict, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(nueva_ficha)
         return {"status": "success", "message": "GUARDADO EXITOSAMENTE"}
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -984,23 +1031,22 @@ async def filtrar_osteomuscular(estado: str, db: Session = Depends(get_db)):
 
 @app.get("/api/informe-consolidado/{codigo_paciente}")
 async def obtener_informe_consolidado(codigo_paciente: str, db: Session = Depends(get_db)):
-    p = db.query(models.Paciente).filter(models.Paciente.codigo_paciente == codigo_paciente).first()
-    if not p: raise HTTPException(status_code=404, detail="Paciente no encontrado")
+    p = paciente_o_404(db, codigo_paciente)
 
-    apt = db.query(models.FichaAptitud).filter(models.FichaAptitud.paciente_id == p.id).order_by(desc(models.FichaAptitud.id)).first()
-    fis = db.query(models.FichaAptitudFisica).filter(models.FichaAptitudFisica.codigo_paciente == p.codigo_paciente).first()
-    ost = db.query(models.FichaOsteomuscular).filter(models.FichaOsteomuscular.codigo_paciente == p.codigo_paciente).first()
-    esp = db.query(models.FichaEspirometria).filter(models.FichaEspirometria.paciente_id == p.id).first()
-    oft = db.query(models.FichaOftalmologica).filter(models.FichaOftalmologica.paciente_id == p.id).first()
-    car = db.query(models.FichaCardiologia).filter(models.FichaCardiologia.paciente_id == p.id).first()
-    ele = db.query(models.FichaElectroencefalograma).filter(models.FichaElectroencefalograma.paciente_id == p.id).first()
-    alt = db.query(models.FichaAltura).filter(models.FichaAltura.paciente_id == p.id).first()
-    dec = db.query(models.AntecedentesP2).filter(models.AntecedentesP2.paciente_id == p.id).first()
-    his = db.query(models.HistorialClinico).filter(models.HistorialClinico.paciente_id == p.id).first()
-    psi = db.query(models.FichaPsicologia).filter(models.FichaPsicologia.paciente_id == p.id).first()
+    apt = ultimo(db, models.FichaAptitud, p.id)
+    fis = ultimo(db, models.FichaAptitudFisica, p.id)
+    ost = ultimo(db, models.FichaOsteomuscular, p.id)
+    esp = ultimo(db, models.FichaEspirometria, p.id)
+    oft = ultimo(db, models.FichaOftalmologica, p.id)
+    car = ultimo(db, models.FichaCardiologia, p.id)
+    ele = ultimo(db, models.FichaElectroencefalograma, p.id)
+    alt = ultimo(db, models.FichaAltura, p.id)
+    dec = ultimo(db, models.AntecedentesP2, p.id)
+    his = ultimo(db, models.HistorialClinico, p.id)
+    psi = ultimo(db, models.FichaPsicologia, p.id)
 
     return {
-        "datos_generales": {"codigo": p.codigo_paciente, "nombre": f"{p.nombre} {p.apellido}"},
+        "datos_generales": {"codigo": p.codigo_paciente, "ci": p.ci, "nombre": f"{p.nombre} {p.apellido}"},
         "resultados_medicos": {
             "01_aptitud_ocupacional": apt.resultado if apt and hasattr(apt, 'resultado') else "SIN EXAMEN",
             "02_aptitud_fisica_psicologica": {

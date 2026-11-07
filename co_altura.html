@@ -14,6 +14,7 @@
         table { width: 100%; margin-top: 20px; background: white; color: #0f172a; border-radius: 10px; overflow: hidden; }
         th { background: #334155; color: white; }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 <div class="container">
@@ -42,7 +43,7 @@
     </table>
 </div>
 <script>
-    const API = 'https://historial-clinico-nube.onrender.com';
+    const API = CONFIG.API_BASE;
     async function filtrar() {
         const campo = document.getElementById('campoSelect').value;
         const tbody = document.getElementById('listaPacientes');
@@ -52,7 +53,7 @@
             const resultados = await res.json();
             tbody.innerHTML = resultados.length === 0 
                 ? "<tr><td colspan='3' class='text-center'>NO SE ENCONTRARON REGISTROS</td></tr>"
-                : resultados.map(item => `<tr><td>${item.codigo}</td><td>${item.nombre}</td><td>${item.estado}</td></tr>`).join('');
+                : resultados.map(item => `<tr><td>${esc(item.codigo)}</td><td>${esc(item.nombre)}</td><td>${esc(item.estado)}</td></tr>`).join('');
         } catch (e) {
             alert("Error al conectar con la nube. Verifica la consola.");
             tbody.innerHTML = "";

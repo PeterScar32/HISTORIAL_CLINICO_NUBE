@@ -45,6 +45,7 @@
     .signature-line { width: 250px; border-top: 1px solid #000; margin: 0 auto 5px; }
     .btn-save { width: 100%; background: #2d73f5; color: white; padding: 15px; border: none; cursor: pointer; font-size: 16px; margin-top: 20px; }
 </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
@@ -55,7 +56,7 @@
     </div>
 
     <div class="header-content">
-        <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png" alt="Logo">
+        <img src="logo.png" alt="Logo">
         <div class="title-area">
             <h1>FICHA DE EVALUACIÓN PSICOLÓGICA</h1>
             <p>SALUD OCUPACIONAL - DOCUMENTO LEGAL</p>
@@ -138,7 +139,7 @@
 </div>
 
 <script>
-   const API = "https://historial-clinico-nube.onrender.com";
+   const API = CONFIG.API_BASE;
     document.querySelectorAll("input[type='checkbox']").forEach(chk => {
         chk.addEventListener("change", function(){
             let group = this.parentElement.querySelectorAll("input[type='checkbox']");

@@ -36,11 +36,12 @@
       	    height:22px;
       	}
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 <div class="ficha-container">
     <div class="header-top">
-        <img src="https://ingerutonny-ui.github.io/HISTORIAL_CLINICO_NUBE/logo.png">
+        <img src="logo.png">
 	      <div class="titulo-legal">
             <h2>FICHA EVALUACIÓN OSTEOMUSCULAR</h2>
             <div class="sub-legal">EVALUACIÓN OSTEOMUSCULAR - DOCUMENTO LEGAL</div>
@@ -1345,7 +1346,7 @@
 
 	async function guardarDatos(event) {
 	    if (event) event.preventDefault();
-	    const API_BASE = 'https://historial-clinico-nube.onrender.com';
+	    const API_BASE = CONFIG.API_BASE;
         // Objeto con la estructura unificada
         const datos = {
             codigo_paciente: document.getElementById("codigo_paciente").value.trim(),

@@ -19,6 +19,7 @@
         th { background: #334155; color: white; }
         @media print { .no-print { display: none; } }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
@@ -65,7 +66,7 @@
 </div>
 
 <script>
-    const API = 'https://historial-clinico-nube.onrender.com';
+    const API = CONFIG.API_BASE;
 
 async function filtrar() {
     const campo = document.getElementById('campoSelect').value;
@@ -87,9 +88,9 @@ async function filtrar() {
         resultados.forEach(item => {
             tbody.innerHTML += `
                 <tr>
-                    <td>${item.codigo_paciente}</td>
-                    <td>${item.nombre_paciente}</td>
-                    <td>${item.valor}</td>
+                    <td>${esc(item.codigo_paciente)}</td>
+                    <td>${esc(item.nombre_paciente)}</td>
+                    <td>${esc(item.valor)}</td>
                 </tr>
             `;
         });

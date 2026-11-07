@@ -19,6 +19,7 @@
         th { background: #334155; color: white; }
         @media print { .no-print { display: none; } }
     </style>
+    <script src="config.js"></script>
 </head>
 <body>
 
@@ -63,7 +64,7 @@
 </div>
 
 <script>
-    const API = 'https://historial-clinico-nube.onrender.com';
+    const API = CONFIG.API_BASE;
 
     async function filtrar() {
         const campo = document.getElementById('patologiaSelect').value;
@@ -71,35 +72,19 @@
         tbody.innerHTML = "<tr><td colspan='3' class='text-center'>CARGANDO DATOS...</td></tr>";
 
         try {
-            const res = await fetch(`${API}/pacientes/`);
-            const pacientes = await res.json();
-            
+            const res = await fetch(`${API}/filtrar-oftalmo/${encodeURIComponent(campo)}`);
+            if (!res.ok) throw new Error("Error en servidor");
+            const lista = await res.json();
             tbody.innerHTML = "";
-            let encontrados = 0;
-
-            for (let p of pacientes) {
-                try {
-                    // Consultamos la ficha oftalmo específica por paciente
-                    const resFicha = await fetch(`${API}/ficha-oftalmo/${p.id}`);
-                    if (!resFicha.ok) continue; 
-                    
-                    const ficha = await resFicha.json();
-
-                    // Verificamos si el campo (patología) es "SI"
-                    if (ficha[campo] && ficha[campo].toUpperCase() === "SI") {
-                        encontrados++;
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>${p.codigo_paciente || '---'}</td>
-                                <td>${p.apellido} ${p.nombre}</td>
-                                <td>TIENE: ${campo.toUpperCase()}</td>
-                            </tr>
-                        `;
-                    }
-                } catch (err) {
-                    console.error("Error al traer ficha del paciente", p.id);
-                }
-            }
+            let encontrados = lista.length;
+            lista.forEach(p => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${esc(p.codigo) || '---'}</td>
+                        <td>${esc(p.nombre)}</td>
+                        <td>TIENE: ${esc(campo.toUpperCase())}</td>
+                    </tr>`;
+            });
 
             if (encontrados === 0) tbody.innerHTML = "<tr><td colspan='3' class='text-center'>NO SE ENCONTRARON PACIENTES CON ESTA CONDICIÓN</td></tr>";
             

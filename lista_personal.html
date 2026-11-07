@@ -12,6 +12,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     </style>
+    <script src="config.js"></script>
 </head>
 <body class="p-10">
 
@@ -46,7 +47,7 @@
     </div>
 
     <script>
-        const BASE_API = 'https://historial-clinico-nube.onrender.com';
+        const BASE_API = CONFIG.API_BASE;
         
         async function cargar() {
             const res = await fetch(`${BASE_API}/personal/`);
@@ -61,16 +62,16 @@
                 const color = p.tipo === 'doctor' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
                 t.innerHTML += `
                     <tr class="border-b">
-                        <td class="p-5">${p.ci}</td>
-                        <td class="p-5">${p.nom} ${p.ap}</td>
+                        <td class="p-5">${esc(p.ci)}</td>
+                        <td class="p-5">${esc(p.nom)} ${esc(p.ap)}</td>
                         <td class="p-5">
                             <span class="${color} px-3 py-1 rounded-full text-[10px] uppercase font-black">
-                                <i class="fa-solid fa-user-md mr-1"></i> ${p.tipo}: ${p.especialidad}
+                                <i class="fa-solid fa-user-md mr-1"></i> ${esc(p.tipo)}: ${esc(p.especialidad)}
                             </span>
                         </td>
                         <td class="p-5 flex gap-2 justify-center">
-                            <button onclick="window.location.href='registro_personal.html?id=${p.id}&tipo=${p.tipo}'" class="bg-orange-500 text-white p-3 rounded"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="eliminar('${p.id}', '${p.tipo}')" class="bg-red-500 text-white p-3 rounded"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="window.location.href='registro_personal.html?id=${esc(p.id)}&tipo=${esc(p.tipo)}'" class="bg-orange-500 text-white p-3 rounded"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="eliminar('${esc(p.id)}', '${esc(p.tipo)}')" class="bg-red-500 text-white p-3 rounded"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>`;
             });
