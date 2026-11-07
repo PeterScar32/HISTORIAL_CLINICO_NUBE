@@ -44,7 +44,7 @@ def crear_evaluacion(db: Session, data: dict):
     data = filtrar(models.Evaluacion, data, ("id", "creado_en"))
     for k in ("empresa", "puesto", "tipo", "observaciones"):
         if data.get(k):
-            data[k] = str(data[k]).strip().upper()
+            data[k] = " ".join(str(data[k]).upper().split())
     if not data.get("fecha"):
         data.pop("fecha", None)
     ev = models.Evaluacion(**data)

@@ -136,6 +136,7 @@ with sync_playwright() as pw:
     page.wait_for_url("**/generar_reporte.html")
     page.wait_for_function("document.querySelectorAll('#sel_evaluacion option').length === 2")
     ok(True, "el reporte ofrece las dos evaluaciones")
+    page.wait_for_function("document.getElementById('main_info').innerText.includes('SEMÁFORO')")
     ok("2027-06-10" in page.inner_text("#main_info") and "USA LENTES" not in page.inner_text("body"), "reporte muestra la evaluación nueva")
     page.select_option("#sel_evaluacion", index=1)
     page.wait_for_selector("text=USA LENTES")

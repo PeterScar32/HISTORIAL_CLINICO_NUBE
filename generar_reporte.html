@@ -85,6 +85,14 @@
                 <div>EVALUACIÓN: <span class="val">${esc(data.evaluacion.fecha)} ${esc(data.evaluacion.tipo || '')} ${data.evaluacion.empresa ? '· ' + esc(data.evaluacion.empresa) : ''}</span></div>
             `;
             document.getElementById('sel_evaluacion').value = data.evaluacion.id;
+            try {
+                const sem = await (await fetch(`${API}/semaforo/evaluacion/${data.evaluacion.id}`)).json();
+                const colores = { ROJO: '#ef4444', AMARILLO: '#f59e0b', VERDE: '#22c55e', GRIS: '#64748b' };
+                const textos = { ROJO: 'ALERTA PRIORITARIA', AMARILLO: 'REQUIERE REVISIÓN', VERDE: 'SIN ALERTA', GRIS: 'PENDIENTE' };
+                document.getElementById('main_info').innerHTML += `
+                    <div>SEMÁFORO: <span class="val" style="color:${colores[sem.color]}">● ${textos[sem.color]}</span>
+                    <span style="font-size:11px;color:#64748b"> · ${esc(sem.motivo)} · FICHAS ${sem.completitud.hechas}/${sem.completitud.total}</span></div>`;
+            } catch (e) {}
 
             // Filtrar CI de la lista para no duplicarlo, pero incluirlo al inicio de la rejilla
             const campos_p1_filtrados = fields_p1.filter(f => f !== 'ci');

@@ -76,12 +76,18 @@
             
             contador.innerText = `TOTAL: ${pacientes.length}`;
             window._pacientes = {};
+            let colores = {};
+            try {
+                const sem = await (await fetch(`${API}/semaforo?solo_ultima=true`)).json();
+                sem.items.forEach(i => { colores[i.paciente_id] = i; });
+            } catch (e) {}
+            const tonos = { ROJO: '#ef4444', AMARILLO: '#f59e0b', VERDE: '#22c55e', GRIS: '#94a3b8' };
             pacientes.forEach(p => {
                 window._pacientes[p.id] = p;
                 const id = parseInt(p.id);
                 tabla.innerHTML += `
                     <tr>
-                        <td class="ps-4">${esc(p.apellido)} ${esc(p.nombre)}</td>
+                        <td class="ps-4"><span title="${esc(colores[p.id] ? colores[p.id].motivo : 'Sin evaluación')}" style="display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:8px;background:${tonos[(colores[p.id] || {}).color || 'GRIS']}"></span>${esc(p.apellido)} ${esc(p.nombre)}</td>
                         <td>${esc(p.ci) || 'S/N'}</td>
                         <td><span class="badge bg-light text-dark border">${esc(p.codigo_paciente) || '---'}</span></td>
                         <td class="text-center">

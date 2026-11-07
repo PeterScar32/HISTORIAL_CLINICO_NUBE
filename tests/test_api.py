@@ -166,3 +166,49 @@ def test_ficha_sin_evaluacion_crea_una(client, paciente):
 
 def test_evaluacion_paciente_invalido(client):
     assert client.post("/evaluaciones/", json={"paciente_id": 999}).status_code == 400
+
+
+def _evaluar(client, ci, nombre, empresa, aptitud=None, osteo=None, hiscli=None):
+    p = client.post("/pacientes/", json={"nombre": nombre, "apellido": "PRUEBA", "ci": ci}).json()
+    ev = client.post("/evaluaciones/", json={"paciente_id": p["id"], "empresa": empresa, "fecha": "2026-11-05"}).json()
+    if aptitud:
+        client.post("/guardar-aptitud", json={"codigo_paciente": ci, "resultado": aptitud})
+    if osteo:
+        client.post("/guardar-osteomuscular", json={"codigo_paciente": ci, "concepto_aptitud": osteo})
+    if hiscli:
+        client.post("/guardar-historial-clinico", json={"codigo_paciente": ci, **hiscli})
+    return ev
+
+
+def test_semaforo_colores(client):
+    v = _evaluar(client, "S1", "VERDE", "Cementos  Andinos", aptitud="APTO", osteo="APTO")
+    a = _evaluar(client, "S2", "AMARILLO", "cementos andinos", aptitud="APTO CON RESTRICCIONES")
+    r = _evaluar(client, "S3", "ROJO", "CEMENTOS ANDINOS", aptitud="APTO", osteo="NO_APTO_TEMPORAL")
+    g = _evaluar(client, "S4", "GRIS", "OTRA EMPRESA")
+    h = _evaluar(client, "S5", "HISCLI", "OTRA EMPRESA", hiscli={"aptitud_restriccion": "APTO CON RESTRICCIÓN"})
+    col = lambda ev: client.get(f"/semaforo/evaluacion/{ev['id']}").json()
+    assert col(v)["color"] == "VERDE"
+    assert col(a)["color"] == "AMARILLO"
+    rr = col(r)
+    assert rr["color"] == "ROJO" and "Osteomuscular" in rr["motivo"]
+    assert any(d["regla_id"] for d in rr["detalle"] if d["color"] == "ROJO")
+    gg = col(g)
+    assert gg["color"] == "GRIS" and gg["completitud"]["hechas"] == 0 and len(gg["completitud"]["faltantes"]) == 13
+    assert col(h)["color"] == "AMARILLO"
+    assert col(v)["completitud"]["hechas"] == 2
+
+    panel = client.get("/semaforo", params={"empresa": "cementos andinos"}).json()
+    assert panel["total"] == 3
+    assert panel["resumen"] == {"ROJO": 1, "AMARILLO": 1, "VERDE": 1, "GRIS": 0}
+    assert set(client.get("/empresas").json()) == {"CEMENTOS ANDINOS", "OTRA EMPRESA"}
+
+
+def test_semaforo_valor_sin_regla_y_reglas_configurables(client):
+    ev = _evaluar(client, "S6", "RARO", "X", aptitud="PENDIENTE DE ESTUDIOS")
+    d = client.get(f"/semaforo/evaluacion/{ev['id']}").json()
+    assert d["color"] == "AMARILLO" and d["detalle"][0]["regla_id"] is None
+    r = client.post("/reglas-semaforo", json={"patron": "PENDIENTE", "color": "rojo", "prioridad": 5, "descripcion": "Pendiente"}).json()
+    assert client.get(f"/semaforo/evaluacion/{ev['id']}").json()["color"] == "ROJO"
+    client.post("/reglas-semaforo", json={"id": r["id"], "patron": "PENDIENTE", "color": "ROJO", "activo": False})
+    assert client.get(f"/semaforo/evaluacion/{ev['id']}").json()["color"] == "AMARILLO"
+    assert client.post("/reglas-semaforo", json={"patron": "X", "color": "AZUL"}).status_code == 400

@@ -12,9 +12,12 @@ from .models import FichaAptitudFisica
 from .database import get_db
 from sqlalchemy import desc
 
+from . import semaforo
 Base.metadata.create_all(bind=engine)
 from .migraciones import aplicar_migraciones
 aplicar_migraciones(engine)
+with SessionLocal() as _db:
+    semaforo.sembrar_reglas(_db)
 app = FastAPI()
 
 ORIGENES = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
@@ -53,6 +56,9 @@ def paciente_o_404(db, codigo):
 
 def ultimo(db, modelo, paciente_id):
     return db.query(modelo).filter(modelo.paciente_id == paciente_id).order_by(desc(modelo.id)).first()
+
+
+app.include_router(semaforo.router)
 
 
 @app.api_route("/", methods=["GET", "HEAD"])
