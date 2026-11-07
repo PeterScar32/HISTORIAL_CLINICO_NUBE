@@ -45,7 +45,8 @@
         tr.fila-GRIS td:first-child { border-left: 4px solid var(--gris); }
         .estado { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 12px; }
         .motivo { color: var(--tenue); font-size: 12px; margin-top: 4px; }
-        .comp { font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .comp { font-variant-numeric: tabular-nums; min-width: 190px; max-width: 280px; }
+        td.fecha { white-space: nowrap; }
         .barra { height: 6px; background: #1e293b; border-radius: 3px; margin-top: 6px; width: 90px; overflow: hidden; }
         .barra span { display: block; height: 100%; background: #60a5fa; }
         .btn-ver { background: #1e293b; color: #93c5fd; padding: 8px 12px; font-size: 11px; border: 1px solid #334155; }
@@ -55,6 +56,19 @@
         summary { cursor: pointer; font-weight: 800; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--tenue); }
         .reglas td { font-size: 12px; }
         .encabezado-impresion { display: none; }
+        .grupo { font-size: 10px; font-weight: 800; letter-spacing: .18em; color: var(--tenue); text-transform: uppercase; margin: 18px 0 8px; }
+        .tarjetas.dos { grid-template-columns: repeat(2, 1fr); max-width: 480px; margin-top: 0; }
+        .insignia { display: inline-block; font-size: 10px; font-weight: 900; letter-spacing: .08em; padding: 3px 8px; border-radius: 999px; border: 1px solid; }
+        .insignia.COMPLETA { color: #86efac; border-color: #166534; background: rgba(34,197,94,.08); }
+        .insignia.INCOMPLETA { color: #fcd34d; border-color: #92400e; background: rgba(245,158,11,.08); }
+        .aviso-prof { color: #fbbf24; font-size: 11px; font-weight: 700; margin-top: 4px; }
+        tr.detalle td { background: #0b1222; padding: 0 14px 14px; }
+        .sub-tabla { width: 100%; font-size: 12px; margin-top: 6px; }
+        .sub-tabla th { font-size: 9px; padding: 8px; }
+        .sub-tabla td { padding: 8px; border-bottom: 1px solid #172033; }
+        .pend { color: #fbbf24; font-weight: 800; }
+        .adic { color: var(--tenue); font-style: italic; }
+        .esp td, .esp th { text-align: center; } .esp td:first-child, .esp th:first-child { text-align: left; }
         @media (max-width: 860px) {
             .filtros { grid-template-columns: 1fr 1fr; }
             .tarjetas { grid-template-columns: repeat(2, 1fr); }
@@ -70,7 +84,7 @@
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
-    <script src="config.js?v=4"></script>
+    <script src="config.js?v=5"></script>
 </head>
 <body>
 <div class="contenedor">
@@ -105,18 +119,21 @@
 
     <div class="alerta" id="alerta" role="alert"></div>
 
+    <div class="grupo">Indicador 1 · Alertas según las conclusiones registradas</div>
     <div class="tarjetas" id="tarjetas"></div>
+    <div class="grupo">Indicador 2 · Cumplimiento de las fichas requeridas</div>
+    <div class="tarjetas dos" id="tarjetas-cumplimiento"></div>
 
     <div class="tabla-caja">
         <table>
             <thead>
                 <tr>
-                    <th>Estado</th>
+                    <th>Alertas</th>
                     <th>CI</th>
                     <th>Trabajador</th>
                     <th>Empresa / puesto</th>
                     <th>Fecha</th>
-                    <th>Fichas</th>
+                    <th>Cumplimiento</th>
                     <th class="no-print"></th>
                 </tr>
             </thead>
@@ -124,7 +141,15 @@
         </table>
     </div>
 
-    <p class="nota">El color refleja la conclusión que el profesional registró en cada ficha (aptitud, aptitud física, psicología, osteomuscular e historia clínica), según las reglas de abajo. El sistema no emite diagnósticos ni decide la aptitud. Gris: todavía no hay conclusión registrada.</p>
+    <p class="nota">Son dos indicadores independientes. <strong>Alertas:</strong> el color refleja la conclusión que el profesional registró en las fichas con conclusión (aptitud, aptitud física, psicología, osteomuscular e historia clínica), según las reglas de abajo; «sin alertas registradas» solo describe lo registrado hasta ahora, no significa que el trabajador esté sano ni que la evaluación haya terminado. <strong>Cumplimiento:</strong> cuántas de las fichas definidas como requeridas para esa evaluación ya están registradas; las fichas no solicitadas no cuentan en el denominador. El sistema no emite diagnósticos ni decide la aptitud.</p>
+
+    <details open>
+        <summary>Estado por especialidad</summary>
+        <table class="esp">
+            <thead><tr><th>Ficha con conclusión</th><th>🔴 Prioritaria</th><th>🟡 Revisión</th><th>🟢 Sin alerta</th><th>⏳ Pendiente (requerida)</th></tr></thead>
+            <tbody id="especialidades"></tbody>
+        </table>
+    </details>
 
     <details>
         <summary>Reglas del semáforo vigentes</summary>
@@ -137,9 +162,11 @@
 
 <script>
     const API = CONFIG.API_BASE;
-    const ETIQUETA = { ROJO: "Alerta prioritaria", AMARILLO: "Requiere revisión", VERDE: "Sin alerta", GRIS: "Pendiente" };
-    let datos = { items: [], resumen: {} };
+    const ETIQUETA = { ROJO: "Alerta prioritaria", AMARILLO: "Requiere revisión", VERDE: "Sin alertas registradas", GRIS: "Sin conclusión" };
+    const COLOR_TXT = { ROJO: "🔴", AMARILLO: "🟡", VERDE: "🟢" };
+    let datos = { items: [], resumen: {}, cumplimiento: {}, por_especialidad: [] };
     let filtroColor = "";
+    let filtroCumpl = "";
     let sonidoPendiente = false;
     document.addEventListener("click", () => { if (sonidoPendiente) { sonidoPendiente = false; sonarAlerta(); } });
 
@@ -167,19 +194,55 @@
     function pintarTarjetas() {
         const r = datos.resumen || {};
         const total = datos.total || 0;
-        const tarjeta = (clave, n, texto, color) => `
-            <button class="tarjeta ${filtroColor === clave ? 'activa' : ''}" onclick="filtrarColor('${clave}')">
+        const tarjeta = (accion, activa, n, texto, color) => `
+            <button class="tarjeta ${activa ? 'activa' : ''}" onclick="${accion}">
                 <span class="n">${n}</span>
                 <span class="t">${color ? `<span class="punto ${color}"></span>` : ''}${texto}</span>
             </button>`;
         document.getElementById("tarjetas").innerHTML =
-            tarjeta("", total, "Total evaluados", "") +
-            ["ROJO", "AMARILLO", "VERDE", "GRIS"].map(c => tarjeta(c, r[c] || 0, ETIQUETA[c], c)).join("");
+            tarjeta("filtrarColor('')", !filtroColor && !filtroCumpl, total, "Total evaluados", "") +
+            ["ROJO", "AMARILLO", "VERDE", "GRIS"].map(c => tarjeta(`filtrarColor('${c}')`, filtroColor === c, r[c] || 0, ETIQUETA[c], c)).join("");
+        const cu = datos.cumplimiento || {};
+        document.getElementById("tarjetas-cumplimiento").innerHTML =
+            tarjeta("filtrarCumpl('COMPLETA')", filtroCumpl === "COMPLETA", cu.COMPLETA || 0, "Evaluaciones completas", "") +
+            tarjeta("filtrarCumpl('INCOMPLETA')", filtroCumpl === "INCOMPLETA", cu.INCOMPLETA || 0, "Evaluaciones incompletas", "");
+        document.getElementById("especialidades").innerHTML = (datos.por_especialidad || []).map(e => `
+            <tr><td>${esc(e.nombre)}</td><td>${e.ROJO}</td><td>${e.AMARILLO}</td><td>${e.VERDE}</td><td>${e.PENDIENTE}</td></tr>`).join("");
+    }
+
+    function fechaCorta(v) {
+        if (!v) return "fecha no registrada";
+        const d = new Date(v);
+        return isNaN(d) ? esc(v) : d.toLocaleString("es-BO", { dateStyle: "short", timeStyle: "short" });
+    }
+
+    function detalleFichas(i) {
+        const filas = i.fichas.map(f => {
+            const concl = f.conclusiones.length
+                ? f.conclusiones.map(c => `${COLOR_TXT[c.color] || ""} ${esc(c.valor)}<div class="motivo">Regla: ${esc(c.regla)}</div>`).join("")
+                : (f.estado === "REGISTRADA" ? '<span class="motivo">Ficha sin campo de conclusión</span>' : "—");
+            return `<tr>
+                <td>${esc(f.nombre)}</td>
+                <td>${f.requerida ? "Requerida" : '<span class="adic">Adicional</span>'}</td>
+                <td>${f.estado === "REGISTRADA" ? "Registrada" : '<span class="pend">Pendiente</span>'}</td>
+                <td>${concl}</td>
+                <td>${f.estado === "REGISTRADA" ? fechaCorta(f.fecha) : "—"}</td>
+                <td>${f.estado === "REGISTRADA" ? (f.profesional ? esc(f.profesional) : '<span class="pend">No identificado</span>') : "—"}</td>
+            </tr>`;
+        }).join("");
+        return `<table class="sub-tabla"><thead><tr><th>Ficha</th><th>Tipo</th><th>Estado</th><th>Conclusión registrada</th><th>Fecha de registro</th><th>Profesional</th></tr></thead><tbody>${filas}</tbody></table>`;
+    }
+
+    function alternarDetalle(id) {
+        const fila = document.getElementById("det-" + id);
+        if (fila) fila.style.display = fila.style.display === "none" ? "table-row" : "none";
     }
 
     function pintarFilas() {
         const peso = { ROJO: 0, AMARILLO: 1, GRIS: 2, VERDE: 3 };
-        const items = datos.items.filter(i => !filtroColor || i.color === filtroColor)
+        const items = datos.items
+            .filter(i => !filtroColor || i.color === filtroColor)
+            .filter(i => !filtroCumpl || i.completitud.estado === filtroCumpl)
             .sort((a, b) => (peso[a.color] - peso[b.color]) || a.nombre.localeCompare(b.nombre));
         const tbody = document.getElementById("filas");
         if (!items.length) {
@@ -188,20 +251,30 @@
         }
         tbody.innerHTML = items.map(i => {
             const c = i.completitud;
-            const pct = Math.round(100 * c.hechas / c.total);
+            const ev = parseInt(i.evaluacion_id);
             return `
             <tr class="fila-${esc(i.color)}">
                 <td>
                     <span class="estado"><span class="punto ${esc(i.color)}"></span>${esc(ETIQUETA[i.color] || i.color)}</span>
                     <div class="motivo">${esc(i.motivo)}</div>
+                    ${i.conclusion_sin_profesional.length ? `<div class="aviso-prof">⚠ Conclusión sin profesional identificado</div>` : ""}
                 </td>
                 <td>${esc(i.ci)}</td>
                 <td><strong>${esc(i.nombre)}</strong></td>
                 <td>${esc(i.empresa || "—")}<div class="motivo">${esc(i.puesto || "")}</div></td>
-                <td>${esc(i.fecha)}<div class="motivo">${esc(i.tipo || "")}</div></td>
-                <td class="comp" title="Faltan: ${esc(c.faltantes.join(", "))}">${c.hechas} / ${c.total}<div class="barra"><span style="width:${pct}%"></span></div></td>
-                <td class="no-print"><button class="btn-ver" onclick="verReporte(${parseInt(i.paciente_id)}, ${parseInt(i.evaluacion_id)})">VER REPORTE</button></td>
-            </tr>`;
+                <td class="fecha">${esc(i.fecha)}<div class="motivo">${esc(i.tipo || "")}</div></td>
+                <td class="comp">
+                    <span class="insignia ${esc(c.estado)}">${c.estado === "COMPLETA" ? "COMPLETA" : "INCOMPLETA"}</span>
+                    <div style="margin-top:6px">${c.registradas} de ${c.requeridas} requeridas</div>
+                    <div class="barra"><span style="width:${c.porcentaje}%"></span></div>
+                    ${c.faltantes.length ? `<div class="motivo">Faltan: ${esc(c.faltantes.join(", "))}</div>` : ""}
+                </td>
+                <td class="no-print" style="white-space:nowrap">
+                    <button class="btn-ver" onclick="alternarDetalle(${ev})">DETALLE</button>
+                    <button class="btn-ver" onclick="verReporte(${parseInt(i.paciente_id)}, ${ev})">REPORTE</button>
+                </td>
+            </tr>
+            <tr class="detalle" id="det-${ev}" style="display:none"><td colspan="7">${detalleFichas(i)}</td></tr>`;
         }).join("");
     }
 
@@ -217,8 +290,15 @@
         }
     }
 
+    function filtrarCumpl(c) {
+        filtroCumpl = filtroCumpl === c ? "" : c;
+        pintarTarjetas();
+        pintarFilas();
+    }
+
     function filtrarColor(c) {
-        filtroColor = filtroColor === c ? "" : c;
+        filtroColor = c === "" ? "" : (filtroColor === c ? "" : c);
+        if (c === "") filtroCumpl = "";
         pintarTarjetas();
         pintarFilas();
     }

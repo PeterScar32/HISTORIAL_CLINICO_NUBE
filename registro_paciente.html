@@ -52,7 +52,7 @@
         }
         .btn-consultar:hover { background: #0069d9; }
     </style>
-    <script src="config.js?v=4"></script>
+    <script src="config.js?v=5"></script>
 </head>
 <body>
 
@@ -115,6 +115,12 @@
         <input type="date" id="fecha_eval">
     </div>
 
+    <div class="input-group">
+        <label>Fichas que se realizarán en esta evaluación</label>
+        <div id="lista-fichas" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-top:8px;font-size:12px;font-weight:700;color:#334155;"></div>
+        <div style="font-size:11px;color:#64748b;margin-top:6px;">Las marcadas son obligatorias para dar la evaluación por completa. Las demás pueden registrarse igual como adicionales.</div>
+    </div>
+
     <button class="btn-guardar" onclick="enviarDatos()">GUARDAR REGISTRO FINAL</button>
 </div>
 
@@ -142,6 +148,16 @@
     let pacienteExistente = null;
 
     document.getElementById('fecha_eval').value = new Date().toLocaleDateString('en-CA');
+
+    (async () => {
+        try {
+            const cat = await (await fetch(`${API_URL}/catalogo-fichas`)).json();
+            document.getElementById('lista-fichas').innerHTML = cat.map(c => `
+                <label style="display:flex;gap:6px;align-items:center;text-transform:none;font-size:12px;color:#334155;margin:0;">
+                    <input type="checkbox" class="ficha-req" value="${esc(c.clave)}" ${c.por_defecto ? 'checked' : ''} style="width:auto;margin:0;">${esc(c.nombre)}
+                </label>`).join('');
+        } catch (e) {}
+    })();
 
     async function verificarExistente() {
         const ci = document.getElementById('ci').value.trim().toUpperCase();
@@ -205,7 +221,8 @@
                     empresa: document.getElementById('empresa').value,
                     puesto: document.getElementById('puesto').value,
                     tipo: document.getElementById('tipo_eval').value,
-                    fecha: document.getElementById('fecha_eval').value || null
+                    fecha: document.getElementById('fecha_eval').value || null,
+                    fichas_requeridas: [...document.querySelectorAll('.ficha-req:checked')].map(c => c.value)
                 })
             });
             if (!rEv.ok) { alert("❌ NO SE PUDO CREAR LA EVALUACIÓN."); return; }

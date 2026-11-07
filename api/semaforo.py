@@ -91,31 +91,88 @@ def clasificar(valor, reglas):
     return {"color": "AMARILLO", "regla": "Valor sin regla definida: requiere revisión", "regla_id": None}
 
 
+REQUERIDAS_POR_DEFECTO = ["declaracion", "antecedentes", "habitos", "historial_clinico", "aptitud"]
+
+
 def ultima(db, modelo, evaluacion_id):
     return db.query(modelo).filter(modelo.evaluacion_id == evaluacion_id).order_by(desc(modelo.id)).first()
 
 
+def requeridas_de(ev):
+    if ev.fichas_requeridas:
+        claves = [c.strip() for c in ev.fichas_requeridas.split(",") if c.strip() in FICHAS]
+        if claves:
+            return claves
+    return list(REQUERIDAS_POR_DEFECTO)
+
+
 def semaforo_evaluacion(db: Session, ev, reglas):
-    detalle = []
-    for clave, nombre, modelo, campos in FUENTES:
+    campos_por_ficha = {clave: campos for clave, _, _, campos in FUENTES}
+    requeridas = requeridas_de(ev)
+    fichas, conclusiones = [], []
+    for clave, (nombre, modelo) in FICHAS.items():
         ficha = ultima(db, modelo, ev.id)
-        if not ficha:
+        requerida = clave in requeridas
+        if not ficha and not requerida:
             continue
-        for campo in campos:
-            valor = getattr(ficha, campo, None)
-            res = clasificar(valor, reglas)
-            if res:
-                detalle.append({"ficha": clave, "nombre": nombre, "campo": campo, "valor": valor, **res})
-    color = max((d["color"] for d in detalle), key=lambda c: ORDEN.get(c, 0), default="GRIS")
-    hechas = [k for k, (_, m) in FICHAS.items() if ultima(db, m, ev.id)]
-    faltantes = [FICHAS[k][0] for k in FICHAS if k not in hechas]
-    motivo = next((d for d in detalle if d["color"] == color), None)
+        item = {
+            "clave": clave, "nombre": nombre, "requerida": requerida,
+            "estado": "REGISTRADA" if ficha else "PENDIENTE",
+            "fecha": ficha.creado_en if ficha else None,
+            "profesional": ficha.registrado_por if ficha else None,
+            "conclusiones": [], "color": None,
+        }
+        if ficha:
+            for campo in campos_por_ficha.get(clave, []):
+                res = clasificar(getattr(ficha, campo, None), reglas)
+                if res:
+                    c = {"campo": campo, "valor": getattr(ficha, campo), **res}
+                    item["conclusiones"].append(c)
+                    conclusiones.append({"ficha": clave, "nombre": nombre, "profesional": item["profesional"], "fecha": item["fecha"], **c})
+            if item["conclusiones"]:
+                item["color"] = max((c["color"] for c in item["conclusiones"]), key=lambda x: ORDEN.get(x, 0))
+        fichas.append(item)
+
+    color = max((c["color"] for c in conclusiones), key=lambda x: ORDEN.get(x, 0), default="GRIS")
+    motivo = next((c for c in conclusiones if c["color"] == color), None)
+    req_registradas = [f for f in fichas if f["requerida"] and f["estado"] == "REGISTRADA"]
+    faltantes = [f["nombre"] for f in fichas if f["requerida"] and f["estado"] == "PENDIENTE"]
+    total = len(requeridas)
+    sin_profesional = [c["nombre"] for c in conclusiones if not c["profesional"]]
     return {
         "color": color,
         "motivo": f'{motivo["nombre"]}: {motivo["valor"]}' if motivo else "Sin conclusión registrada",
-        "detalle": detalle,
-        "completitud": {"hechas": len(hechas), "total": len(FICHAS), "faltantes": faltantes},
+        "conclusiones": conclusiones,
+        "fichas": fichas,
+        "conclusion_sin_profesional": sorted(set(sin_profesional)),
+        "completitud": {
+            "estado": "COMPLETA" if not faltantes else "INCOMPLETA",
+            "registradas": len(req_registradas),
+            "requeridas": total,
+            "porcentaje": round(100 * len(req_registradas) / total) if total else 0,
+            "faltantes": faltantes,
+            "adicionales": [f["nombre"] for f in fichas if not f["requerida"]],
+            "requeridas_por_defecto": not bool(ev.fichas_requeridas),
+        },
     }
+
+
+@router.get("/catalogo-fichas")
+def catalogo_fichas():
+    return [{"clave": k, "nombre": n, "por_defecto": k in REQUERIDAS_POR_DEFECTO} for k, (n, _) in FICHAS.items()]
+
+
+@router.put("/evaluaciones/{evaluacion_id}/fichas-requeridas")
+def definir_requeridas(evaluacion_id: int, data: dict, db: Session = Depends(get_db)):
+    ev = db.query(models.Evaluacion).filter(models.Evaluacion.id == evaluacion_id).first()
+    if not ev:
+        raise HTTPException(status_code=404, detail="Evaluación no encontrada")
+    claves = [c for c in data.get("fichas_requeridas", []) if c in FICHAS]
+    if not claves:
+        raise HTTPException(status_code=400, detail="Debe indicar al menos una ficha")
+    ev.fichas_requeridas = ",".join(claves)
+    db.commit()
+    return {"evaluacion_id": ev.id, "fichas_requeridas": claves}
 
 
 @router.get("/semaforo/evaluacion/{evaluacion_id}")
@@ -150,7 +207,22 @@ def panel_semaforo(empresa: Optional[str] = None, desde: Optional[str] = None, h
             **semaforo_evaluacion(db, ev, reglas),
         })
     resumen = {c: sum(1 for i in items if i["color"] == c) for c in ("ROJO", "AMARILLO", "VERDE", "GRIS")}
-    return {"total": len(items), "resumen": resumen, "items": items}
+    cumplimiento = {e: sum(1 for i in items if i["completitud"]["estado"] == e) for e in ("COMPLETA", "INCOMPLETA")}
+    por_especialidad = []
+    for clave, nombre, _, _ in FUENTES:
+        conteo = {c: 0 for c in ("ROJO", "AMARILLO", "VERDE")}
+        pendientes = 0
+        for i in items:
+            f = next((x for x in i["fichas"] if x["clave"] == clave), None)
+            if not f:
+                continue
+            if f["estado"] == "PENDIENTE":
+                pendientes += 1
+            elif f["color"] in conteo:
+                conteo[f["color"]] += 1
+        por_especialidad.append({"clave": clave, "nombre": nombre, **conteo, "PENDIENTE": pendientes})
+    return {"total": len(items), "resumen": resumen, "cumplimiento": cumplimiento,
+            "por_especialidad": por_especialidad, "items": items}
 
 
 def normalizar_empresa(nombre: str) -> str:

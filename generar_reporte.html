@@ -20,7 +20,7 @@
         .btn-print { background: #22c55e; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
         @media print { .no-print { display: none; } }
     </style>
-    <script src="config.js?v=4"></script>
+    <script src="config.js?v=5"></script>
 </head>
 <body>
     <a href="lista_historial.html" class="mb-14 text-[13px] font-bold text-slate-500 uppercase tracking-[0.3em] hover:text-blue-400 transition-colors">
@@ -88,10 +88,12 @@
             try {
                 const sem = await (await fetch(`${API}/semaforo/evaluacion/${data.evaluacion.id}`)).json();
                 const colores = { ROJO: '#ef4444', AMARILLO: '#f59e0b', VERDE: '#22c55e', GRIS: '#64748b' };
-                const textos = { ROJO: 'ALERTA PRIORITARIA', AMARILLO: 'REQUIERE REVISIÓN', VERDE: 'SIN ALERTA', GRIS: 'PENDIENTE' };
+                const textos = { ROJO: 'ALERTA PRIORITARIA', AMARILLO: 'REQUIERE REVISIÓN', VERDE: 'SIN ALERTAS REGISTRADAS', GRIS: 'SIN CONCLUSIÓN' };
                 document.getElementById('main_info').innerHTML += `
                     <div>SEMÁFORO: <span class="val" style="color:${colores[sem.color]}">● ${textos[sem.color]}</span>
-                    <span style="font-size:11px;color:#64748b"> · ${esc(sem.motivo)} · FICHAS ${sem.completitud.hechas}/${sem.completitud.total}</span></div>`;
+                    <span style="font-size:11px;color:#64748b"> · ${esc(sem.motivo)} </span></div>
+                    <div>CUMPLIMIENTO: <span class="val">${sem.completitud.estado === 'COMPLETA' ? 'EVALUACIÓN COMPLETA' : 'EVALUACIÓN INCOMPLETA'} (${sem.completitud.registradas}/${sem.completitud.requeridas} fichas requeridas)</span>
+                    ${sem.completitud.faltantes.length ? `<span style="font-size:11px;color:#64748b"> · FALTAN: ${esc(sem.completitud.faltantes.join(', '))}</span>` : ''}</div>`;
             } catch (e) {}
 
             // Filtrar CI de la lista para no duplicarlo, pero incluirlo al inicio de la rejilla
