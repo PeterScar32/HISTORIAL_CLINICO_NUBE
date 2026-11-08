@@ -22,7 +22,7 @@ engine = create_engine(
     pool_timeout=30,
     pool_recycle=1800,
     pool_pre_ping=True,
-    connect_args={'connect_timeout': 10}
+    connect_args={"connect_timeout": 10, "options": "-c timezone=UTC"}
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

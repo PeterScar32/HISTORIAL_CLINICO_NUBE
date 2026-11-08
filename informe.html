@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OHS | Informe PDF</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>">
+    <style>
+        :root { --tinta: #0f172a; --tenue: #475569; --borde: #cbd5e1; --verde: #16a34a; --azul: #1d4ed8; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #e2e8f0; color: var(--tinta); font-family: "Segoe UI", system-ui, sans-serif; }
+        .marco { display: grid; grid-template-columns: 320px 1fr; gap: 20px; padding: 64px 16px 40px; max-width: 1280px; margin: 0 auto; align-items: start; }
+        .panel { background: #0f172a; color: #e2e8f0; border-radius: 16px; padding: 18px; position: sticky; top: 60px; max-height: calc(100vh - 80px); overflow: auto; }
+        .panel h2 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #94a3b8; margin: 0 0 10px; }
+        .panel label { display: flex; gap: 8px; align-items: center; font-size: 13px; padding: 4px 0; cursor: pointer; }
+        .panel select { width: 100%; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 8px; padding: 8px; font-size: 13px; margin-bottom: 14px; }
+        .grupo { border-top: 1px solid #1e293b; padding-top: 10px; margin-top: 10px; }
+        .acciones { display: flex; gap: 6px; margin: 6px 0; }
+        .acciones button { flex: 1; background: #1e293b; color: #cbd5e1; border: 1px solid #334155; border-radius: 8px; padding: 6px; font-size: 11px; cursor: pointer; }
+        .btn-pdf { width: 100%; margin-top: 14px; background: var(--verde); color: #fff; border: none; border-radius: 10px; padding: 12px; font-weight: 800; letter-spacing: .06em; cursor: pointer; }
+        .nota-panel { color: #94a3b8; font-size: 11px; line-height: 1.4; margin-top: 10px; }
+        .vacia { color: #64748b; }
+        .hoja { background: #fff; border-radius: 6px; box-shadow: 0 10px 30px rgba(15,23,42,.15); padding: 18mm 16mm; min-height: 297mm; width: 100%; max-width: 210mm; }
+        .cabecera { display: flex; align-items: center; gap: 16px; border-bottom: 3px solid var(--verde); padding-bottom: 10px; margin-bottom: 14px; }
+        .cabecera img { width: 64px; height: 64px; border-radius: 50%; }
+        .cabecera h1 { font-size: 17px; margin: 0; letter-spacing: .02em; }
+        .cabecera p { margin: 2px 0 0; font-size: 11px; color: var(--tenue); }
+        .datos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 14px; font-size: 11.5px; margin-bottom: 12px; }
+        .datos div span { display: block; color: var(--tenue); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+        .datos div strong { font-size: 12px; }
+        section { margin-top: 12px; break-inside: avoid-page; }
+        section h3 { font-size: 12px; background: #f1f5f9; border-left: 4px solid var(--azul); padding: 5px 8px; margin: 0 0 6px; letter-spacing: .04em; text-transform: uppercase; }
+        .meta { font-size: 10px; color: var(--tenue); margin: -2px 0 6px; }
+        table.campos { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+        table.campos td { border-bottom: 1px solid #e2e8f0; padding: 3px 6px; vertical-align: top; }
+        table.campos td:first-child { color: var(--tenue); width: 42%; }
+        table.campos.dos td:nth-child(3) { color: var(--tenue); width: 21%; }
+        table.campos.dos td:first-child { width: 21%; }
+        table.cambios { width: 100%; border-collapse: collapse; font-size: 9.5px; }
+        table.cambios th, table.cambios td { border: 1px solid #e2e8f0; padding: 3px 5px; text-align: left; vertical-align: top; }
+        table.cambios th { background: #f8fafc; }
+        .semaforo { display: flex; gap: 18px; font-size: 11.5px; align-items: center; }
+        .punto { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+        .ROJO { background: #ef4444; } .AMARILLO { background: #f59e0b; } .VERDE { background: #22c55e; } .GRIS { background: #94a3b8; }
+        .pie { margin-top: 26px; display: flex; justify-content: space-between; gap: 30px; font-size: 10px; color: var(--tenue); }
+        .firma { flex: 1; text-align: center; padding-top: 36px; }
+        .firma div { border-top: 1px solid var(--tinta); padding-top: 4px; color: var(--tinta); font-weight: 700; }
+        .leyenda { font-size: 9px; color: var(--tenue); margin-top: 14px; border-top: 1px dashed var(--borde); padding-top: 6px; }
+        .cert { text-align: center; }
+        .cert .titulo { font-size: 20px; font-weight: 900; letter-spacing: .08em; margin: 18px 0 4px; }
+        .cert .conclusion { display: inline-block; margin: 22px 0; padding: 14px 28px; border: 3px solid var(--tinta); border-radius: 10px; font-size: 22px; font-weight: 900; letter-spacing: .06em; }
+        .cert table { margin: 0 auto; font-size: 13px; text-align: left; border-collapse: collapse; }
+        .cert table td { padding: 5px 12px; border-bottom: 1px solid #e2e8f0; }
+        .cert table td:first-child { color: var(--tenue); }
+        .aviso-borrador { background: #fef3c7; color: #92400e; font-size: 10px; padding: 5px 8px; border-radius: 6px; margin-bottom: 10px; }
+        @media (max-width: 900px) { .marco { grid-template-columns: 1fr; } .panel { position: static; max-height: none; } }
+        @page { size: A4; margin: 0; }
+        @media print {
+            body { background: #fff; }
+            .marco { display: block; padding: 0; max-width: none; }
+            .panel, #barra-nav, #aviso-servidor { display: none !important; }
+            .hoja { box-shadow: none; border-radius: 0; max-width: none; min-height: auto; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+    <script src="config.js?v=8"></script>
+</head>
+<body>
+<div class="marco">
+    <aside class="panel" aria-label="Contenido del informe">
+        <h2>Evaluación</h2>
+        <select id="sel-evaluacion" aria-label="Evaluación"></select>
+
+        <h2>Tipo de documento</h2>
+        <label><input type="radio" name="plantilla" value="informe" checked> Informe clínico (uso interno)</label>
+        <label><input type="radio" name="plantilla" value="certificado"> Certificado de aptitud (para la empresa)</label>
+
+        <div id="opciones-informe">
+            <div class="grupo">
+                <h2>Secciones</h2>
+                <div class="acciones"><button type="button" onclick="marcar(true)">Marcar todo</button><button type="button" onclick="marcar(false)">Ninguno</button></div>
+                <div id="casillas"></div>
+            </div>
+            <div class="grupo">
+                <label><input type="checkbox" id="omitir-vacios" checked> Omitir campos vacíos</label>
+                <label><input type="checkbox" id="incluir-historial"> Historial de modificaciones</label>
+            </div>
+        </div>
+        <p class="nota-panel" id="nota-certificado" hidden>El certificado muestra solo los datos del trabajador, la evaluación y la conclusión de aptitud registrada por el profesional. No incluye antecedentes, diagnósticos ni resultados clínicos. Formato provisional hasta recibir el modelo institucional de OHS.</p>
+        <button class="btn-pdf" type="button" onclick="window.print()">🖨️ IMPRIMIR / GUARDAR PDF</button>
+        <p class="nota-panel">En el diálogo de impresión elige «Guardar como PDF» para obtener el archivo.</p>
+    </aside>
+
+    <main class="hoja" id="hoja"><p class="vacia">Cargando expediente…</p></main>
+</div>
+
+<script>
+    const API = CONFIG.API_BASE;
+    const SECCIONES = [
+        ["datos", "Datos del trabajador y de la evaluación", null],
+        ["semaforo", "Semáforo: alertas y cumplimiento", null],
+        ["declaracion", "Declaración jurada · P1 Filiación", "declaracion"],
+        ["antecedentes", "Declaración jurada · P2 Antecedentes", "antecedentes"],
+        ["habitos", "Declaración jurada · P3 Hábitos y riesgos", "habitos"],
+        ["historial_clinico", "Historia clínica", "historial_clinico"],
+        ["aptitud", "Aptitud ocupacional", "aptitud"],
+        ["aptitud_fisica", "Aptitud física", "aptitud_fisica"],
+        ["psicologia", "Psicología", "psicologia"],
+        ["oftalmologia", "Oftalmología", "oftalmologia"],
+        ["cardiologia", "Cardiología", "cardiologia"],
+        ["espirometria", "Espirometría", "espirometria"],
+        ["altura", "Trabajo en altura", "altura"],
+        ["electroencefalograma", "Electroencefalograma", "electroencefalograma"],
+        ["osteomuscular", "Osteomuscular", "osteomuscular"],
+    ];
+    const INTERNOS = new Set(["id", "paciente_id", "evaluacion_id", "codigo_paciente", "creado_en", "registrado_por"]);
+    let exp = null, sem = null, cambios = [], evaluaciones = [];
+
+    function etiqueta(campo) {
+        const t = campo.replace(/_/g, " ").replace(/\s+/g, " ").trim();
+        return t.charAt(0).toUpperCase() + t.slice(1);
+    }
+
+    function fecha(v, conHora) {
+        if (!v) return "—";
+        const d = fechaServidor(v);
+        if (isNaN(d)) return esc(v);
+        return conHora ? d.toLocaleString("es-BO", { dateStyle: "short", timeStyle: "short" }) : d.toLocaleDateString("es-BO");
+    }
+
+    function valorVacio(v) {
+        return v === null || v === undefined || String(v).trim() === "";
+    }
+
+    function tablaCampos(obj) {
+        const omitir = document.getElementById("omitir-vacios").checked;
+        const filas = Object.entries(obj).filter(([k, v]) => !INTERNOS.has(k) && !(omitir && valorVacio(v)));
+        if (!filas.length) return '<p class="meta">Sin datos registrados.</p>';
+        const mitad = Math.ceil(filas.length / 2);
+        const izq = filas.slice(0, mitad), der = filas.slice(mitad);
+        return `<table class="campos dos">${izq.map((f, i) => `<tr><td>${esc(etiqueta(f[0]))}</td><td>${esc(f[1] ?? "—")}</td>${der[i] ? `<td>${esc(etiqueta(der[i][0]))}</td><td>${esc(der[i][1] ?? "—")}</td>` : "<td></td><td></td>"}</tr>`).join("")}</table>`;
+    }
+
+    function seleccionadas() {
+        return new Set([...document.querySelectorAll(".casilla:checked")].map(c => c.value));
+    }
+
+    function cabecera(titulo) {
+        const ev = exp.evaluacion || {};
+        return `<div class="cabecera"><img src="img/logo_ohs_circulo.png" alt="OHS"><div><h1>${esc(titulo)}</h1><p>Occupational Health Services · Historial Clínico Nube</p></div></div>`;
+    }
+
+    function datosTrabajador() {
+        const p = exp.paciente, ev = exp.evaluacion || {};
+        return `<div class="datos">
+            <div><span>Trabajador</span><strong>${esc(p.apellido)} ${esc(p.nombre)}</strong></div>
+            <div><span>CI</span><strong>${esc(p.ci)}</strong></div>
+            <div><span>Empresa</span><strong>${esc(ev.empresa || "—")}</strong></div>
+            <div><span>Puesto</span><strong>${esc(ev.puesto || "—")}</strong></div>
+            <div><span>Tipo de evaluación</span><strong>${esc(ev.tipo || "—")}</strong></div>
+            <div><span>Fecha de evaluación</span><strong>${fecha(ev.fecha)}</strong></div>
+        </div>`;
+    }
+
+    function seccionSemaforo() {
+        if (!sem) return "";
+        const t = { ROJO: "Alerta prioritaria", AMARILLO: "Requiere revisión", VERDE: "Sin alertas registradas", GRIS: "Sin conclusión registrada" };
+        const c = sem.completitud;
+        return `<section><h3>Semáforo: alertas y cumplimiento</h3>
+            <div class="semaforo"><div><span class="punto ${esc(sem.color)}"></span><strong>${esc(t[sem.color])}</strong> · ${esc(sem.motivo)}</div>
+            <div><strong>${c.estado === "COMPLETA" ? "Evaluación completa" : "Evaluación incompleta"}</strong> (${c.registradas}/${c.requeridas} fichas requeridas)</div></div>
+            ${c.faltantes.length ? `<p class="meta">Fichas requeridas pendientes: ${esc(c.faltantes.join(", "))}</p>` : ""}
+            <p class="meta">El semáforo refleja las conclusiones registradas por los profesionales; el sistema no emite diagnósticos.</p></section>`;
+    }
+
+    function seccionFicha(clave, titulo) {
+        const f = exp.fichas[clave];
+        if (!f) return `<section><h3>${esc(titulo)}</h3><p class="meta">Ficha no registrada en esta evaluación.</p></section>`;
+        return `<section><h3>${esc(titulo)}</h3>
+            <p class="meta">Registrada: ${fecha(f.creado_en, true)}${f.registrado_por ? " · " + esc(f.registrado_por) : ""}</p>
+            ${tablaCampos(f)}</section>`;
+    }
+
+    function seccionCambios() {
+        const mods = cambios.filter(c => c.accion !== "CREACION");
+        return `<section><h3>Historial de modificaciones</h3>${mods.length ? `<table class="cambios"><thead><tr><th>Fecha</th><th>Usuario</th><th>Ficha</th><th>Campo</th><th>Valor anterior</th><th>Valor nuevo</th></tr></thead><tbody>
+            ${mods.map(c => `<tr><td>${fecha(c.fecha, true)}</td><td>${esc(c.usuario)}</td><td>${esc(c.ficha ? etiqueta(c.ficha) : c.tabla)}</td><td>${esc(c.campo ? etiqueta(c.campo) : c.accion)}</td><td>${esc(c.valor_anterior ?? "—")}</td><td>${esc(c.valor_nuevo ?? "—")}</td></tr>`).join("")}
+            </tbody></table>` : '<p class="meta">No hay modificaciones posteriores al registro inicial.</p>'}</section>`;
+    }
+
+    function pie() {
+        const s = sesion();
+        return `<div class="pie"><div class="firma"><div>Firma y sello del profesional responsable</div></div><div class="firma"><div>Fecha</div></div></div>
+            <p class="leyenda">Documento generado el ${new Date().toLocaleString("es-BO")} por ${esc(s ? s.usuario.nombre : "—")} desde Historial Clínico Nube. La firma debe ser manuscrita o certificada; el sistema no aplica firma digital con validez legal. Información confidencial.</p>`;
+    }
+
+    function conclusionAptitud() {
+        const a = exp.fichas.aptitud, h = exp.fichas.historial_clinico;
+        if (a && !valorVacio(a.resultado)) return { valor: a.resultado, fuente: a };
+        if (h) for (const k of ["aptitud_no_apto", "aptitud_restriccion", "aptitud_apto"]) if (!valorVacio(h[k])) return { valor: h[k], fuente: h };
+        return null;
+    }
+
+    function certificado() {
+        const p = exp.paciente, ev = exp.evaluacion || {};
+        const c = conclusionAptitud();
+        return `${cabecera("Certificado de aptitud ocupacional")}
+            <div class="aviso-borrador">Formato provisional: se ajustará al modelo institucional de OHS.</div>
+            <div class="cert">
+                <div class="titulo">CERTIFICADO DE APTITUD</div>
+                <p style="font-size:12px;color:#475569">Se certifica que el trabajador fue evaluado por el servicio de salud ocupacional de OHS con el siguiente resultado:</p>
+                <table>
+                    <tr><td>Nombre</td><td><strong>${esc(p.apellido)} ${esc(p.nombre)}</strong></td></tr>
+                    <tr><td>CI</td><td><strong>${esc(p.ci)}</strong></td></tr>
+                    <tr><td>Empresa</td><td>${esc(ev.empresa || "—")}</td></tr>
+                    <tr><td>Puesto</td><td>${esc(ev.puesto || "—")}</td></tr>
+                    <tr><td>Tipo de evaluación</td><td>${esc(ev.tipo || "—")}</td></tr>
+                    <tr><td>Fecha de evaluación</td><td>${fecha(ev.fecha)}</td></tr>
+                </table>
+                <div class="conclusion">${c ? esc(c.valor) : "CONCLUSIÓN PENDIENTE"}</div>
+                <p style="font-size:11px;color:#475569">${c ? `Conclusión registrada el ${fecha(c.fuente.creado_en, true)}${c.fuente.registrado_por ? " por " + esc(c.fuente.registrado_por) : ""}.` : "El profesional aún no registró la conclusión de aptitud."}</p>
+                <p style="font-size:11px;color:#475569">Este certificado no contiene información clínica. Los resultados detallados son confidenciales y quedan bajo custodia de OHS.</p>
+            </div>${pie()}`;
+    }
+
+    function informe() {
+        const sel = seleccionadas();
+        let html = cabecera("Informe de evaluación médico-ocupacional");
+        if (sel.has("datos")) html += datosTrabajador();
+        if (sel.has("semaforo")) html += seccionSemaforo();
+        SECCIONES.filter(s => s[2] && sel.has(s[0])).forEach(s => { html += seccionFicha(s[2], s[1]); });
+        if (document.getElementById("incluir-historial").checked) html += seccionCambios();
+        return html + pie();
+    }
+
+    function pintar() {
+        if (!exp) return;
+        const tipo = document.querySelector('input[name="plantilla"]:checked').value;
+        document.getElementById("opciones-informe").hidden = tipo !== "informe";
+        document.getElementById("nota-certificado").hidden = tipo !== "certificado";
+        document.getElementById("hoja").innerHTML = tipo === "certificado" ? certificado() : informe();
+        document.title = `${tipo === "certificado" ? "Certificado" : "Informe"} ${exp.paciente.ci} ${exp.evaluacion ? exp.evaluacion.fecha : ""}`;
+    }
+
+    function marcar(v) {
+        document.querySelectorAll(".casilla").forEach(c => { if (!c.disabled) c.checked = v; });
+        pintar();
+    }
+
+    function pintarCasillas() {
+        document.getElementById("casillas").innerHTML = SECCIONES.map(([clave, titulo, ficha]) => {
+            const hay = !ficha || !!exp.fichas[ficha];
+            return `<label class="${hay ? "" : "vacia"}"><input type="checkbox" class="casilla" value="${clave}" ${hay ? "checked" : ""}> ${esc(titulo)}${hay ? "" : " (sin registrar)"}</label>`;
+        }).join("");
+        document.querySelectorAll(".casilla").forEach(c => c.addEventListener("change", pintar));
+    }
+
+    async function cargar() {
+        let pid = null;
+        try { pid = localStorage.getItem("p_id_reporte") || localStorage.getItem("p_id"); } catch (e) {}
+        if (!pid) { document.getElementById("hoja").innerHTML = '<p class="vacia">Elige un paciente desde la lista o el semáforo.</p>'; return; }
+        const ev = evaluacionActual();
+        try {
+            evaluaciones = await (await fetch(`${API}/pacientes/${pid}/evaluaciones`)).json();
+            exp = await (await fetch(`${API}/api/expediente/${pid}` + (ev ? `?evaluacion_id=${ev}` : ""))).json();
+            if (exp.evaluacion) {
+                sem = await (await fetch(`${API}/semaforo/evaluacion/${exp.evaluacion.id}`)).json();
+                cambios = await (await fetch(`${API}/auditoria?evaluacion_id=${exp.evaluacion.id}`)).json();
+            }
+        } catch (e) {
+            document.getElementById("hoja").innerHTML = '<p class="vacia">No se pudo cargar el expediente.</p>';
+            return;
+        }
+        const sel = document.getElementById("sel-evaluacion");
+        sel.innerHTML = evaluaciones.map(e => `<option value="${e.id}">${esc(e.fecha)} · ${esc(e.tipo || "")}${e.empresa ? " · " + esc(e.empresa) : ""}</option>`).join("");
+        if (exp.evaluacion) sel.value = exp.evaluacion.id;
+        sel.onchange = () => { try { localStorage.setItem("p_eval", sel.value); } catch (e) {} location.reload(); };
+        pintarCasillas();
+        pintar();
+    }
+
+    document.querySelectorAll('input[name="plantilla"]').forEach(r => r.addEventListener("change", pintar));
+    document.getElementById("omitir-vacios").addEventListener("change", pintar);
+    document.getElementById("incluir-historial").addEventListener("change", pintar);
+    window.addEventListener("load", cargar);
+</script>
+</body>
+</html>

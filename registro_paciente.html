@@ -52,7 +52,7 @@
         }
         .btn-consultar:hover { background: #0069d9; }
     </style>
-    <script src="config.js?v=6"></script>
+    <script src="config.js?v=8"></script>
 </head>
 <body>
 
@@ -189,7 +189,7 @@
             if (!nueva) {
                 fijarPacienteActual(paciente);
                 localStorage.setItem('p_id_reporte', paciente.id);
-                window.location.href = 'generar_reporte.html';
+                window.location.href = 'informe.html';
                 return;
             }
         }

@@ -5,14 +5,15 @@ from api.models import FichaElectroencefalograma, Paciente
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from .database import SessionLocal, engine, Base
-from .crud import PROFESIONAL_ACTUAL, crear_evaluacion, evaluacion_vigente, create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
+from .crud import PROFESIONAL_ACTUAL, EVALUACION_ACTUAL, crear_evaluacion, evaluacion_vigente, create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
 import os
 from . import models
 from .models import FichaAptitudFisica 
 from .database import get_db
 from sqlalchemy import desc
 
-from . import semaforo, auth
+from . import semaforo, auth, auditoria
+from .auditoria import guardar_en_evaluacion, registrar_eliminacion
 Base.metadata.create_all(bind=engine)
 from .migraciones import aplicar_migraciones
 aplicar_migraciones(engine)
@@ -53,6 +54,7 @@ def ultimo(db, modelo, paciente_id):
 
 app.include_router(semaforo.router)
 app.include_router(auth.router)
+app.include_router(auditoria.router)
 
 
 @app.middleware("http")
@@ -60,10 +62,13 @@ async def seguridad(request, call_next):
     async def siguiente(req):
         datos = getattr(req.state, "usuario", None)
         token = PROFESIONAL_ACTUAL.set(f"usr:{datos['uid']}" if datos else None)
+        ev = req.headers.get("x-evaluacion", "")
+        token_ev = EVALUACION_ACTUAL.set(int(ev) if ev.isdigit() else None)
         try:
             return await call_next(req)
         finally:
             PROFESIONAL_ACTUAL.reset(token)
+            EVALUACION_ACTUAL.reset(token_ev)
     return await auth.control_acceso(request, siguiente)
 
 
@@ -174,6 +179,9 @@ def buscar_paciente_ci(ci: str, db: Session = Depends(get_db)):
 
 @app.delete("/api/pacientes/{paciente_id}")
 def eliminar_paciente(paciente_id: int, db: Session = Depends(get_db)):
+    p = db.query(models.Paciente).filter(models.Paciente.id == paciente_id).first()
+    if p:
+        registrar_eliminacion(db, "pacientes", p.id, p.id, f"{p.apellido} {p.nombre} · CI {p.ci}")
     if not delete_paciente(db, paciente_id):
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
     return {"message": "Eliminado"}
@@ -188,7 +196,7 @@ def guardar_ficha_oftalmo(data: dict, db: Session = Depends(get_db)):
     if not data.get("paciente_id") and data.get("codigo_paciente"):
         data["paciente_id"] = paciente_o_404(db, data["codigo_paciente"]).id
     if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
-    nueva = models.FichaOftalmologica(**filtrar(models.FichaOftalmologica, data)); db.add(nueva); db.commit(); db.refresh(nueva); return nueva
+    nueva = guardar_en_evaluacion(db, models.FichaOftalmologica(**filtrar(models.FichaOftalmologica, data))); db.commit(); db.refresh(nueva); return nueva
 
 @app.get("/ficha-oftalmo/{paciente_id}")
 def obtener_ficha_oftalmo(paciente_id: int, db: Session = Depends(get_db)):
@@ -242,7 +250,7 @@ async def guardar_psicologia(data: dict, db: Session = Depends(get_db)):
             percepcion=data.get("percepcion"),
             resultado_psicologico=data.get("resultado_psicologico")
         )
-        db.add(nueva_ficha)
+        nueva_ficha = guardar_en_evaluacion(db, nueva_ficha)
         db.commit()
         db.refresh(nueva_ficha)
         return {"message": "GUARDADO EXITOSAMENTE"}
@@ -365,7 +373,7 @@ async def guardar_cardiologia(data: dict, db: Session = Depends(get_db)):
         resultado_electro=data.get("resultado_electro"),
         diagnostico_recomendaciones=data.get("diagnostico_recomendaciones")
     )
-    db.add(nueva_ficha)
+    nueva_ficha = guardar_en_evaluacion(db, nueva_ficha)
     db.commit()
     return {"status": "success"}
 
@@ -478,7 +486,7 @@ async def guardar_espirometria(data: dict, db: Session = Depends(get_db)):
             tos_flemas_detalle=data.get("tos_flemas_detalle"),
             equipo_proteccion=data.get("equipo_proteccion")
         )
-        db.add(nueva_ficha)
+        nueva_ficha = guardar_en_evaluacion(db, nueva_ficha)
         db.commit()
         db.refresh(nueva_ficha)
         return {"status": "success", "message": "GUARDADO EXITOSAMENTE"}
@@ -591,7 +599,7 @@ async def guardar_altura(data: dict, db: Session = Depends(get_db)):
             extremidades=data.get("extremidades"),
             obs_examen=data.get("obs_examen")
         )
-        db.add(nueva_ficha)
+        nueva_ficha = guardar_en_evaluacion(db, nueva_ficha)
         db.commit()
         db.refresh(nueva_ficha)
         return {"status": "success", "message": "GUARDADO EXITOSAMENTE"}
@@ -676,7 +684,7 @@ async def guardar_electro(data: dict, db: Session = Depends(get_db)):
         )
         
         # 3. Guardar
-        db.add(nueva_ficha)
+        nueva_ficha = guardar_en_evaluacion(db, nueva_ficha)
         db.commit()
         db.refresh(nueva_ficha)
         return {"status": "success"}
@@ -742,7 +750,7 @@ async def guardar_aptitud(data: dict, db: Session = Depends(get_db)):
             recomendacion_3=data.get("recomendacion_3"),
             recomendacion_4=data.get("recomendacion_4")
         )
-        db.add(nueva_ficha)
+        nueva_ficha = guardar_en_evaluacion(db, nueva_ficha)
         db.commit()
         return {"status": "success"}
     except HTTPException:
@@ -816,7 +824,7 @@ def guardar_aptitud_fisica(data: dict, db: Session = Depends(get_db)):
             rec5=data.get("rec5"),
             rec6=data.get("rec6")
         )
-        db.add(nueva_ficha)
+        nueva_ficha = guardar_en_evaluacion(db, nueva_ficha)
         db.commit()
         db.refresh(nueva_ficha)
         return {"status": "success", "id": nueva_ficha.id}
@@ -875,7 +883,7 @@ async def guardar_historial_clinico(data: dict, db: Session = Depends(get_db)):
         datos_a_guardar["paciente_id"] = paciente.id
 
         nueva_ficha = models.HistorialClinico(**datos_a_guardar)
-        db.add(nueva_ficha)
+        nueva_ficha = guardar_en_evaluacion(db, nueva_ficha)
         db.commit()
         db.refresh(nueva_ficha)
         
@@ -1080,7 +1088,7 @@ async def guardar_osteomuscular(data: dict, db: Session = Depends(get_db)):
             fecha_firma=data.get("fecha_firma")
         )
         
-        db.add(nueva_ficha)
+        nueva_ficha = guardar_en_evaluacion(db, nueva_ficha)
         db.commit()
         db.refresh(nueva_ficha)
         return {"status": "success", "message": "GUARDADO EXITOSAMENTE"}

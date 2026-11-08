@@ -24,7 +24,7 @@
         .top-bar a { color: white; text-decoration: none; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; }
         .contador-badge { background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin-left: 10px; vertical-align: middle; }
     </style>
-    <script src="config.js?v=6"></script>
+    <script src="config.js?v=8"></script>
 </head>
 <body>
 
@@ -106,7 +106,7 @@
     function verReporte(id) {
         if (window._pacientes && window._pacientes[id]) fijarPacienteActual(window._pacientes[id]);
         localStorage.setItem('p_id_reporte', id);
-        window.location.href = "generar_reporte.html";
+        window.location.href = "informe.html";
     }
 
     function editarPaciente(id) {

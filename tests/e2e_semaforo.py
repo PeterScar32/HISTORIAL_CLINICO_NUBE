@@ -82,8 +82,8 @@ with sync_playwright() as pw:
     page.locator(".tarjeta").nth(1).click()
     ok(page.locator("#filas > tr:not(.detalle)").count() == 1, "filtrar por color rojo")
     page.click("tr.fila-ROJO >> text=REPORTE")
-    page.wait_for_url("**/generar_reporte.html")
-    page.wait_for_selector("text=ALERTA PRIORITARIA")
+    page.wait_for_url("**/informe.html")
+    page.wait_for_selector("text=Alerta prioritaria")
     ok(True, "el reporte muestra el semáforo de la evaluación")
 
     page.goto(f"{WEB}/lista_historial.html")

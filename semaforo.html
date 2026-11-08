@@ -84,7 +84,7 @@
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
-    <script src="config.js?v=6"></script>
+    <script src="config.js?v=8"></script>
 </head>
 <body>
 <div class="contenedor">
@@ -215,7 +215,7 @@
 
     function fechaCorta(v) {
         if (!v) return "fecha no registrada";
-        const d = new Date(v);
+        const d = fechaServidor(v);
         return isNaN(d) ? esc(v) : d.toLocaleString("es-BO", { dateStyle: "short", timeStyle: "short" });
     }
 
@@ -316,7 +316,7 @@
             localStorage.setItem("p_id_reporte", pacienteId);
             localStorage.setItem("p_eval", evaluacionId);
         } catch (e) {}
-        location.href = "generar_reporte.html";
+        location.href = "informe.html";
     }
 
     async function buscar(conSonido) {
