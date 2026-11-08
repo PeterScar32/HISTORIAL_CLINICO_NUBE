@@ -183,6 +183,7 @@ def upsert_electro(db: Session, data: dict):
 
 
 PROFESIONAL_ACTUAL = contextvars.ContextVar("profesional_actual", default=None)
+EVALUACION_ACTUAL = contextvars.ContextVar("evaluacion_actual", default=None)
 
 
 def nombre_profesional(connection, clave):

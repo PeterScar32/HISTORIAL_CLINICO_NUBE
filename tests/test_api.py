@@ -309,3 +309,90 @@ def test_restablecer_clave(client):
     r = client.post(f"/auth/usuarios/{knoya['id']}/restablecer", json={}).json()
     assert len(r["temporal"]) >= 6
     assert client.post("/auth/login", json={"usuario": "knoya", "clave": r["temporal"]}).status_code == 200
+
+
+def test_ficha_se_edita_en_la_misma_evaluacion_y_queda_auditada(client, paciente):
+    pid, ci = paciente["id"], paciente["ci"]
+    ev1 = client.post("/evaluaciones/", json={"paciente_id": pid, "fecha": "2026-11-05"}).json()
+    client.post("/guardar-cardiologia", json={"codigo_paciente": ci, "hta": "NO", "diagnostico_recomendaciones": "NORMAL"})
+    client.post("/guardar-cardiologia", json={"codigo_paciente": ci, "hta": "SI", "diagnostico_recomendaciones": "NORMAL"})
+    f = client.get(f"/fichas/cardiologia/{pid}").json()
+    assert f["evaluacion_id"] == ev1["id"] and f["ficha"]["hta"] == "SI"
+    a = client.get("/auditoria", params={"paciente_id": pid, "ficha": "cardiologia"}).json()
+    cambios = [x for x in a if x["accion"] == "MODIFICACION"]
+    assert len(cambios) == 1
+    c = cambios[0]
+    assert (c["campo"], c["valor_anterior"], c["valor_nuevo"]) == ("hta", "NO", "SI")
+    assert c["usuario"].startswith("MARÍA ELENA CONDARCO") and c["fecha"] and c["evaluacion_id"] == ev1["id"]
+    assert sum(1 for x in a if x["accion"] == "CREACION") == 1
+
+    ev2 = client.post("/evaluaciones/", json={"paciente_id": pid, "fecha": "2027-06-10"}).json()
+    client.post("/guardar-cardiologia", json={"codigo_paciente": ci, "hta": "NO"})
+    assert client.get(f"/fichas/cardiologia/{pid}", params={"evaluacion_id": ev1["id"]}).json()["ficha"]["hta"] == "SI"
+    assert client.get(f"/fichas/cardiologia/{pid}", params={"evaluacion_id": ev2["id"]}).json()["ficha"]["hta"] == "NO"
+    assert len([x for x in client.get("/auditoria", params={"evaluacion_id": ev1["id"]}).json() if x["accion"] == "MODIFICACION"]) == 1
+
+
+def test_auditoria_de_todas_las_fichas(client, paciente):
+    pid, ci = paciente["id"], paciente["ci"]
+    envios = [
+        ("/guardar-psicologia", {"codigo_paciente": ci, "resultado_psicologico": "APTO"}, {"resultado_psicologico": "NO APTO"}, "psicologia"),
+        ("/guardar-espirometria", {"codigo_paciente": ci, "hemoptisis": "NO"}, {"hemoptisis": "SI"}, "espirometria"),
+        ("/guardar-altura", {"codigo_paciente": ci, "vertigo": "NO"}, {"vertigo": "SI"}, "altura"),
+        ("/guardar-electro", {"codigo_paciente": ci, "cefaleas": "NO"}, {"cefaleas": "SI"}, "electroencefalograma"),
+        ("/guardar-aptitud", {"codigo_paciente": ci, "resultado": "APTO"}, {"resultado": "NO APTO"}, "aptitud"),
+        ("/guardar-aptitud-fisica", {"codigo_paciente": ci, "resultado_fisico": "APTO"}, {"resultado_fisico": "NO APTO"}, "aptitud_fisica"),
+        ("/guardar-osteomuscular", {"codigo_paciente": ci, "concepto_aptitud": "APTO"}, {"concepto_aptitud": "NO APTO"}, "osteomuscular"),
+        ("/guardar-historial-clinico", {"codigo_paciente": ci, "tipo_control": "PERIODICO"}, {"tipo_control": "RETIRO"}, "historial_clinico"),
+        ("/ficha-oftalmo/", {"paciente_id": pid, "lentes": "NO"}, {"lentes": "SI"}, "oftalmologia"),
+    ]
+    for ruta, primero, cambio, clave in envios:
+        assert client.post(ruta, json=primero).status_code == 200, ruta
+        assert client.post(ruta, json={**primero, **cambio}).status_code == 200, ruta
+        ficha = client.get(f"/fichas/{clave}/{pid}").json()["ficha"]
+        campo, valor = next(iter(cambio.items()))
+        assert ficha[campo] == valor, clave
+        mods = [x for x in client.get("/auditoria", params={"paciente_id": pid, "ficha": clave}).json() if x["accion"] == "MODIFICACION"]
+        assert any(m["campo"] == campo and m["valor_nuevo"] == valor for m in mods), clave
+    evs = client.get(f"/pacientes/{pid}/evaluaciones").json()
+    assert len(evs) == 1
+
+
+def test_expediente_y_respaldo(client, paciente):
+    pid, ci = paciente["id"], paciente["ci"]
+    client.post("/filiacion/", json={"paciente_id": pid, "edad": "30"})
+    client.post("/guardar-aptitud", json={"codigo_paciente": ci, "resultado": "APTO"})
+    e = client.get(f"/api/expediente/{pid}").json()
+    assert e["paciente"]["ci"] == ci and e["fichas"]["aptitud"]["resultado"] == "APTO" and e["fichas"]["cardiologia"] is None
+    r = client.get("/admin/respaldo").json()
+    assert r["sistema"] == "HC NUBE OHS" and len(r["tablas"]["pacientes"]) == 1
+    assert "auditoria" in r["tablas"] and "usuarios" in r["tablas"]
+
+
+def test_permisos_nuevas_rutas(anonimo):
+    from tests.conftest import iniciar
+    enf = {"Authorization": f"Bearer {iniciar(anonimo, 'enfermeria', 'temporal-5', 'clave-enfermera')}"}
+    p = anonimo.post("/pacientes/", json={"nombre": "A", "apellido": "B", "ci": "Z1"}, headers=enf).json()
+    assert anonimo.get(f"/fichas/cardiologia/{p['id']}", headers=enf).status_code == 200
+    assert anonimo.get("/auditoria", headers=enf).status_code == 403
+    assert anonimo.get("/admin/respaldo", headers=enf).status_code == 403
+    assert anonimo.get(f"/api/expediente/{p['id']}", headers=enf).status_code == 403
+    assert anonimo.get("/admin/respaldo").status_code == 401
+
+
+def test_borrado_queda_auditado(client, paciente):
+    client.delete(f"/api/pacientes/{paciente['id']}")
+    a = client.get("/auditoria", params={"paciente_id": paciente["id"]}).json()
+    assert any(x["accion"] == "ELIMINACION" and "9999001" in x["valor_anterior"] for x in a)
+
+
+def test_ficha_en_evaluacion_elegida_por_cabecera(client, paciente):
+    pid, ci = paciente["id"], paciente["ci"]
+    ev1 = client.post("/evaluaciones/", json={"paciente_id": pid}).json()
+    ev2 = client.post("/evaluaciones/", json={"paciente_id": pid}).json()
+    client.post("/guardar-aptitud", json={"codigo_paciente": ci, "resultado": "APTO"}, headers={"X-Evaluacion": str(ev1["id"])})
+    assert client.get(f"/fichas/aptitud/{pid}", params={"evaluacion_id": ev1["id"]}).json()["ficha"]["resultado"] == "APTO"
+    assert client.get(f"/fichas/aptitud/{pid}", params={"evaluacion_id": ev2["id"]}).json()["ficha"] is None
+    otro = client.post("/pacientes/", json={"nombre": "X", "apellido": "Y", "ci": "OTRO"}).json()
+    client.post("/guardar-aptitud", json={"codigo_paciente": "OTRO", "resultado": "APTO"}, headers={"X-Evaluacion": str(ev1["id"])})
+    assert client.get(f"/fichas/aptitud/{otro['id']}").json()["evaluacion_id"] not in (ev1["id"], ev2["id"])

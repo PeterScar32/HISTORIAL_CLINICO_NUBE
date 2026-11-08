@@ -20,7 +20,7 @@
         .btn-print { background: #22c55e; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
         @media print { .no-print { display: none; } }
     </style>
-    <script src="config.js?v=6"></script>
+    <script src="config.js?v=8"></script>
 </head>
 <body>
     <a href="lista_historial.html" class="mb-14 text-[13px] font-bold text-slate-500 uppercase tracking-[0.3em] hover:text-blue-400 transition-colors">
@@ -30,6 +30,7 @@
     <label style="font-weight:700;font-size:13px;margin-right:8px;">EVALUACIÓN:</label>
     <select id="sel_evaluacion" style="padding:8px;border-radius:5px;margin-right:12px;" onchange="cambiarEvaluacion(this.value)"></select>
     <button class="btn-print" onclick="window.print()">IMPRIMIR REPORTE COMPLETO</button>
+    <button class="btn-print" style="margin-left:8px" onclick="location.href='informe.html'">INFORME PDF CON SELECCIÓN</button>
 </div>
 
 <div class="sheet">

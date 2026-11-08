@@ -51,7 +51,7 @@ RUTAS_PUBLICAS = {"/", "/auth/perfiles", "/auth/login"}
 PREFIJOS_SOLO_MEDICO = (
     "/semaforo", "/reglas-semaforo", "/empresas", "/api/informe-consolidado", "/verificar_estado_paciente",
     "/filtrar", "/buscar-cardiologia", "/ficha-psicologia-filtrada", "/espirometria-filtrada", "/listar-espirometria",
-    "/consultar-electro-por-campo", "/historial-filtrado", "/api/reporte-unificado", "/auth/usuarios",
+    "/consultar-electro-por-campo", "/historial-filtrado", "/api/reporte-unificado", "/auth/usuarios", "/auditoria", "/admin", "/api/expediente",
 )
 
 

@@ -6,6 +6,13 @@ function esc(valor) {
     return String(valor ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+function fechaServidor(v) {
+    if (!v) return null;
+    const t = String(v);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return new Date(t + "T12:00:00");
+    return new Date(/[zZ]|[+-]\d{2}:?\d{2}$/.test(t) ? t : t + "Z");
+}
+
 function pacienteActual() {
     try {
         return {
@@ -84,6 +91,110 @@ function barraNavegacion() {
     document.body.appendChild(barra);
 }
 
+const FICHA_DE_PAGINA = {
+    "doc_cardiologia.html": "cardiologia", "doc_psicologia.html": "psicologia", "doc_espirometria.html": "espirometria",
+    "doc_altura.html": "altura", "doc_electroencefalograma.html": "electroencefalograma", "doc_aptitud.html": "aptitud",
+    "doc_aptifi.html": "aptitud_fisica", "doc_hiscli.html": "historial_clinico", "doc_osteomuscular.html": "osteomuscular",
+    "doc_oftalmologia.html": "oftalmologia"
+};
+
+const MAPEO_FICHAS = {"cardiologia":{"ninez":{"tipo":"getval","id":"ninez_si"},"tabaquismo":{"tipo":"getval","id":"tabaquismo_si"},"hta":{"tipo":"getval","id":"hta_si"},"adolescente":{"tipo":"getval","id":"adolescente_si"},"hiperlipidemias":{"tipo":"getval","id":"hiperlipidemias_si"},"diabetes":{"tipo":"getval","id":"diabetes_si"},"adultez":{"tipo":"getval","id":"adultez_si"},"asma_bronquial":{"tipo":"getval","id":"asma_si"},"bronquitis":{"tipo":"getval","id":"bronquitis_si"},"padre":{"tipo":"getval","id":"padre_si"},"madre":{"tipo":"getval","id":"madre_si"},"hermanos":{"tipo":"getval","id":"hermanos_si"},"abuelos":{"tipo":"getval","id":"abuelos_si"},"hijos":{"tipo":"getval","id":"hijos_si"}},"psicologia":{"habitos_alcohol":{"tipo":"check_name","name":"alcohol","valor":"SI","si":"SI"},"habitos_tabaco":{"tipo":"check_name","name":"tabaco","valor":"SI","si":"SI"},"postura":{"tipo":"radio","name":"postura"},"discurso":{"tipo":"radio","name":"discurso"},"resultado_psicologico":{"tipo":"radio","name":"psicologicamente"},"frecuencia":{"tipo":"getval","id":"alcohol_freq"},"cantidad":{"tipo":"getval","id":"tabaco_cant"}},"espirometria":{"criterios_exclusion_1":{"tipo":"radio","name":"criterios_exclusion_1"},"criterios_exclusion_2":{"tipo":"radio","name":"criterios_exclusion_2"},"criterios_exclusion_3":{"tipo":"radio","name":"criterios_exclusion_3"},"criterios_exclusion_4":{"tipo":"radio","name":"criterios_exclusion_4"},"criterios_exclusion_5":{"tipo":"radio","name":"criterios_exclusion_5"},"hemoptisis":{"tipo":"radio","name":"hemoptisis"},"infarto_reciente":{"tipo":"radio","name":"infarto_reciente"},"neumotorax":{"tipo":"radio","name":"neumotorax"},"fiebre_nauseas":{"tipo":"radio","name":"fiebre_nauseas"},"traqueostomia":{"tipo":"radio","name":"traqueostomia"},"embarazo_avanzado":{"tipo":"radio","name":"embarazo_avanzado"},"sonda_pleural":{"tipo":"radio","name":"sonda_pleural"},"embarazo_complicado":{"tipo":"radio","name":"embarazo_complicado"},"aneurisma_cerebral":{"tipo":"radio","name":"aneurisma_cerebral"},"inestabilidad_cv":{"tipo":"radio","name":"inestabilidad_cv"},"embolia_pulmonar":{"tipo":"radio","name":"embolia_pulmonar"},"infeccion_respiratoria":{"tipo":"radio","name":"infeccion_respiratoria"},"infeccion_oido":{"tipo":"radio","name":"infeccion_oido"},"uso_aerosoles":{"tipo":"radio","name":"uso_aerosoles"},"fumo_ultimas_horas":{"tipo":"radio","name":"fumo_ultimas_horas"},"ejercicio_fisico":{"tipo":"radio","name":"ejercicio_fisico"},"comio_ultima_hora":{"tipo":"radio","name":"comio_ultima_hora"},"tos_flemas":{"tipo":"radio","name":"tos_flemas"},"equipo_proteccion":{"tipo":"radio","name":"equipo_proteccion"}},"electroencefalograma":{"cefaleas":{"tipo":"check","id":"cefaleas","si":"SI","no":"NO"},"perdida_conocimiento":{"tipo":"check","id":"perdida_conocimiento","si":"SI","no":"NO"},"derrame_cerebral":{"tipo":"check","id":"derrame_cerebral","si":"SI","no":"NO"},"epilepsia":{"tipo":"check","id":"epilepsia","si":"SI","no":"NO"},"paralisis":{"tipo":"check","id":"paralisis","si":"SI","no":"NO"},"quirurgicos":{"tipo":"check","id":"quirurgicos","si":"SI","no":"NO"},"convulsiones":{"tipo":"check","id":"convulsiones","si":"SI","no":"NO"},"accidente":{"tipo":"check","id":"accidente","si":"SI","no":"NO"},"otros_antecedentes":{"tipo":"check","id":"otros_antecedentes","si":"SI","no":"NO"},"marcha":{"tipo":"check","id":"marcha","si":"NORMAL","no":"ANORMAL"},"reflejos":{"tipo":"check","id":"reflejos","si":"NORMAL","no":"ANORMAL"},"coordinacion_dedo_nariz":{"tipo":"check","id":"coordinacion_dedo_nariz","si":"NORMAL","no":"ANORMAL"},"coordinacion_talon_rodilla":{"tipo":"check","id":"coordinacion_talon_rodilla","si":"NORMAL","no":"ANORMAL"},"romberg":{"tipo":"check","id":"romberg","si":"NORMAL","no":"ANORMAL"},"vertigo_nistagmo":{"tipo":"check","id":"vertigo_nistagmo","si":"NORMAL","no":"ANORMAL"},"vertigo_adaptacion":{"tipo":"check","id":"vertigo_adaptacion","si":"NORMAL","no":"ANORMAL"},"descripcion_estudio":{"tipo":"check","id":"descripcion_estudio","si":"NORMAL","no":"ANORMAL"},"resultado_estudio":{"tipo":"check","id":"resultado_estudio","si":"NORMAL","no":"ANORMAL"},"reposo":{"tipo":"check","id":"reposo_n","si":"NORMAL","no":"ANORMAL"},"fotoestimulacion":{"tipo":"check","id":"foto_n","si":"NORMAL","no":"ANORMAL"},"hipernea":{"tipo":"check","id":"hipernea_n","si":"NORMAL","no":"ANORMAL"}},"aptitud":{"tipo_examen":{"tipo":"radio","name":"tipo"},"resultado":{"tipo":"radio","name":"resultado"},"apellido_paterno":{"tipo":"id","id":"ape_pat"},"apellido_materno":{"tipo":"id","id":"ape_mat"},"nro_doc_identidad":{"tipo":"id","id":"doc_id"},"puesto_trabajo":{"tipo":"id","id":"puesto"},"recomendacion_1":{"tipo":"id","id":"rec1"},"recomendacion_2":{"tipo":"id","id":"rec2"},"recomendacion_3":{"tipo":"id","id":"rec3"},"recomendacion_4":{"tipo":"id","id":"rec4"}},"aptitud_fisica":{"tipo_examen":{"tipo":"radio","name":"tipo_examen"},"resultado_fisico":{"tipo":"radio","name":"res_fisico"},"resultado_psicologico":{"tipo":"radio","name":"res_psico"}},"osteomuscular":{"sexo":{"tipo":"radio","name":"sexo"},"grave_hombro_der":{"tipo":"radio","name":"grave_hombro_der"},"grave_hombro_izq":{"tipo":"radio","name":"grave_hombro_izq"},"gravedad_codo_der":{"tipo":"radio","name":"gravedad_codo_der"},"gravedad_codo_izq":{"tipo":"radio","name":"gravedad_codo_izq"},"grado_codo_der":{"tipo":"radio","name":"grado_codo_der"},"grado_codo_izq":{"tipo":"radio","name":"grado_codo_izq"},"gravedad_cuadro":{"tipo":"radio","name":"gravedad_cuadro"},"concepto_aptitud":{"tipo":"radio","name":"concepto_aptitud"},"ant1_fecha":{"tipo":"id","id":"fecha_ant_1"},"ant1_diagnostico":{"tipo":"id","id":"diagnostico_1"},"ant1_tratamiento":{"tipo":"id","id":"tratamiento_1"},"ant1_comentario":{"tipo":"id","id":"comentario_1"},"ant2_fecha":{"tipo":"id","id":"fecha_ant_2"},"ant2_diagnostico":{"tipo":"id","id":"diagnostico_2"},"ant2_tratamiento":{"tipo":"id","id":"tratamiento_2"},"ant2_comentario":{"tipo":"id","id":"comentario_2"},"ant3_fecha":{"tipo":"id","id":"fecha_ant_3"},"ant3_diagnostico":{"tipo":"id","id":"diagnostico_3"},"ant3_tratamiento":{"tipo":"id","id":"tratamiento_3"},"ant3_comentario":{"tipo":"id","id":"comentario_3"}}};
+
+const ORDEN_ALTURA = ["agorafobia", "diabetes", "acrofobia", "insuficiencia_cardiaca", "arritmia", "hipertension", "consumo_drogas", "meniere",
+    "enfermedad_psiquiatrica", "ametropia", "trauma_encefalo", "esteropsis", "convulsiones", "asma_bronquial", "vertigo", "hipoacusia", "sincope",
+    "accidentes_fracturas", "mioclonias", "deformidades", "cefaleas", "soplo_cardiaco", "sustentacion_pie", "arritmias_cardiacas", "camina_libre",
+    "nistagmus", "adiacocinesia", "test_romberg", "audicion", "test_barany", "marcha_ojos_cerrados", "test_babinsky", "extremidades"];
+
+const CAMPOS_INTERNOS = new Set(["id", "paciente_id", "evaluacion_id", "codigo_paciente", "creado_en", "registrado_por"]);
+
+function asignarCampo(clave, valor) {
+    const v = String(valor);
+    const el = document.getElementById(clave);
+    const avisar = e => { e.dispatchEvent(new Event("input", { bubbles: true })); e.dispatchEvent(new Event("change", { bubbles: true })); };
+    if (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)) {
+        if (el.type === "checkbox") el.checked = ["SI", "TRUE", "1", "ON"].includes(v.toUpperCase()) || (el.value !== "on" && el.value === v);
+        else if (el.type === "radio") el.checked = el.value === v;
+        else el.value = v;
+        avisar(el);
+        return true;
+    }
+    const si = document.getElementById(clave + "_si");
+    const no = document.getElementById(clave + "_no");
+    if (si || no) {
+        if (si) si.checked = v.toUpperCase() === "SI";
+        if (no) no.checked = v.toUpperCase() === "NO";
+        return true;
+    }
+    const grupo = document.querySelectorAll(`input[name="${CSS.escape(clave)}"]`);
+    if (grupo.length) {
+        grupo.forEach(g => { g.checked = g.value === v; });
+        const marcado = [...grupo].find(g => g.checked);
+        if (marcado) avisar(marcado);
+        return true;
+    }
+    return false;
+}
+
+function rellenarFicha(clave, ficha) {
+    if (clave === "altura") {
+        const cajas = document.querySelectorAll('input[type="checkbox"]');
+        ORDEN_ALTURA.forEach((k, i) => {
+            if (cajas[2 * i]) cajas[2 * i].checked = ficha[k] === "SI";
+            if (cajas[2 * i + 1]) cajas[2 * i + 1].checked = ficha[k] === "NO";
+        });
+        const obs = document.querySelectorAll(".observaciones");
+        if (obs[0]) obs[0].value = ficha.obs_antecedentes || "";
+        if (obs[1]) obs[1].value = ficha.obs_examen || "";
+        return;
+    }
+    const mapa = MAPEO_FICHAS[clave] || {};
+    Object.entries(ficha).forEach(([k, v]) => {
+        if (CAMPOS_INTERNOS.has(k) || v === null || v === undefined || v === "") return;
+        const m = mapa[k];
+        const txt = String(v);
+        if (!m) { asignarCampo(k, v); return; }
+        if (m.tipo === "check") {
+            const el = document.getElementById(m.id);
+            if (el) { el.checked = txt === m.si; el.dispatchEvent(new Event("change", { bubbles: true })); }
+        } else if (m.tipo === "check_name") {
+            document.querySelectorAll(`input[name="${CSS.escape(m.name)}"]`).forEach(e => { e.checked = txt === m.si ? e.value === m.valor : e.value !== m.valor && e.value === txt; });
+        } else if (m.tipo === "radio") {
+            document.querySelectorAll(`input[name="${CSS.escape(m.name)}"]`).forEach(e => { e.checked = e.value === txt; });
+        } else {
+            asignarCampo(m.id, v);
+        }
+    });
+}
+
+async function precargarFicha(pacienteId, etiqueta) {
+    const clave = FICHA_DE_PAGINA[paginaActual()];
+    if (!clave) return;
+    let aviso = document.getElementById("aviso-ficha");
+    if (!aviso) {
+        aviso = document.createElement("div");
+        aviso.id = "aviso-ficha";
+        aviso.style.cssText = "margin:8px 0;padding:8px 12px;border-radius:8px;font:600 12px system-ui,sans-serif;";
+        (etiqueta.closest("div") || etiqueta.parentElement).insertAdjacentElement("afterend", aviso);
+    }
+    try {
+        const ev = evaluacionActual();
+        const r = await fetch(`${CONFIG.API_BASE}/fichas/${clave}/${pacienteId}` + (ev ? `?evaluacion_id=${ev}` : ""));
+        if (!r.ok) return;
+        const d = await r.json();
+        const evTxt = d.evaluacion ? `evaluación del ${d.evaluacion.fecha || "—"}${d.evaluacion.tipo ? " (" + d.evaluacion.tipo + ")" : ""}` : "nueva evaluación";
+        if (d.evaluacion_id) { try { localStorage.setItem("p_eval", d.evaluacion_id); } catch (e) {} }
+        if (d.ficha) {
+            rellenarFicha(clave, d.ficha);
+            const cuando = d.ficha.creado_en ? fechaServidor(d.ficha.creado_en).toLocaleString("es-BO", { dateStyle: "short", timeStyle: "short" }) : "fecha no registrada";
+            aviso.style.background = "#fef3c7"; aviso.style.color = "#92400e";
+            aviso.textContent = `📝 Esta ficha ya está registrada en la ${evTxt} (${cuando}${d.ficha.registrado_por ? " · " + d.ficha.registrado_por : ""}). Se cargaron sus datos: al guardar se actualizarán y cada cambio quedará en el historial.`;
+        } else {
+            aviso.style.background = "#dcfce7"; aviso.style.color = "#166534";
+            aviso.textContent = `🆕 Ficha nueva para la ${evTxt}.`;
+        }
+    } catch (e) {}
+}
+
 function vincularCampoPaciente() {
     const campo = document.querySelector("#codigo_paciente, form#oftalmoForm #paciente_id");
     if (!campo || !location.pathname.includes("doc_")) return;
@@ -104,6 +215,7 @@ function vincularCampoPaciente() {
             fijarPacienteActual(p);
             etiqueta.style.color = "#047857";
             etiqueta.textContent = `✔ ${p.apellido} ${p.nombre}`;
+            precargarFicha(p.id, etiqueta);
         } catch (e) {
             etiqueta.style.color = "#b91c1c";
             etiqueta.textContent = "✘ CI no registrado";
@@ -180,6 +292,8 @@ window.fetch = async (url, opciones = {}) => {
     if (s && String(url).startsWith(CONFIG.API_BASE)) {
         const h = new Headers(opciones.headers || {});
         h.set("Authorization", `Bearer ${s.token}`);
+        const ev = evaluacionActual();
+        if (ev && !h.has("X-Evaluacion")) h.set("X-Evaluacion", String(ev));
         opciones = { ...opciones, headers: h };
     }
     const r = await _fetchOriginal(url, opciones);
