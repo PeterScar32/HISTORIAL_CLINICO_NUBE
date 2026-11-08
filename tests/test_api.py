@@ -396,3 +396,19 @@ def test_ficha_en_evaluacion_elegida_por_cabecera(client, paciente):
     otro = client.post("/pacientes/", json={"nombre": "X", "apellido": "Y", "ci": "OTRO"}).json()
     client.post("/guardar-aptitud", json={"codigo_paciente": "OTRO", "resultado": "APTO"}, headers={"X-Evaluacion": str(ev1["id"])})
     assert client.get(f"/fichas/aptitud/{otro['id']}").json()["evaluacion_id"] not in (ev1["id"], ev2["id"])
+
+
+def test_datos_de_demostracion(client):
+    r = client.post("/admin/datos-demo").json()
+    assert r["creados"] == 24
+    assert client.post("/admin/datos-demo").json()["creados"] == 0
+    panel = client.get("/semaforo", params={"solo_ultima": True}).json()
+    assert panel["total"] == 24
+    assert panel["resumen"]["ROJO"] >= 3 and panel["resumen"]["AMARILLO"] >= 3 and panel["resumen"]["VERDE"] >= 10 and panel["resumen"]["GRIS"] >= 2
+    assert panel["cumplimiento"]["COMPLETA"] >= 10 and panel["cumplimiento"]["INCOMPLETA"] >= 3
+    assert len(client.get("/empresas").json()) == 3
+    con_historial = [i for i in panel["items"] if len(client.get(f"/pacientes/{i['paciente_id']}/evaluaciones").json()) == 2]
+    assert len(con_historial) == 4
+    assert any(a["accion"] == "MODIFICACION" and a["campo"] == "hta" for a in client.get("/auditoria").json())
+    assert client.delete("/admin/datos-demo").json()["borrados"] == 24
+    assert client.get("/pacientes/").json() == []

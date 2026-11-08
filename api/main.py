@@ -12,7 +12,7 @@ from .models import FichaAptitudFisica
 from .database import get_db
 from sqlalchemy import desc
 
-from . import semaforo, auth, auditoria
+from . import semaforo, auth, auditoria, demo
 from .auditoria import guardar_en_evaluacion, registrar_eliminacion
 Base.metadata.create_all(bind=engine)
 from .migraciones import aplicar_migraciones
@@ -55,6 +55,7 @@ def ultimo(db, modelo, paciente_id):
 app.include_router(semaforo.router)
 app.include_router(auth.router)
 app.include_router(auditoria.router)
+app.include_router(demo.router)
 
 
 @app.middleware("http")
