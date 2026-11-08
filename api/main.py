@@ -12,23 +12,16 @@ from .models import FichaAptitudFisica
 from .database import get_db
 from sqlalchemy import desc
 
-from . import semaforo
+from . import semaforo, auth
 Base.metadata.create_all(bind=engine)
 from .migraciones import aplicar_migraciones
 aplicar_migraciones(engine)
 with SessionLocal() as _db:
     semaforo.sembrar_reglas(_db)
+    auth.sembrar_usuarios(_db)
 app = FastAPI()
 
 ORIGENES = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ORIGENES,
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 def get_db():
     db = SessionLocal()
@@ -59,15 +52,28 @@ def ultimo(db, modelo, paciente_id):
 
 
 app.include_router(semaforo.router)
+app.include_router(auth.router)
 
 
 @app.middleware("http")
-async def profesional_de_la_peticion(request, call_next):
-    token = PROFESIONAL_ACTUAL.set(request.headers.get("x-profesional"))
-    try:
-        return await call_next(request)
-    finally:
-        PROFESIONAL_ACTUAL.reset(token)
+async def seguridad(request, call_next):
+    async def siguiente(req):
+        datos = getattr(req.state, "usuario", None)
+        token = PROFESIONAL_ACTUAL.set(f"usr:{datos['uid']}" if datos else None)
+        try:
+            return await call_next(req)
+        finally:
+            PROFESIONAL_ACTUAL.reset(token)
+    return await auth.control_acceso(request, siguiente)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ORIGENES,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.api_route("/", methods=["GET", "HEAD"])

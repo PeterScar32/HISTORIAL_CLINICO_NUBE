@@ -71,7 +71,7 @@ function barraNavegacion() {
         #barra-nav button { background: rgba(15,23,42,.92); color: #e2e8f0; border: 1px solid #334155; border-radius: 999px;
             padding: 8px 14px; font: 700 12px system-ui, sans-serif; cursor: pointer; letter-spacing: .03em; }
         #barra-nav button:hover { border-color: #60a5fa; color: #93c5fd; }
-        @media print { #barra-nav, #caja-profesional, #aviso-servidor { display: none !important; } }
+        @media print { #barra-nav, #aviso-servidor { display: none !important; } }
     `;
     document.head.appendChild(estilo);
     const barra = document.createElement("nav");
@@ -118,49 +118,103 @@ function vincularCampoPaciente() {
     }
 }
 
-function profesionalActual() {
-    try { return localStorage.getItem("prof_actual") || ""; } catch (e) { return ""; }
+const PAGINAS_ENFERMERIA = ["", "index.html", "enfermera.html", "registro_paciente.html", "declaracion_jurada_p1.html",
+    "declaracion_jurada_p2.html", "declaracion_jurada_p3.html", "d_menu.html", "lista_historial.html"];
+
+function paginaActual() {
+    return location.pathname.split("/").pop();
 }
 
+function sesion() {
+    try {
+        const token = localStorage.getItem("ohs_token");
+        const usuario = JSON.parse(localStorage.getItem("ohs_usuario") || "null");
+        if (!token || !usuario) return null;
+        const carga = JSON.parse(atob(token.split(".")[0].replace(/-/g, "+").replace(/_/g, "/")));
+        if (carga.exp * 1000 < Date.now()) return null;
+        return { token, usuario };
+    } catch (e) {
+        return null;
+    }
+}
+
+function guardarSesion(token, usuario) {
+    try {
+        localStorage.setItem("ohs_token", token);
+        localStorage.setItem("ohs_usuario", JSON.stringify(usuario));
+    } catch (e) {}
+}
+
+function cerrarSesion() {
+    try {
+        localStorage.removeItem("ohs_token");
+        localStorage.removeItem("ohs_usuario");
+    } catch (e) {}
+    location.href = "index.html";
+}
+
+function esMedico() {
+    const s = sesion();
+    return !!s && s.usuario.rol === "MEDICO";
+}
+
+function pedirAcceso() {
+    const pagina = paginaActual();
+    if (pagina === "" || pagina === "index.html") return;
+    const s = sesion();
+    if (!s || s.usuario.debe_cambiar) {
+        location.replace("index.html");
+        return;
+    }
+    if (s.usuario.rol !== "MEDICO" && !PAGINAS_ENFERMERIA.includes(pagina) && !pagina.startsWith("doc_")) {
+        alert("Su perfil no tiene acceso a esta pantalla.");
+        location.replace("index.html");
+    }
+}
+
+pedirAcceso();
+
 const _fetchOriginal = window.fetch.bind(window);
-window.fetch = (url, opciones = {}) => {
-    const metodo = String(opciones.method || "GET").toUpperCase();
-    const prof = profesionalActual();
-    if (prof && ["POST", "PUT"].includes(metodo) && String(url).startsWith(CONFIG.API_BASE)) {
+window.fetch = async (url, opciones = {}) => {
+    const s = sesion();
+    if (s && String(url).startsWith(CONFIG.API_BASE)) {
         const h = new Headers(opciones.headers || {});
-        h.set("X-Profesional", prof);
+        h.set("Authorization", `Bearer ${s.token}`);
         opciones = { ...opciones, headers: h };
     }
-    return _fetchOriginal(url, opciones);
+    const r = await _fetchOriginal(url, opciones);
+    if (r.status === 401 && String(url).startsWith(CONFIG.API_BASE) && !String(url).includes("/auth/login")) {
+        cerrarSesion();
+    }
+    return r;
 };
 
-async function selectorProfesional() {
-    if (!/(doc_|declaracion_jurada_)/.test(location.pathname)) return;
-    const caja = document.createElement("div");
-    caja.id = "caja-profesional";
-    caja.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:9997;background:rgba(15,23,42,.94);border:1px solid #334155;border-radius:12px;padding:8px 12px;font:700 11px system-ui,sans-serif;color:#cbd5e1;display:flex;gap:8px;align-items:center;max-width:calc(100vw - 24px)";
-    caja.innerHTML = `<label for="sel-profesional">PROFESIONAL RESPONSABLE:</label><select id="sel-profesional" style="background:#1e293b;color:#fff;border:1px solid #475569;border-radius:8px;padding:6px;font:600 12px system-ui;max-width:260px"><option value="">— SIN IDENTIFICAR —</option></select>`;
-    document.body.appendChild(caja);
-    const sel = caja.querySelector("select");
-    sel.addEventListener("change", () => {
-        try { localStorage.setItem("prof_actual", sel.value); } catch (e) {}
-        caja.style.borderColor = sel.value ? "#334155" : "#f59e0b";
-    });
-    try {
-        const p = await (await _fetchOriginal(`${CONFIG.API_BASE}/personal/`)).json();
-        const opciones = [
-            ...(p.doctores || []).map(d => [`doc:${d.id_doc}`, `DR(A). ${d.nombre_doc || ""} ${d.appaterno_doc || ""} · ${d.especialidad || ""}`]),
-            ...(p.enfermeras || []).map(e => [`enf:${e.id_enfe}`, `LIC. ${e.nombre_enfe || ""} ${e.appaterno_enfe || ""} · ENFERMERÍA`])
-        ];
-        sel.innerHTML += opciones.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("");
-        sel.value = opciones.some(([v]) => v === profesionalActual()) ? profesionalActual() : "";
-    } catch (e) {}
-    caja.style.borderColor = sel.value ? "#334155" : "#f59e0b";
+function insigniaUsuario() {
+    const s = sesion();
+    const barra = document.getElementById("barra-nav");
+    if (!s || !barra) return;
+    document.body.classList.add("rol-" + s.usuario.rol);
+    const chip = document.createElement("div");
+    chip.id = "chip-usuario";
+    const foto = s.usuario.foto
+        ? `<img src="${esc(s.usuario.foto)}" alt="" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid #22c55e">`
+        : `<span style="width:26px;height:26px;border-radius:50%;background:#0f766e;display:inline-flex;align-items:center;justify-content:center;font-size:13px">⚕️</span>`;
+    chip.innerHTML = `${foto}<span>${esc(s.usuario.nombre.split(" ").slice(0, 2).join(" "))}</span>`;
+    chip.style.cssText = "display:flex;align-items:center;gap:8px;background:rgba(15,23,42,.92);color:#e2e8f0;border:1px solid #334155;border-radius:999px;padding:4px 12px 4px 4px;font:700 12px system-ui,sans-serif";
+    const salir = document.createElement("button");
+    salir.type = "button";
+    salir.textContent = "Salir";
+    salir.onclick = cerrarSesion;
+    barra.prepend(chip);
+    barra.appendChild(salir);
+    const estilo = document.createElement("style");
+    estilo.textContent = `.rol-ENFERMERIA .btn-reporte, .rol-ENFERMERIA .btn-borrar, .rol-ENFERMERIA .solo-medico { display: none !important; }`;
+    document.head.appendChild(estilo);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     barraNavegacion();
-    selectorProfesional();
+    insigniaUsuario();
     vincularCampoPaciente();
     despertarServidor();
 });

@@ -3,6 +3,9 @@ import os
 import sys
 import urllib.request
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, os.path.dirname(__file__))
+from sesion_e2e import obtener_sesion, abrir_sesion
+SESION = obtener_sesion("mecondarco", "temporal-1", "clave-medico-1")
 
 WEB = os.getenv("WEB", "http://127.0.0.1:8080")
 API = os.getenv("API", "http://127.0.0.1:8000")
@@ -11,7 +14,7 @@ errores = []
 
 
 def post(ruta, datos):
-    req = urllib.request.Request(API + ruta, data=json.dumps(datos).encode(), headers={"Content-Type": "application/json"})
+    req = urllib.request.Request(API + ruta, data=json.dumps(datos).encode(), headers={"Content-Type": "application/json", "Authorization": f"Bearer {SESION['token']}"})
     return json.loads(urllib.request.urlopen(req).read())
 
 
@@ -27,7 +30,6 @@ casos = [
     ("8800003", "RAUL", "NO APTO", None),
     ("8800004", "EVA", None, None),
 ]
-doc = post("/doctores/", {"ci_doc": "D-SIM", "nombre_doc": "MARTA", "appaterno_doc": "ROJAS", "especialidad": "MEDICINA OCUPACIONAL"})
 for ci, nombre, aptitud, osteo in casos:
     p = post("/pacientes/", {"nombre": nombre, "apellido": "SIMULACION", "ci": ci})
     post("/evaluaciones/", {"paciente_id": p["id"], "empresa": "Minera Ficticia", "puesto": "Operario", "tipo": "PERIODICO", "fecha": "2026-11-05"})
@@ -47,14 +49,10 @@ with sync_playwright() as pw:
         const O = window.AudioContext;
         window.AudioContext = function() { window.__sonidos++; return new O(); };
     """)
+    abrir_sesion(page, WEB, SESION)
     page.on("pageerror", lambda e: errores.append("JS: " + str(e)))
 
-    page.goto(f"{WEB}/doc_aptitud.html")
-    page.wait_for_function("document.querySelectorAll('#sel-profesional option').length === 2")
-    page.select_option("#sel-profesional", f"doc:{doc['id_doc']}")
-    estado = page.evaluate("""async () => (await fetch(CONFIG.API_BASE + '/guardar-aptitud', {method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({codigo_paciente: '8800003', resultado: 'NO APTO'})})).status""")
-    ok(estado == 200, "ficha guardada desde una página con profesional seleccionado")
+    post("/guardar-aptitud", {"codigo_paciente": "8800003", "resultado": "NO APTO"})
 
     page.goto(f"{WEB}/semaforo.html")
     page.wait_for_function("[...document.querySelectorAll('#empresa option')].some(o => o.value === 'MINERA FICTICIA')")
@@ -72,11 +70,10 @@ with sync_playwright() as pw:
     ok((cu(0), cu(1)) == ("0", "4"), "cumplimiento: 0 completas, 4 incompletas (requeridas por defecto)")
     verde = page.inner_text("tr.fila-VERDE")
     ok("Sin alertas registradas" in verde and "INCOMPLETA" in verde and "1 de 5 requeridas" in verde, "verde con fichas faltantes se muestra como incompleta")
-    ok("Conclusión sin profesional" in verde, "avisa conclusión sin profesional identificado")
-    ok("Conclusión sin profesional" not in page.inner_text("tr.fila-ROJO"), "la conclusión roja tiene profesional")
+    ok("Conclusión sin profesional" not in page.inner_text("#filas"), "todas las conclusiones tienen profesional (sesión iniciada)")
     page.click("tr.fila-ROJO >> text=DETALLE")
     det = page.inner_text("tr.detalle:visible")
-    ok("DR(A). MARTA ROJAS" in det and "NO APTO" in det and "Pendiente" in det, "detalle por ficha con conclusión, profesional y pendientes")
+    ok("MARÍA ELENA CONDARCO" in det and "NO APTO" in det and "Pendiente" in det, "detalle por ficha con conclusión, profesional y pendientes")
     esp = page.inner_text("#especialidades")
     ok("Aptitud ocupacional" in esp, "tabla de estado por especialidad")
     if CAPTURAS:

@@ -84,7 +84,7 @@
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
-    <script src="config.js?v=5"></script>
+    <script src="config.js?v=6"></script>
 </head>
 <body>
 <div class="contenedor">
@@ -110,7 +110,10 @@
             <label for="hasta">Hasta</label>
             <input type="date" id="hasta">
         </div>
-        <label class="check"><input type="checkbox" id="solo_ultima" checked> Última evaluación de cada trabajador</label>
+        <div>
+            <label class="check" style="padding-bottom:4px"><input type="checkbox" id="solo_ultima" checked> Última evaluación de cada trabajador</label>
+            <label class="check"><input type="checkbox" id="auto" checked> Actualizar cada 30 s</label>
+        </div>
         <div style="display:flex; gap:8px;">
             <button class="btn-buscar" id="btn-buscar" onclick="buscar(true)">BUSCAR</button>
             <button class="btn-sec" onclick="window.print()">🖨️</button>
@@ -278,8 +281,12 @@
         }).join("");
     }
 
+    let rojosAnteriores = null;
+
     function pintarAlerta(conSonido) {
         const rojos = (datos.resumen || {}).ROJO || 0;
+        if (rojosAnteriores !== null && rojos > rojosAnteriores) conSonido = true;
+        rojosAnteriores = rojos;
         const caja = document.getElementById("alerta");
         if (rojos > 0) {
             caja.style.display = "block";
@@ -353,6 +360,10 @@
                 + `<tr><td>—</td><td>cualquier otro valor</td><td><span class="estado"><span class="punto AMARILLO"></span>AMARILLO</span></td><td>Valor sin regla definida: requiere revisión</td></tr>`;
         } catch (e) {}
     }
+
+    setInterval(() => {
+        if (document.getElementById("auto").checked && !document.hidden) buscar(false);
+    }, 30000);
 
     window.addEventListener("load", async () => {
         await cargarEmpresas();
