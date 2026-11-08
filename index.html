@@ -157,10 +157,32 @@
             `<button class="opcion" onclick="location.href='${href}'"><div class="ico">${ico}</div><span>${texto}</span></button>`).join("");
         if (u.rol === "MEDICO") {
             document.getElementById("opciones").insertAdjacentHTML("afterend",
-                `<p><button class="btn btn-texto" style="width:auto;color:#94a3b8" type="button" onclick="descargarRespaldo(this)">💾 Descargar respaldo de la base de datos</button></p>`);
+                `<p><button class="btn btn-texto" style="width:auto;color:#94a3b8" type="button" onclick="descargarRespaldo(this)">💾 Descargar respaldo de la base de datos</button>
+                <button class="btn btn-texto" style="width:auto;color:#94a3b8" type="button" onclick="datosDemo(this, true)">🧪 Cargar pacientes ficticios</button>
+                <button class="btn btn-texto" style="width:auto;color:#94a3b8" type="button" onclick="datosDemo(this, false)">🗑️ Quitar pacientes ficticios</button></p>`);
         }
         if (!document.getElementById("chip-usuario")) insigniaUsuario();
         mostrar("paso-portal");
+    }
+
+    async function datosDemo(boton, cargar) {
+        const pregunta = cargar
+            ? "Se cargarán 24 trabajadores ficticios de 3 empresas de demostración (CI 9100001 a 9100024). ¿Continuar?"
+            : "Se borrarán los 24 trabajadores ficticios de demostración (CI 9100001 a 9100024) con todas sus fichas. Los demás pacientes no se tocan. ¿Continuar?";
+        if (!confirm(pregunta)) return;
+        const texto = boton.textContent;
+        boton.disabled = true;
+        boton.textContent = cargar ? "Cargando…" : "Quitando…";
+        try {
+            const r = await fetch(`${API}/admin/datos-demo`, { method: cargar ? "POST" : "DELETE" });
+            const d = await r.json();
+            if (!r.ok) throw new Error(d.detail);
+            boton.textContent = cargar ? `✅ ${d.creados} pacientes ficticios cargados` : `✅ ${d.borrados} pacientes ficticios quitados`;
+        } catch (e) {
+            boton.textContent = "❌ No se pudo completar";
+        }
+        boton.disabled = false;
+        setTimeout(() => { boton.textContent = texto; }, 6000);
     }
 
     async function descargarRespaldo(boton) {
