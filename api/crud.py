@@ -191,6 +191,11 @@ def nombre_profesional(connection, clave):
         ident = int(ident)
     except (ValueError, TypeError):
         return None
+    if tipo == "usr":
+        t = models.Base.metadata.tables.get("usuarios")
+        f = connection.execute(t.select().where(t.c.id == ident)).mappings().first() if t is not None else None
+        if f:
+            return f["nombre"] + (f" · {f['cargo']}" if f["cargo"] else "")
     if tipo == "doc":
         t = models.Doctor.__table__
         f = connection.execute(t.select().where(t.c.id_doc == ident)).mappings().first()

@@ -199,7 +199,7 @@ def test_semaforo_colores(client):
     vv = col(v)
     assert vv["completitud"]["registradas"] == 1 and vv["completitud"]["estado"] == "INCOMPLETA"
     assert vv["completitud"]["adicionales"] == ["Osteomuscular"]
-    assert vv["conclusion_sin_profesional"] == ["Aptitud ocupacional", "Osteomuscular"]
+    assert vv["conclusion_sin_profesional"] == []
 
     panel = client.get("/semaforo", params={"empresa": "cementos andinos"}).json()
     assert panel["total"] == 3
@@ -243,15 +243,69 @@ def test_fichas_requeridas_y_completitud(client):
 
 
 def test_profesional_responsable_y_fecha(client):
-    doc = client.post("/doctores/", json={"ci_doc": "D9", "nombre_doc": "MARTA", "appaterno_doc": "ROJAS", "especialidad": "MEDICINA OCUPACIONAL"}).json()
     p = client.post("/pacientes/", json={"nombre": "TITO", "apellido": "PRUEBA", "ci": "R2"}).json()
     ev = client.post("/evaluaciones/", json={"paciente_id": p["id"]}).json()
-    client.post("/guardar-aptitud", json={"codigo_paciente": "R2", "resultado": "NO APTO"}, headers={"X-Profesional": f"doc:{doc['id_doc']}"})
+    client.post("/guardar-aptitud", json={"codigo_paciente": "R2", "resultado": "NO APTO"}, headers={"X-Profesional": "doc:999"})
     d = client.get(f"/semaforo/evaluacion/{ev['id']}").json()
     c = d["conclusiones"][0]
-    assert c["profesional"] == "DR(A). MARTA ROJAS · MEDICINA OCUPACIONAL"
+    assert c["profesional"].startswith("MARÍA ELENA CONDARCO CASTELLÓN")
     assert c["fecha"] is not None
     assert d["conclusion_sin_profesional"] == []
-    client.post("/filiacion/", json={"paciente_id": p["id"], "edad": "40"}, headers={"X-Profesional": "doc:999"})
-    f = next(x for x in client.get(f"/semaforo/evaluacion/{ev['id']}").json()["fichas"] if x["clave"] == "declaracion")
-    assert f["estado"] == "REGISTRADA" and f["profesional"] is None
+
+
+def test_sin_sesion_no_hay_acceso(anonimo):
+    assert anonimo.get("/").status_code == 200
+    assert anonimo.get("/pacientes/").status_code == 401
+    assert anonimo.post("/pacientes/", json={"ci": "1"}).status_code == 401
+    assert anonimo.get("/semaforo").status_code == 401
+    assert anonimo.get("/pacientes/", headers={"Authorization": "Bearer falso.token"}).status_code == 401
+    perfiles = anonimo.get("/auth/perfiles").json()
+    assert [p["usuario"] for p in perfiles] == ["mecondarco", "knoya", "rcervantes", "lquinteros", "enfermeria"]
+    assert all("pass_hash" not in p for p in perfiles)
+
+
+def test_login_y_cambio_de_clave(anonimo):
+    assert anonimo.post("/auth/login", json={"usuario": "mecondarco", "clave": "mala"}).status_code == 401
+    assert anonimo.post("/auth/login", json={"usuario": "knoya", "clave": ""}).status_code == 401
+    r = anonimo.post("/auth/login", json={"usuario": "mecondarco", "clave": "temporal-1"}).json()
+    assert r["usuario"]["debe_cambiar"] is True
+    h = {"Authorization": f"Bearer {r['token']}"}
+    assert anonimo.get("/pacientes/", headers=h).status_code == 403
+    assert anonimo.post("/auth/cambiar-clave", json={"actual": "temporal-1", "nueva": "corta"}, headers=h).status_code == 400
+    r2 = anonimo.post("/auth/cambiar-clave", json={"actual": "temporal-1", "nueva": "nueva-clave-1"}, headers=h).json()
+    assert r2["usuario"]["debe_cambiar"] is False
+    assert anonimo.get("/pacientes/", headers={"Authorization": f"Bearer {r2['token']}"}).status_code == 200
+    assert anonimo.post("/auth/login", json={"usuario": "mecondarco", "clave": "temporal-1"}).status_code == 401
+    assert anonimo.post("/auth/login", json={"usuario": "mecondarco", "clave": "nueva-clave-1"}).status_code == 200
+
+
+def test_permisos_enfermeria(anonimo):
+    from tests.conftest import iniciar
+    med = {"Authorization": f"Bearer {iniciar(anonimo, 'mecondarco', 'temporal-1', 'clave-medico-1')}"}
+    enf = {"Authorization": f"Bearer {iniciar(anonimo, 'enfermeria', 'temporal-5', 'clave-enfermera')}"}
+    p = anonimo.post("/pacientes/", json={"nombre": "ANA", "apellido": "PRUEBA", "ci": "E1"}, headers=enf)
+    assert p.status_code == 200
+    pid = p.json()["id"]
+    assert anonimo.post("/evaluaciones/", json={"paciente_id": pid}, headers=enf).status_code == 200
+    assert anonimo.post("/filiacion/", json={"paciente_id": pid, "edad": "30"}, headers=enf).status_code == 200
+    assert anonimo.post("/guardar-cardiologia", json={"codigo_paciente": "E1", "hta": "NO"}, headers=enf).status_code == 200
+    assert anonimo.get(f"/api/paciente-completo/{pid}", headers=enf).status_code == 200
+    assert anonimo.get("/pacientes/buscar/E1", headers=enf).status_code == 200
+    assert anonimo.get("/semaforo", headers=enf).status_code == 403
+    assert anonimo.get("/api/informe-consolidado/E1", headers=enf).status_code == 403
+    assert anonimo.get("/filtrar-oftalmo/lentes", headers=enf).status_code == 403
+    assert anonimo.delete(f"/api/pacientes/{pid}", headers=enf).status_code == 403
+    assert anonimo.post("/doctores/", json={"ci_doc": "X"}, headers=enf).status_code == 403
+    assert anonimo.get("/auth/usuarios", headers=enf).status_code == 403
+    assert anonimo.get("/semaforo", headers=med).status_code == 200
+    f = next(x for x in anonimo.get(f"/semaforo/evaluacion/{pid and anonimo.get(f'/pacientes/{pid}/evaluaciones', headers=med).json()[0]['id']}", headers=med).json()["fichas"] if x["clave"] == "declaracion")
+    assert f["profesional"].startswith("ENFERMERÍA")
+    assert anonimo.delete(f"/api/pacientes/{pid}", headers=med).status_code == 200
+
+
+def test_restablecer_clave(client):
+    us = client.get("/auth/usuarios").json()
+    knoya = next(u for u in us if u["usuario"] == "knoya")
+    r = client.post(f"/auth/usuarios/{knoya['id']}/restablecer", json={}).json()
+    assert len(r["temporal"]) >= 6
+    assert client.post("/auth/login", json={"usuario": "knoya", "clave": r["temporal"]}).status_code == 200

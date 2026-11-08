@@ -1,6 +1,9 @@
 import os
 import sys
 from playwright.sync_api import sync_playwright
+sys.path.insert(0, os.path.dirname(__file__))
+from sesion_e2e import obtener_sesion, abrir_sesion
+SESION = obtener_sesion("mecondarco", "temporal-1", "clave-medico-1")
 
 WEB = os.getenv("WEB", "http://127.0.0.1:8080")
 API = os.getenv("API", "http://127.0.0.1:8000")
@@ -37,6 +40,7 @@ with sync_playwright() as pw:
         d.accept()
 
     page.on("dialog", on_dialog)
+    abrir_sesion(page, WEB, SESION)
     page.on("pageerror", lambda e: errores.append("JS: " + str(e)))
 
     page.goto(f"{WEB}/registro_paciente.html")

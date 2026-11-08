@@ -52,7 +52,7 @@
         }
         .btn-consultar:hover { background: #0069d9; }
     </style>
-    <script src="config.js?v=5"></script>
+    <script src="config.js?v=6"></script>
 </head>
 <body>
 
@@ -228,7 +228,7 @@
             if (!rEv.ok) { alert("❌ NO SE PUDO CREAR LA EVALUACIÓN."); return; }
             const ev = await rEv.json();
 
-            localStorage.clear();
+            ['p_id', 'p_id_edicion', 'p_id_reporte', 'p_eval', 'p_ci', 'p_cod', 'p_nom', 'edit_modo', 'temp_p2'].forEach(k => localStorage.removeItem(k));
             fijarPacienteActual(paciente);
             localStorage.setItem('p_eval', ev.id);
 
