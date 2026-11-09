@@ -46,7 +46,7 @@
         .bienvenida small { display: block; color: #64748b; font-weight: 600; font-size: 11px; }
         .pie { color: #334155; font-size: 10px; letter-spacing: .25em; text-transform: uppercase; margin-top: 30px; }
     </style>
-    <script src="config.js?v=8"></script>
+    <script src="config.js?v=9"></script>
 </head>
 <body>
 <main class="centro">
@@ -149,10 +149,13 @@
     function mostrarPortal() {
         const s = sesion();
         const u = s.usuario;
-        document.getElementById("bienvenida").innerHTML = `${avatar(u)}<div>${esc(u.nombre)}<small>${esc(u.rol === "MEDICO" ? "Acceso completo" : "Registro de datos")}</small></div>`;
-        const opciones = u.rol === "MEDICO"
-            ? [["semaforo.html", "🚦", "Semáforo"], ["lista_historial.html", "🗂️", "Pacientes"], ["enfermera.html", "⚕️", "Registro y fichas"], ["opciones_visor.html", "🔍", "Visor e informes"], ["lista_personal.html", "👨‍⚕️", "Personal"]]
-            : [["enfermera.html", "⚕️", "Registro y fichas"], ["lista_historial.html", "🗂️", "Pacientes"]];
+        document.getElementById("bienvenida").innerHTML = `${avatar(u)}<div>${esc(u.nombre)}<small>${esc({ MEDICO: "Acceso completo", ENFERMERIA: "Registro de datos", ESPECIALISTA: u.especialidad || "Especialista", LECTURA: "Solo consulta" }[u.rol] || u.rol)}</small></div>`;
+        const opciones = {
+            MEDICO: [["semaforo.html", "🚦", "Semáforo"], ["lista_historial.html", "🗂️", "Pacientes"], ["enfermera.html", "⚕️", "Registro y fichas"], ["opciones_visor.html", "🔍", "Visor e informes"], ["lista_personal.html", "👨‍⚕️", "Personal"]],
+            ENFERMERIA: [["enfermera.html", "⚕️", "Registro y fichas"], ["lista_historial.html", "🗂️", "Pacientes"]],
+            ESPECIALISTA: [["lista_historial.html", "🗂️", "Pacientes"], ["d_menu.html", "🩺", "Mis fichas"], ["semaforo.html", "🚦", "Semáforo"], ["opciones_visor.html", "🔍", "Visor e informes"]],
+            LECTURA: [["semaforo.html", "🚦", "Semáforo"], ["lista_historial.html", "🗂️", "Pacientes"], ["opciones_visor.html", "🔍", "Visor e informes"]],
+        }[u.rol] || [];
         document.getElementById("opciones").innerHTML = opciones.map(([href, ico, texto]) =>
             `<button class="opcion" onclick="location.href='${href}'"><div class="ico">${ico}</div><span>${texto}</span></button>`).join("");
         if (u.rol === "MEDICO") {

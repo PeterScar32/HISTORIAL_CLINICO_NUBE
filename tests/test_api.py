@@ -106,10 +106,10 @@ def test_borrar_paciente_borra_sus_fichas(client, paciente):
     client.post("/guardar-osteomuscular", json={"codigo_paciente": ci, "concepto_aptitud": "APTO"})
     client.post("/guardar-aptitud-fisica", json={"codigo_paciente": ci})
     client.post("/guardar-psicologia", json={"codigo_paciente": ci})
-    assert client.delete(f"/api/pacientes/{pid}").status_code == 200
+    assert client.delete(f"/api/pacientes/{pid}", params={"confirmar_ci": ci}).status_code == 200
     assert client.get(f"/api/paciente-completo/{pid}").status_code == 404
     assert client.get("/filtrar-osteomuscular/APTO").json() == []
-    assert client.delete(f"/api/pacientes/{pid}").status_code == 404
+    assert client.delete(f"/api/pacientes/{pid}", params={"confirmar_ci": ci}).status_code == 404
 
 
 def test_personal(client):
@@ -190,7 +190,7 @@ def test_semaforo_colores(client):
     assert col(v)["color"] == "VERDE"
     assert col(a)["color"] == "AMARILLO"
     rr = col(r)
-    assert rr["color"] == "ROJO" and "Osteomuscular" in rr["motivo"]
+    assert rr["color"] == "ROJO" and "osteomuscular" in rr["motivo"]
     assert any(d["regla_id"] for d in rr["conclusiones"] if d["color"] == "ROJO")
     gg = col(g)
     assert gg["color"] == "GRIS" and gg["completitud"]["registradas"] == 0 and gg["completitud"]["requeridas"] == 5
@@ -198,7 +198,7 @@ def test_semaforo_colores(client):
     assert col(h)["color"] == "AMARILLO"
     vv = col(v)
     assert vv["completitud"]["registradas"] == 1 and vv["completitud"]["estado"] == "INCOMPLETA"
-    assert vv["completitud"]["adicionales"] == ["Osteomuscular"]
+    assert vv["completitud"]["adicionales"] == ["Evaluación osteomuscular"]
     assert vv["conclusion_sin_profesional"] == []
 
     panel = client.get("/semaforo", params={"empresa": "cementos andinos"}).json()
@@ -299,8 +299,8 @@ def test_permisos_enfermeria(anonimo):
     assert anonimo.get("/auth/usuarios", headers=enf).status_code == 403
     assert anonimo.get("/semaforo", headers=med).status_code == 200
     f = next(x for x in anonimo.get(f"/semaforo/evaluacion/{pid and anonimo.get(f'/pacientes/{pid}/evaluaciones', headers=med).json()[0]['id']}", headers=med).json()["fichas"] if x["clave"] == "declaracion")
-    assert f["profesional"].startswith("ENFERMERÍA")
-    assert anonimo.delete(f"/api/pacientes/{pid}", headers=med).status_code == 200
+    assert f["registrado_por"].startswith("ENFERMERÍA") and f["profesional"] is None
+    assert anonimo.delete(f"/api/pacientes/{pid}", params={"confirmar_ci": "E1"}, headers=med).status_code == 200
 
 
 def test_restablecer_clave(client):
@@ -381,7 +381,7 @@ def test_permisos_nuevas_rutas(anonimo):
 
 
 def test_borrado_queda_auditado(client, paciente):
-    client.delete(f"/api/pacientes/{paciente['id']}")
+    client.delete(f"/api/pacientes/{paciente['id']}", params={"confirmar_ci": paciente["ci"]})
     a = client.get("/auditoria", params={"paciente_id": paciente["id"]}).json()
     assert any(x["accion"] == "ELIMINACION" and "9999001" in x["valor_anterior"] for x in a)
 

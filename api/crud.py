@@ -184,6 +184,7 @@ def upsert_electro(db: Session, data: dict):
 
 PROFESIONAL_ACTUAL = contextvars.ContextVar("profesional_actual", default=None)
 EVALUACION_ACTUAL = contextvars.ContextVar("evaluacion_actual", default=None)
+RESPONSABLE_ACTUAL = contextvars.ContextVar("responsable_actual", default=None)
 
 
 def nombre_profesional(connection, clave):
@@ -210,12 +211,46 @@ def nombre_profesional(connection, clave):
     return None
 
 
+def _usuario_responsable(connection, uid):
+    t = models.Base.metadata.tables.get("usuarios")
+    if t is None or not uid:
+        return None
+    f = connection.execute(t.select().where(t.c.id == int(uid))).mappings().first()
+    if f and f["activo"] and f["rol"] in ("MEDICO", "ESPECIALISTA"):
+        return f
+    return None
+
+
+def _asignar_responsable(connection, target, al_crear):
+    if not hasattr(target, "responsable_id"):
+        return
+    pedido = RESPONSABLE_ACTUAL.get()
+    if pedido == 0:
+        target.responsable_id = None
+        target.responsable = None
+        return
+    f = _usuario_responsable(connection, pedido)
+    if f is None and al_crear and not target.responsable_id:
+        clave = PROFESIONAL_ACTUAL.get() or ""
+        if clave.startswith("usr:"):
+            f = _usuario_responsable(connection, clave[4:])
+    if f is not None:
+        target.responsable_id = f["id"]
+        detalle = f["especialidad"] or f["cargo"]
+        target.responsable = f["nombre"] + (f" · {detalle}" if detalle else "")
+
+
 def registrar_profesional(mapper, connection, target):
     clave = PROFESIONAL_ACTUAL.get()
-    if clave:
+    if clave and not getattr(target, "registrado_por", None):
         nombre = nombre_profesional(connection, clave)
         if nombre:
             target.registrado_por = nombre
+    _asignar_responsable(connection, target, True)
+
+
+def actualizar_responsable(mapper, connection, target):
+    _asignar_responsable(connection, target, False)
 
 
 def asignar_evaluacion(mapper, connection, target):
@@ -235,4 +270,4 @@ def asignar_evaluacion(mapper, connection, target):
 for _modelo in FICHAS_POR_ID:
     if _modelo is not models.Evaluacion:
         event.listen(_modelo, "before_insert", asignar_evaluacion)
-        event.listen(_modelo, "before_update", registrar_profesional)
+        event.listen(_modelo, "before_update", actualizar_responsable)

@@ -1,5 +1,6 @@
 import datetime
 import decimal
+import json
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -12,7 +13,8 @@ from .crud import PROFESIONAL_ACTUAL, EVALUACION_ACTUAL, nombre_profesional, eva
 
 router = APIRouter()
 
-IGNORAR = {"id", "creado_en", "registrado_por", "paciente_id", "evaluacion_id"}
+IGNORAR = {"id", "creado_en", "registrado_por", "paciente_id", "evaluacion_id", "responsable_id"}
+NO_COPIAR = IGNORAR | {"codigo_paciente", "responsable"}
 
 FICHAS = {
     "declaracion": models.DeclaracionJurada,
@@ -142,7 +144,7 @@ def guardar_en_evaluacion(db: Session, nueva):
         db.add(nueva)
         return nueva
     for col in modelo.__table__.columns:
-        if col.name in IGNORAR or col.name == "codigo_paciente":
+        if col.name in NO_COPIAR:
             continue
         setattr(existente, col.name, getattr(nueva, col.name))
     return existente
@@ -203,3 +205,66 @@ def respaldo(db: Session = Depends(get_db)):
         tablas[tabla.name] = [{k: texto(v) if isinstance(v, (datetime.date, datetime.datetime, decimal.Decimal)) else v for k, v in f.items()} for f in filas]
     return {"sistema": "HC NUBE OHS", "version_respaldo": 1, "fecha": datetime.datetime.now().isoformat(),
             "orden_tablas": [t.name for t in Base.metadata.sorted_tables], "tablas": tablas}
+
+
+class Papelera(Base):
+    __tablename__ = "papelera"
+    id = Column(Integer, primary_key=True, index=True)
+    paciente_id = Column(Integer, index=True)
+    ci = Column(String, index=True)
+    nombre = Column(String)
+    eliminado_en = Column(DateTime, server_default=func.now())
+    eliminado_por = Column(String)
+    datos = Column(Text, nullable=False)
+    restaurado_en = Column(DateTime)
+    restaurado_por = Column(String)
+
+
+TABLAS_PACIENTE = [models.Evaluacion] + list(FICHAS.values())
+
+
+def instantanea_paciente(db: Session, p) -> dict:
+    datos = {"pacientes": [fila_a_dict(p)]}
+    for modelo in TABLAS_PACIENTE:
+        filas = db.query(modelo).filter(modelo.paciente_id == p.id).all()
+        if filas:
+            datos[modelo.__tablename__] = [fila_a_dict(f) for f in filas]
+    return json.loads(json.dumps(datos, default=texto))
+
+
+def enviar_a_papelera(db: Session, p) -> Papelera:
+    item = Papelera(paciente_id=p.id, ci=p.ci, nombre=f"{p.apellido} {p.nombre}",
+                    eliminado_por=usuario_actual(db.connection()), datos=json.dumps(instantanea_paciente(db, p), ensure_ascii=False))
+    db.add(item)
+    registrar_eliminacion(db, "pacientes", p.id, p.id, f"{p.apellido} {p.nombre} · CI {p.ci} · enviado a la papelera")
+    return item
+
+
+@router.get("/papelera")
+def ver_papelera(db: Session = Depends(get_db)):
+    return [{"id": x.id, "paciente_id": x.paciente_id, "ci": x.ci, "nombre": x.nombre, "eliminado_en": x.eliminado_en,
+             "eliminado_por": x.eliminado_por, "restaurado_en": x.restaurado_en, "restaurado_por": x.restaurado_por,
+             "evaluaciones": len(json.loads(x.datos).get("evaluaciones", []))}
+            for x in db.query(Papelera).order_by(desc(Papelera.id)).all()]
+
+
+@router.post("/papelera/{item_id}/restaurar")
+def restaurar_paciente(item_id: int, db: Session = Depends(get_db)):
+    item = db.query(Papelera).filter(Papelera.id == item_id).first()
+    if not item or item.restaurado_en:
+        raise HTTPException(status_code=404, detail="Elemento no disponible para restaurar")
+    if db.query(models.Paciente).filter((models.Paciente.ci == item.ci) | (models.Paciente.id == item.paciente_id)).first():
+        raise HTTPException(status_code=409, detail="Ya existe un paciente con ese CI; no se puede restaurar sin duplicar")
+    datos = json.loads(item.datos)
+    tablas = {t.name: t for t in Base.metadata.sorted_tables}
+    for nombre in ["pacientes", "evaluaciones"] + [m.__tablename__ for m in FICHAS.values()]:
+        filas = datos.get(nombre) or []
+        if filas:
+            validas = {c.name for c in tablas[nombre].columns}
+            db.execute(tablas[nombre].insert(), [{k: v for k, v in f.items() if k in validas} for f in filas])
+    item.restaurado_en = datetime.datetime.utcnow()
+    item.restaurado_por = usuario_actual(db.connection())
+    db.add(Auditoria(usuario=item.restaurado_por, accion="RESTAURACION", tabla="pacientes", registro_id=item.paciente_id,
+                     paciente_id=item.paciente_id, valor_nuevo=f"{item.nombre} · CI {item.ci}"))
+    db.commit()
+    return {"restaurado": True, "paciente_id": item.paciente_id}

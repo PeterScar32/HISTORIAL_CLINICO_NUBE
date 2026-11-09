@@ -84,7 +84,7 @@
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
-    <script src="config.js?v=8"></script>
+    <script src="config.js?v=9"></script>
 </head>
 <body>
 <div class="contenedor">
@@ -230,10 +230,12 @@
                 <td>${f.estado === "REGISTRADA" ? "Registrada" : '<span class="pend">Pendiente</span>'}</td>
                 <td>${concl}</td>
                 <td>${f.estado === "REGISTRADA" ? fechaCorta(f.fecha) : "—"}</td>
-                <td>${f.estado === "REGISTRADA" ? (f.profesional ? esc(f.profesional) : '<span class="pend">No identificado</span>') : "—"}</td>
+                <td>${f.estado === "REGISTRADA" ? (f.profesional ? esc(f.profesional) : '<span class="pend">Sin asignar</span>') : "—"}</td>
+                <td>${f.estado === "REGISTRADA" ? esc(f.registrado_por || "—") : "—"}</td>
+                <td>${f.ultima_modificacion ? `${fechaCorta(f.ultima_modificacion.fecha)}<div class="motivo">${esc(f.ultima_modificacion.usuario)}</div>` : "—"}</td>
             </tr>`;
         }).join("");
-        return `<table class="sub-tabla"><thead><tr><th>Ficha</th><th>Tipo</th><th>Estado</th><th>Conclusión registrada</th><th>Fecha de registro</th><th>Profesional</th></tr></thead><tbody>${filas}</tbody></table>`;
+        return `<table class="sub-tabla"><thead><tr><th>Ficha</th><th>Tipo</th><th>Estado</th><th>Conclusión registrada</th><th>Fecha de registro</th><th>Responsable</th><th>Registrado por</th><th>Última modificación</th></tr></thead><tbody>${filas}</tbody></table>`;
     }
 
     function alternarDetalle(id) {
@@ -260,7 +262,7 @@
                 <td>
                     <span class="estado"><span class="punto ${esc(i.color)}"></span>${esc(ETIQUETA[i.color] || i.color)}</span>
                     <div class="motivo">${esc(i.motivo)}</div>
-                    ${i.conclusion_sin_profesional.length ? `<div class="aviso-prof">⚠ Conclusión sin profesional identificado</div>` : ""}
+                    ${i.conclusion_sin_profesional.length ? `<div class="aviso-prof">⚠ Conclusión sin profesional responsable</div>` : ""}
                 </td>
                 <td>${esc(i.ci)}</td>
                 <td><strong>${esc(i.nombre)}</strong></td>

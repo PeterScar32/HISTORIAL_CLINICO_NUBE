@@ -78,7 +78,7 @@ function barraNavegacion() {
         #barra-nav button { background: rgba(15,23,42,.92); color: #e2e8f0; border: 1px solid #334155; border-radius: 999px;
             padding: 8px 14px; font: 700 12px system-ui, sans-serif; cursor: pointer; letter-spacing: .03em; }
         #barra-nav button:hover { border-color: #60a5fa; color: #93c5fd; }
-        @media print { #barra-nav, #aviso-servidor { display: none !important; } }
+        @media print { #barra-nav, #caja-responsable, #aviso-servidor { display: none !important; } }
     `;
     document.head.appendChild(estilo);
     const barra = document.createElement("nav");
@@ -183,16 +183,44 @@ async function precargarFicha(pacienteId, etiqueta) {
         const d = await r.json();
         const evTxt = d.evaluacion ? `evaluación del ${d.evaluacion.fecha || "—"}${d.evaluacion.tipo ? " (" + d.evaluacion.tipo + ")" : ""}` : "nueva evaluación";
         if (d.evaluacion_id) { try { localStorage.setItem("p_eval", d.evaluacion_id); } catch (e) {} }
+        const selResp = document.getElementById("sel-responsable");
+        if (selResp && d.ficha) {
+            selResp.dataset.cargada = "1";
+            selResp.dataset.pendiente = d.ficha.responsable_id ? String(d.ficha.responsable_id) : "";
+            selResp.value = selResp.dataset.pendiente;
+            selResp.dispatchEvent(new Event("change"));
+        }
         if (d.ficha) {
             rellenarFicha(clave, d.ficha);
             const cuando = d.ficha.creado_en ? fechaServidor(d.ficha.creado_en).toLocaleString("es-BO", { dateStyle: "short", timeStyle: "short" }) : "fecha no registrada";
             aviso.style.background = "#fef3c7"; aviso.style.color = "#92400e";
-            aviso.textContent = `📝 Esta ficha ya está registrada en la ${evTxt} (${cuando}${d.ficha.registrado_por ? " · " + d.ficha.registrado_por : ""}). Se cargaron sus datos: al guardar se actualizarán y cada cambio quedará en el historial.`;
+            aviso.textContent = `📝 Esta ficha ya está registrada en la ${evTxt} (registrada el ${cuando}${d.ficha.registrado_por ? " por " + d.ficha.registrado_por : ""}${d.ficha.responsable ? " · responsable: " + d.ficha.responsable : " · sin profesional responsable"}). Se cargaron sus datos: al guardar se actualizarán y cada cambio quedará en el historial.`;
         } else {
             aviso.style.background = "#dcfce7"; aviso.style.color = "#166534";
             aviso.textContent = `🆕 Ficha nueva para la ${evTxt}.`;
         }
     } catch (e) {}
+}
+
+async function selectorResponsable() {
+    if (!FICHA_DE_PAGINA[paginaActual()]) return;
+    const s = sesion();
+    if (!s) return;
+    const caja = document.createElement("div");
+    caja.id = "caja-responsable";
+    caja.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:9997;background:rgba(15,23,42,.95);border:1px solid #334155;border-radius:12px;padding:8px 12px;font:700 11px system-ui,sans-serif;color:#cbd5e1;display:flex;gap:8px;align-items:center;max-width:calc(100vw - 24px)";
+    caja.innerHTML = `<label for="sel-responsable">PROFESIONAL RESPONSABLE:</label><select id="sel-responsable" style="background:#1e293b;color:#fff;border:1px solid #475569;border-radius:8px;padding:6px;font:600 12px system-ui;max-width:300px"><option value="">— SIN ASIGNAR —</option></select>`;
+    document.body.appendChild(caja);
+    const sel = caja.querySelector("select");
+    const marcar = () => { caja.style.borderColor = sel.value ? "#334155" : "#f59e0b"; };
+    sel.addEventListener("change", marcar);
+    try {
+        const lista = await (await fetch(`${CONFIG.API_BASE}/auth/profesionales`)).json();
+        sel.innerHTML += lista.map(p => `<option value="${p.id}">${esc(p.nombre)}${p.especialidad || p.cargo ? " · " + esc(p.especialidad || p.cargo) : ""}</option>`).join("");
+        if (sel.dataset.cargada) sel.value = sel.dataset.pendiente || "";
+        else if (["MEDICO", "ESPECIALISTA"].includes(s.usuario.rol) && lista.some(p => p.id === s.usuario.id)) sel.value = String(s.usuario.id);
+    } catch (e) {}
+    marcar();
 }
 
 function vincularCampoPaciente() {
@@ -270,6 +298,23 @@ function esMedico() {
     return !!s && s.usuario.rol === "MEDICO";
 }
 
+const PAGINAS_SOLO_MEDICO = ["lista_personal.html", "registro_personal.html"];
+const PAGINAS_CONSULTA = ["semaforo.html", "lista_historial.html", "informe.html", "generar_reporte.html", "d_menu.html",
+    "opciones_visor.html", "consultas.html", "informes.html", "informes_2.html"];
+
+function paginaPermitida(u, pagina) {
+    if (u.rol === "MEDICO") return true;
+    if (PAGINAS_SOLO_MEDICO.includes(pagina)) return false;
+    if (u.rol === "ENFERMERIA") return PAGINAS_ENFERMERIA.includes(pagina) || pagina.startsWith("doc_");
+    if (u.rol === "LECTURA") return true;
+    if (u.rol === "ESPECIALISTA") {
+        if (PAGINAS_CONSULTA.includes(pagina) || pagina.startsWith("co_")) return true;
+        const ficha = FICHA_DE_PAGINA[pagina];
+        return !!ficha && (u.fichas_permitidas || []).includes(ficha);
+    }
+    return false;
+}
+
 function pedirAcceso() {
     const pagina = paginaActual();
     if (pagina === "" || pagina === "index.html") return;
@@ -278,7 +323,7 @@ function pedirAcceso() {
         location.replace("index.html");
         return;
     }
-    if (s.usuario.rol !== "MEDICO" && !PAGINAS_ENFERMERIA.includes(pagina) && !pagina.startsWith("doc_")) {
+    if (!paginaPermitida(s.usuario, pagina)) {
         alert("Su perfil no tiene acceso a esta pantalla.");
         location.replace("index.html");
     }
@@ -294,11 +339,18 @@ window.fetch = async (url, opciones = {}) => {
         h.set("Authorization", `Bearer ${s.token}`);
         const ev = evaluacionActual();
         if (ev && !h.has("X-Evaluacion")) h.set("X-Evaluacion", String(ev));
+        const sel = document.getElementById("sel-responsable");
+        if (sel && !h.has("X-Responsable") && ["POST", "PUT"].includes(String(opciones.method || "GET").toUpperCase())) h.set("X-Responsable", sel.value || "0");
         opciones = { ...opciones, headers: h };
     }
     const r = await _fetchOriginal(url, opciones);
-    if (r.status === 401 && String(url).startsWith(CONFIG.API_BASE) && !String(url).includes("/auth/login")) {
+    const deApi = String(url).startsWith(CONFIG.API_BASE);
+    if (r.status === 401 && deApi && !String(url).includes("/auth/login")) {
         cerrarSesion();
+    }
+    const metodo = String(opciones.method || "GET").toUpperCase();
+    if (deApi && r.status === 403 && metodo !== "GET") {
+        r.clone().json().then(d => alert("⛔ " + (d.detail || "No tiene permiso para esta acción"))).catch(() => {});
     }
     return r;
 };
@@ -322,13 +374,32 @@ function insigniaUsuario() {
     barra.prepend(chip);
     barra.appendChild(salir);
     const estilo = document.createElement("style");
-    estilo.textContent = `.rol-ENFERMERIA .btn-reporte, .rol-ENFERMERIA .btn-borrar, .rol-ENFERMERIA .solo-medico { display: none !important; }`;
+    estilo.textContent = `.rol-ENFERMERIA .btn-reporte, .rol-ENFERMERIA .btn-borrar, .rol-ENFERMERIA .solo-medico, .rol-ENFERMERIA .btn-papelera,
+        .rol-ESPECIALISTA .btn-borrar, .rol-ESPECIALISTA .btn-editar, .rol-ESPECIALISTA .solo-medico, .rol-ESPECIALISTA .btn-papelera,
+        .rol-LECTURA .btn-borrar, .rol-LECTURA .btn-editar, .rol-LECTURA .solo-medico, .rol-LECTURA .btn-papelera { display: none !important; }`;
     document.head.appendChild(estilo);
+}
+
+function destinoDe(el) {
+    const txt = el.getAttribute("onclick") || el.getAttribute("href") || "";
+    const m = txt.match(/([\w-]+\.html)/);
+    return m ? m[1] : null;
+}
+
+function ocultarEnlacesNoPermitidos() {
+    const s = sesion();
+    if (!s) return;
+    document.querySelectorAll("[onclick*='.html'], a[href$='.html']").forEach(el => {
+        const destino = destinoDe(el);
+        if (destino && destino !== "index.html" && !paginaPermitida(s.usuario, destino)) el.style.display = "none";
+    });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     barraNavegacion();
+    ocultarEnlacesNoPermitidos();
     insigniaUsuario();
+    selectorResponsable();
     vincularCampoPaciente();
     despertarServidor();
 });

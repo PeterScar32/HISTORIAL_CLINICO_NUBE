@@ -20,7 +20,19 @@ DURACION_TOKEN = 12 * 3600
 ITERACIONES = 200_000
 
 ROL_MEDICO = "MEDICO"
+ROL_ESPECIALISTA = "ESPECIALISTA"
 ROL_ENFERMERIA = "ENFERMERIA"
+ROL_LECTURA = "LECTURA"
+ROLES = (ROL_MEDICO, ROL_ESPECIALISTA, ROL_ENFERMERIA, ROL_LECTURA)
+ROLES_RESPONSABLES = (ROL_MEDICO, ROL_ESPECIALISTA)
+
+RUTAS_FICHA = {
+    "declaracion": "/filiacion/", "antecedentes": "/p2/", "habitos": "/p3/",
+    "cardiologia": "/guardar-cardiologia", "psicologia": "/guardar-psicologia", "espirometria": "/guardar-espirometria",
+    "altura": "/guardar-altura", "electroencefalograma": "/guardar-electro", "aptitud": "/guardar-aptitud",
+    "aptitud_fisica": "/guardar-aptitud-fisica", "historial_clinico": "/guardar-historial-clinico",
+    "osteomuscular": "/guardar-osteomuscular", "oftalmologia": "/ficha-oftalmo/",
+}
 
 
 class Usuario(Base):
@@ -30,6 +42,8 @@ class Usuario(Base):
     nombre = Column(String, nullable=False)
     cargo = Column(String)
     rol = Column(String, nullable=False)
+    especialidad = Column(String)
+    fichas_permitidas = Column(String)
     foto = Column(String)
     orden = Column(Integer, default=100)
     pass_hash = Column(String)
@@ -48,10 +62,12 @@ PERFILES_INICIALES = [
 
 RUTAS_PUBLICAS = {"/", "/auth/perfiles", "/auth/login"}
 
+PREFIJOS_ADMIN = ("/admin", "/auth/usuarios", "/papelera")
+
 PREFIJOS_SOLO_MEDICO = (
     "/semaforo", "/reglas-semaforo", "/empresas", "/api/informe-consolidado", "/verificar_estado_paciente",
     "/filtrar", "/buscar-cardiologia", "/ficha-psicologia-filtrada", "/espirometria-filtrada", "/listar-espirometria",
-    "/consultar-electro-por-campo", "/historial-filtrado", "/api/reporte-unificado", "/auth/usuarios", "/auditoria", "/admin", "/api/expediente",
+    "/consultar-electro-por-campo", "/historial-filtrado", "/api/reporte-unificado", "/auditoria", "/api/expediente",
 )
 
 
@@ -124,17 +140,27 @@ def sembrar_usuarios(db: Session):
 
 def publico(u: Usuario):
     return {"id": u.id, "usuario": u.usuario, "nombre": u.nombre, "cargo": u.cargo, "rol": u.rol,
+            "especialidad": u.especialidad, "fichas_permitidas": [f for f in (u.fichas_permitidas or "").split(",") if f],
             "foto": u.foto, "debe_cambiar": bool(u.debe_cambiar)}
 
 
-def permitido(rol: str, metodo: str, ruta: str) -> bool:
-    if rol == ROL_MEDICO:
+def permitido(u: Usuario, metodo: str, ruta: str) -> bool:
+    if u.rol == ROL_MEDICO:
         return True
+    if ruta.startswith(PREFIJOS_ADMIN):
+        return False
+    if u.rol == ROL_LECTURA:
+        return metodo == "GET" and not ruta.startswith("/auditoria")
+    if u.rol == ROL_ESPECIALISTA:
+        if metodo == "GET":
+            return not ruta.startswith("/auditoria")
+        propias = [f for f in (u.fichas_permitidas or "").split(",") if f]
+        return any(ruta == RUTAS_FICHA[f] or ruta.rstrip("/") == RUTAS_FICHA[f].rstrip("/") for f in propias if f in RUTAS_FICHA)
     if metodo == "DELETE":
         return False
     if ruta.startswith(PREFIJOS_SOLO_MEDICO):
         return False
-    if ruta.startswith(("/doctores", "/enfermeras")) and metodo != "GET":
+    if ruta.startswith(("/doctores", "/enfermeras", "/reglas-semaforo")) and metodo != "GET":
         return False
     return True
 
@@ -147,15 +173,21 @@ async def control_acceso(request: Request, call_next, db_factory=SessionLocal):
     datos = leer_token(auth[7:]) if auth.lower().startswith("bearer ") else None
     if not datos:
         return JSONResponse({"detail": "Sesión no iniciada o vencida"}, status_code=401)
-    if ruta != "/auth/cambiar-clave" and ruta != "/auth/yo":
-        with db_factory() as db:
-            u = db.query(Usuario).filter(Usuario.id == datos["uid"], Usuario.activo.is_(True)).first()
-            if not u:
-                return JSONResponse({"detail": "Usuario no válido"}, status_code=401)
+    with db_factory() as db:
+        u = db.query(Usuario).filter(Usuario.id == datos["uid"], Usuario.activo.is_(True)).first()
+        if not u:
+            return JSONResponse({"detail": "Usuario no válido o desactivado"}, status_code=401)
+        if ruta not in ("/auth/cambiar-clave", "/auth/yo"):
             if u.debe_cambiar:
                 return JSONResponse({"detail": "Debe cambiar su contraseña"}, status_code=403)
-    if not permitido(datos["rol"], request.method, ruta):
-        return JSONResponse({"detail": "No tiene permiso para esta acción"}, status_code=403)
+            if not permitido(u, request.method, ruta):
+                return JSONResponse({"detail": "Su perfil no tiene permiso para esta acción"}, status_code=403)
+        resp = request.headers.get("x-responsable", "")
+        if resp and resp != "0" and request.method in ("POST", "PUT"):
+            r = db.query(Usuario).filter(Usuario.id == int(resp) if resp.isdigit() else False).first()
+            if not r or not r.activo or r.rol not in ROLES_RESPONSABLES:
+                return JSONResponse({"detail": "El profesional responsable indicado no es válido"}, status_code=400)
+        datos["rol"] = u.rol
     request.state.usuario = datos
     return await call_next(request)
 
@@ -203,9 +235,78 @@ def cambiar_clave(data: dict, u: Usuario = Depends(usuario_actual), db: Session 
     return {"token": crear_token(u), "usuario": publico(u)}
 
 
+@router.get("/auth/profesionales")
+def profesionales(db: Session = Depends(get_db)):
+    us = db.query(Usuario).filter(Usuario.activo.is_(True), Usuario.rol.in_(ROLES_RESPONSABLES)).order_by(Usuario.orden, Usuario.nombre).all()
+    return [{"id": u.id, "nombre": u.nombre, "cargo": u.cargo, "especialidad": u.especialidad, "rol": u.rol} for u in us]
+
+
 @router.get("/auth/usuarios")
 def listar_usuarios(db: Session = Depends(get_db)):
     return [publico(u) | {"activo": u.activo} for u in db.query(Usuario).order_by(Usuario.orden, Usuario.id).all()]
+
+
+def _datos_usuario(data: dict):
+    campos = {}
+    for k in ("nombre", "cargo", "especialidad"):
+        if k in data:
+            campos[k] = " ".join(str(data[k] or "").split()).upper() or None
+    if "rol" in data:
+        if data["rol"] not in ROLES:
+            raise HTTPException(status_code=400, detail="Rol no válido")
+        campos["rol"] = data["rol"]
+    if "fichas_permitidas" in data:
+        lista = data["fichas_permitidas"] or []
+        if any(f not in RUTAS_FICHA for f in lista):
+            raise HTTPException(status_code=400, detail="Ficha no válida")
+        campos["fichas_permitidas"] = ",".join(lista)
+    if "activo" in data:
+        campos["activo"] = bool(data["activo"])
+    return campos
+
+
+def _usuario_unico(db: Session, nombre: str) -> str:
+    partes = [p for p in "".join(c for c in nombre.lower() if c.isalpha() or c == " ").split() if p]
+    base = ((partes[0][0] if partes else "u") + (partes[1] if len(partes) > 1 else "")).translate(str.maketrans("áéíóúñü", "aeiounu"))[:20] or "usuario"
+    cand, n = base, 2
+    while db.query(Usuario).filter(Usuario.usuario == cand).first():
+        cand, n = f"{base}{n}", n + 1
+    return cand
+
+
+@router.post("/auth/usuarios")
+def crear_usuario(data: dict, db: Session = Depends(get_db)):
+    campos = _datos_usuario(data)
+    if not campos.get("nombre") or not campos.get("rol"):
+        raise HTTPException(status_code=400, detail="Nombre y rol son obligatorios")
+    if campos["rol"] == ROL_ESPECIALISTA and not campos.get("fichas_permitidas"):
+        raise HTTPException(status_code=400, detail="Indique las fichas que llena el especialista")
+    temporal = secrets.token_urlsafe(6)
+    u = Usuario(usuario=_usuario_unico(db, campos["nombre"]), orden=50, pass_hash=hash_clave(temporal), debe_cambiar=True, **campos)
+    db.add(u)
+    db.commit()
+    db.refresh(u)
+    return publico(u) | {"activo": u.activo, "temporal": temporal}
+
+
+@router.put("/auth/usuarios/{usuario_id}")
+def editar_usuario(usuario_id: int, data: dict, request: Request, db: Session = Depends(get_db)):
+    u = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not u:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    campos = _datos_usuario(data)
+    actual = getattr(request.state, "usuario", {}).get("uid")
+    if u.id == actual and (campos.get("activo") is False or campos.get("rol", ROL_MEDICO) != ROL_MEDICO):
+        raise HTTPException(status_code=400, detail="No puede desactivarse ni quitarse el rol de médico a sí mismo")
+    for k, v in campos.items():
+        setattr(u, k, v)
+    if u.rol == ROL_ESPECIALISTA and not u.fichas_permitidas:
+        raise HTTPException(status_code=400, detail="Indique las fichas que llena el especialista")
+    if not db.query(Usuario).filter(Usuario.rol == ROL_MEDICO, Usuario.activo.is_(True)).count():
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Debe quedar al menos un médico activo")
+    db.commit()
+    return publico(u) | {"activo": u.activo}
 
 
 @router.post("/auth/usuarios/{usuario_id}/restablecer")

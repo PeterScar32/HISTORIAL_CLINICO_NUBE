@@ -3,9 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Request
 from api.models import FichaElectroencefalograma, Paciente 
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import and_, or_, func
 from .database import SessionLocal, engine, Base
-from .crud import PROFESIONAL_ACTUAL, EVALUACION_ACTUAL, crear_evaluacion, evaluacion_vigente, create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
+from .crud import PROFESIONAL_ACTUAL, EVALUACION_ACTUAL, RESPONSABLE_ACTUAL, crear_evaluacion, evaluacion_vigente, create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
 import os
 from . import models
 from .models import FichaAptitudFisica 
@@ -13,7 +13,7 @@ from .database import get_db
 from sqlalchemy import desc
 
 from . import semaforo, auth, auditoria, demo
-from .auditoria import guardar_en_evaluacion, registrar_eliminacion
+from .auditoria import guardar_en_evaluacion, registrar_eliminacion, enviar_a_papelera
 Base.metadata.create_all(bind=engine)
 from .migraciones import aplicar_migraciones
 aplicar_migraciones(engine)
@@ -65,11 +65,14 @@ async def seguridad(request, call_next):
         token = PROFESIONAL_ACTUAL.set(f"usr:{datos['uid']}" if datos else None)
         ev = req.headers.get("x-evaluacion", "")
         token_ev = EVALUACION_ACTUAL.set(int(ev) if ev.isdigit() else None)
+        resp = req.headers.get("x-responsable", "")
+        token_resp = RESPONSABLE_ACTUAL.set(int(resp) if resp.isdigit() else None)
         try:
             return await call_next(req)
         finally:
             PROFESIONAL_ACTUAL.reset(token)
             EVALUACION_ACTUAL.reset(token_ev)
+            RESPONSABLE_ACTUAL.reset(token_resp)
     return await auth.control_acceso(request, siguiente)
 
 
@@ -174,15 +177,30 @@ def listar_evaluaciones(paciente_id: int, db: Session = Depends(get_db)):
         res.append({"id": ev.id, "fecha": ev.fecha, "empresa": ev.empresa, "puesto": ev.puesto, "tipo": ev.tipo, "fichas": fichas})
     return res
 
+@app.get("/pacientes/busqueda")
+def buscar_pacientes(q: str = "", db: Session = Depends(get_db)):
+    texto = " ".join(q.upper().split())
+    if len(texto) < 2:
+        return []
+    filtros = [models.Paciente.ci.ilike(f"{texto}%")]
+    palabras = texto.split()
+    nombre_completo = func.upper(func.concat(models.Paciente.apellido, " ", models.Paciente.nombre))
+    filtros.append(and_(*[nombre_completo.ilike(f"%{w}%") for w in palabras]))
+    filas = db.query(models.Paciente).filter(or_(*filtros)).order_by(models.Paciente.apellido, models.Paciente.nombre).limit(20).all()
+    return [{"id": x.id, "ci": x.ci, "nombre": f"{x.apellido} {x.nombre}",
+             "evaluaciones": db.query(models.Evaluacion).filter(models.Evaluacion.paciente_id == x.id).count()} for x in filas]
+
 @app.get("/pacientes/buscar/{ci}")
 def buscar_paciente_ci(ci: str, db: Session = Depends(get_db)):
     return paciente_o_404(db, ci)
 
 @app.delete("/api/pacientes/{paciente_id}")
-def eliminar_paciente(paciente_id: int, db: Session = Depends(get_db)):
+def eliminar_paciente(paciente_id: int, confirmar_ci: str = "", db: Session = Depends(get_db)):
     p = db.query(models.Paciente).filter(models.Paciente.id == paciente_id).first()
+    if p and str(confirmar_ci).strip().upper() != str(p.ci).strip().upper():
+        raise HTTPException(status_code=400, detail="Para eliminar debe confirmar escribiendo el CI del paciente")
     if p:
-        registrar_eliminacion(db, "pacientes", p.id, p.id, f"{p.apellido} {p.nombre} · CI {p.ci}")
+        enviar_a_papelera(db, p)
     if not delete_paciente(db, paciente_id):
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
     return {"message": "Eliminado"}
@@ -1108,37 +1126,46 @@ async def filtrar_osteomuscular(estado: str, db: Session = Depends(get_db)):
     return [{"codigo": r.codigo_paciente, "nombre": r.nombre_completo, "resultado": r.concepto_aptitud} for r in resultados]
 
 @app.get("/api/informe-consolidado/{codigo_paciente}")
-async def obtener_informe_consolidado(codigo_paciente: str, db: Session = Depends(get_db)):
+def obtener_informe_consolidado(codigo_paciente: str, evaluacion_id: int = None, db: Session = Depends(get_db)):
     p = paciente_o_404(db, codigo_paciente)
+    q_ev = db.query(models.Evaluacion).filter(models.Evaluacion.paciente_id == p.id)
+    ev = (q_ev.filter(models.Evaluacion.id == evaluacion_id).first() if evaluacion_id else None) or q_ev.order_by(desc(models.Evaluacion.id)).first()
 
-    apt = ultimo(db, models.FichaAptitud, p.id)
-    fis = ultimo(db, models.FichaAptitudFisica, p.id)
-    ost = ultimo(db, models.FichaOsteomuscular, p.id)
-    esp = ultimo(db, models.FichaEspirometria, p.id)
-    oft = ultimo(db, models.FichaOftalmologica, p.id)
-    car = ultimo(db, models.FichaCardiologia, p.id)
-    ele = ultimo(db, models.FichaElectroencefalograma, p.id)
-    alt = ultimo(db, models.FichaAltura, p.id)
-    dec = ultimo(db, models.AntecedentesP2, p.id)
-    his = ultimo(db, models.HistorialClinico, p.id)
-    psi = ultimo(db, models.FichaPsicologia, p.id)
+    def de_ev(modelo):
+        if not ev:
+            return None
+        return db.query(modelo).filter(modelo.paciente_id == p.id, modelo.evaluacion_id == ev.id).order_by(desc(modelo.id)).first()
+
+    apt = de_ev(models.FichaAptitud)
+    fis = de_ev(models.FichaAptitudFisica)
+    ost = de_ev(models.FichaOsteomuscular)
+    esp = de_ev(models.FichaEspirometria)
+    oft = de_ev(models.FichaOftalmologica)
+    car = de_ev(models.FichaCardiologia)
+    ele = de_ev(models.FichaElectroencefalograma)
+    alt = de_ev(models.FichaAltura)
+    dec = de_ev(models.AntecedentesP2)
+    his = de_ev(models.HistorialClinico)
+    psi = de_ev(models.FichaPsicologia)
 
     return {
         "datos_generales": {"codigo": p.codigo_paciente, "ci": p.ci, "nombre": f"{p.nombre} {p.apellido}"},
+        "evaluacion": {"id": ev.id, "fecha": ev.fecha, "tipo": ev.tipo, "empresa": ev.empresa, "puesto": ev.puesto} if ev else None,
+        "evaluaciones": [{"id": e.id, "fecha": e.fecha, "tipo": e.tipo, "empresa": e.empresa} for e in q_ev.order_by(desc(models.Evaluacion.id)).all()],
         "resultados_medicos": {
             "01_aptitud_ocupacional": apt.resultado if apt and hasattr(apt, 'resultado') else "SIN EXAMEN",
             "02_aptitud_fisica_psicologica": {
-                "fisico": fis.resultado_fisico if fis else "Sin examén", 
-                "psico": fis.resultado_psicologico if fis else "Sin examén"
+                "fisico": fis.resultado_fisico if fis else "SIN EXAMEN", 
+                "psico": fis.resultado_psicologico if fis else "SIN EXAMEN"
             },
-            "03_osteomuscular": ost.concepto_aptitud if ost else "Sin examén",
-            "04_espirometria": "Examen realizado" if esp else "Sin examén",
+            "03_osteomuscular": ost.concepto_aptitud if ost else "SIN EXAMEN",
+            "04_espirometria": "Examen realizado" if esp else "SIN EXAMEN",
             "05_oftalmologia": f"LENTES: {oft.lentes or 'NO'}, ESTRABISMO: {oft.estrabismo or 'NO'}, DALTONISMO: {oft.daltonismo or 'NO'}" if oft else "SIN EXAMEN",
             "06_cardiologia": f"NIÑEZ: {car.ninez or 'NO'}, ADOLESCENTE: {car.adolescente or 'NO'}, ADULTEZ: {car.adultez or 'NO'}" if car else "SIN EXAMEN",
             "07_electroencefalograma": f"CEFALEAS: {ele.cefaleas or 'NO'}, EPILEPSIA: {ele.epilepsia or 'NO'}, CONVULSIONES: {ele.convulsiones or 'NO'}" if ele else "SIN EXAMEN",
             "08_altura": f"SOPLO CARDIACO: {alt.soplo_cardiaco or 'NO'}, ARRITMIAS: {alt.arritmias_cardiacas or 'NO'}" if alt else "SIN EXAMEN",
-            "09_declaracion_jurada": "Completada" if dec else "Sin examén",
-            "10_historial_clinico": "Completado" if his else "Sin examén",
+            "09_declaracion_jurada": "Completada" if dec else "SIN EXAMEN",
+            "10_historial_clinico": "Completado" if his else "SIN EXAMEN",
             "11_psicologia_detallada": psi.resultado_psicologico if psi and psi.resultado_psicologico else "SIN EXAMEN"
         }
     }
