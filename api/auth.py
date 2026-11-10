@@ -1,3 +1,4 @@
+import re
 import base64
 import hashlib
 import hmac
@@ -68,6 +69,7 @@ PREFIJOS_SOLO_MEDICO = (
     "/semaforo", "/reglas-semaforo", "/empresas", "/api/informe-consolidado", "/verificar_estado_paciente",
     "/filtrar", "/buscar-cardiologia", "/ficha-psicologia-filtrada", "/espirometria-filtrada", "/listar-espirometria",
     "/consultar-electro-por-campo", "/historial-filtrado", "/api/reporte-unificado", "/auditoria", "/api/expediente",
+    "/consultas",
 )
 
 
@@ -154,6 +156,8 @@ def permitido(u: Usuario, metodo: str, ruta: str) -> bool:
     if u.rol == ROL_ESPECIALISTA:
         if metodo == "GET":
             return not ruta.startswith("/auditoria")
+        if metodo == "POST" and re.fullmatch(r"/pacientes/\d+/adjuntos", ruta):
+            return True
         propias = [f for f in (u.fichas_permitidas or "").split(",") if f]
         return any(ruta == RUTAS_FICHA[f] or ruta.rstrip("/") == RUTAS_FICHA[f].rstrip("/") for f in propias if f in RUTAS_FICHA)
     if metodo == "DELETE":

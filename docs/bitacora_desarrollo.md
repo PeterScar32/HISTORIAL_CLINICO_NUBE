@@ -181,3 +181,17 @@ Los flujos del navegador requieren la API local en el puerto 8000 y las páginas
 - Datos de la enfermera.
 - Comparación campo por campo con las fichas originales de OHS.
 - Prueba de usabilidad (SUS) con el personal.
+
+## Incremento 8 · Archivos adjuntos y búsqueda en consultas (10-11-2026)
+
+**Pedido:** subir PDF o fotos en cada paciente y buscar por CI o nombre completo en las consultas por especialidad.
+
+**Decisiones**
+- **Tabla `adjuntos`:** el archivo se guarda en la base (Render gratuito no tiene disco persistente), en base64, con límite de 5 MB. El tipo se valida por la firma de los bytes (PDF, JPG o PNG), no por la extensión.
+- Las fotos de más de 1,5 MB se reducen en el navegador (2000 px, JPEG) antes de subirse.
+- Cada archivo queda vinculado a la evaluación vigente y su alta o eliminación se registra en `auditoria`.
+- Los archivos se incluyen en la papelera (se restauran con el expediente) y en el respaldo JSON.
+- Permisos: suben médico, enfermería y especialista; consulta solo ve; solo el médico elimina.
+- **Búsqueda en consultas:** ruta `GET /consultas/{ficha}/buscar?q=` (por CI o por todas las palabras del nombre, en cualquier orden) y un buscador común en las 11 páginas `co_*.html`, con enlace al informe de la evaluación.
+
+**Pruebas:** API 96/96 (`tests/test_adjuntos.py`: AD01–AD08, CS01–CS02); navegador 147/147 (nuevo `tests/e2e_adjuntos.py`, 18).
