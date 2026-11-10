@@ -23,8 +23,23 @@
         .top-bar { width: 100%; background: #343a40; padding: 10px 20px; color: white; margin-bottom: 20px; }
         .top-bar a { color: white; text-decoration: none; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; }
         .contador-badge { background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin-left: 10px; vertical-align: middle; }
+        body { background-color: #020617; color: #e2e8f0; padding-top: 30px; }
+        .top-bar { background: transparent; }
+        .card { background: #0f172a; border: 1px solid #1e293b; box-shadow: none; }
+        .card-header { background: #0f172a; border-bottom: 1px solid #1e293b; }
+        .table { --bs-table-bg: transparent; --bs-table-hover-bg: #111c33; --bs-table-color: #e2e8f0; --bs-table-hover-color: #fff; }
+        .table thead { background-color: #0b1222; }
+        .table th { color: #94a3b8; border-bottom: 1px solid #1e293b; }
+        .table td { color: #e2e8f0; border-color: #1e293b; }
+        .badge.bg-light { background: #1e293b !important; color: #cbd5e1 !important; border-color: #334155 !important; }
+        .buscador { display: flex; gap: 10px; padding: 14px 16px; border-bottom: 1px solid #1e293b; flex-wrap: wrap; }
+        .buscador input { flex: 1; min-width: 220px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+        .buscador button { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 10px; padding: 8px 14px; font-weight: 800; font-size: 12px; }
+        #papelera { display: none; padding: 14px 16px; border-top: 1px solid #1e293b; }
+        #papelera h3 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #94a3b8; }
+        #papelera table td, #papelera table th { font-size: .78rem; text-transform: none; }
     </style>
-    <script src="config.js?v=8"></script>
+    <script src="config.js?v=9"></script>
 </head>
 <body>
 
@@ -39,6 +54,10 @@
             <span id="totalPacientes" class="contador-badge">Cargando...</span>
         </div>
         <div class="card-body p-0">
+            <div class="buscador">
+                <input type="search" id="buscar" placeholder="Buscar por CI, apellido o nombre…" aria-label="Buscar paciente" oninput="filtrarLista()">
+                <button type="button" class="btn-papelera" onclick="verPapelera()">🗑️ Papelera</button>
+            </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead>
@@ -51,6 +70,11 @@
                     </thead>
                     <tbody id="listaPacientes"></tbody>
                 </table>
+            </div>
+            <div id="papelera">
+                <h3>Papelera · pacientes eliminados</h3>
+                <p style="font-size:12px;color:#94a3b8">Al eliminar un paciente se guarda una copia completa de su expediente. Desde aquí se puede restaurar con todas sus evaluaciones y fichas.</p>
+                <div class="table-responsive"><table class="table mb-0"><thead><tr><th>CI</th><th>Paciente</th><th>Evaluaciones</th><th>Eliminado</th><th>Restaurado</th><th></th></tr></thead><tbody id="filasPapelera"></tbody></table></div>
             </div>
         </div>
     </div>
@@ -92,7 +116,8 @@
                         <td><span class="badge bg-light text-dark border">${esc(p.codigo_paciente) || '---'}</span></td>
                         <td class="text-center">
                             <button class="btn-action btn-reporte" title="REPORTE" onclick="verReporte(${id})">📄</button>
-                            <button class="btn-action btn-editar" title="EDITAR" onclick="editarPaciente(${id})">✏️</button>
+                            <button class="btn-action btn-editar btn-identidad" title="CORREGIR NOMBRE O CI" onclick="abrirIdentidad(${id})">🪪</button>
+                            <button class="btn-action btn-editar" title="EDITAR DECLARACIÓN JURADA" onclick="editarPaciente(${id})">✏️</button>
                             <button class="btn-action btn-borrar" title="BORRAR" onclick="eliminarPaciente(${id})">🗑️</button>
                         </td>
                     </tr>`;
@@ -122,29 +147,93 @@
         localStorage.removeItem('p_id');
     }
 
+    function filtrarLista() {
+        const q = document.getElementById('buscar').value.trim().toUpperCase().split(/\s+/).filter(Boolean);
+        document.querySelectorAll('#listaPacientes tr').forEach(tr => {
+            const t = tr.innerText.toUpperCase();
+            tr.style.display = q.every(w => t.includes(w)) ? '' : 'none';
+        });
+    }
+
     async function eliminarPaciente(id) {
-        if (!confirm("¿Estás seguro de que deseas eliminar este paciente y todos sus registros?")) return;
-
+        const p = (window._pacientes || {})[id];
+        if (!p) return;
+        const escrito = prompt(`Va a eliminar a ${p.apellido} ${p.nombre} con todas sus evaluaciones y fichas.\n\nEl expediente se guardará en la papelera y podrá restaurarse.\n\nPara confirmar, escriba el CI del paciente (${p.ci}):`);
+        if (escrito === null) return;
         try {
-            const response = await fetch(`${API}/api/pacientes/${id}`, { 
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
+            const response = await fetch(`${API}/api/pacientes/${id}?confirmar_ci=${encodeURIComponent(escrito)}`, { method: 'DELETE' });
+            const d = await response.json().catch(() => ({}));
             if (response.ok) {
-                alert("Paciente eliminado exitosamente.");
-                location.reload(); 
+                alert("Paciente enviado a la papelera. Puede restaurarlo desde el botón 🗑️ Papelera.");
+                location.reload();
             } else {
-                const errorMsg = await response.text();
-                alert("Error al intentar eliminar: " + errorMsg);
+                alert("No se eliminó: " + (d.detail || response.status));
             }
         } catch (error) {
-            console.error("Error:", error);
-            alert("Error de conexión al eliminar.");
+            alert("Error de conexión con el servidor.");
         }
-    }   
+    }
+
+    async function verPapelera() {
+        const caja = document.getElementById('papelera');
+        caja.style.display = caja.style.display === 'block' ? 'none' : 'block';
+        if (caja.style.display === 'none') return;
+        const r = await fetch(`${API}/papelera`);
+        if (!r.ok) { document.getElementById('filasPapelera').innerHTML = '<tr><td colspan="6">Solo los médicos pueden ver la papelera.</td></tr>'; return; }
+        const items = await r.json();
+        document.getElementById('filasPapelera').innerHTML = items.length ? items.map(x => `
+            <tr><td>${esc(x.ci)}</td><td>${esc(x.nombre)}</td><td>${x.evaluaciones}</td>
+            <td>${fechaServidor(x.eliminado_en).toLocaleString('es-BO')}<div style="color:#94a3b8">${esc(x.eliminado_por || '')}</div></td>
+            <td>${x.restaurado_en ? fechaServidor(x.restaurado_en).toLocaleString('es-BO') + '<div style="color:#94a3b8">' + esc(x.restaurado_por || '') + '</div>' : '—'}</td>
+            <td>${x.restaurado_en ? '' : `<button class="btn btn-sm btn-outline-light" onclick="restaurar(${x.id})">Restaurar</button>`}</td></tr>`).join('')
+            : '<tr><td colspan="6">La papelera está vacía.</td></tr>';
+    }
+
+    async function restaurar(id) {
+        if (!confirm('¿Restaurar este paciente con todas sus evaluaciones y fichas?')) return;
+        const r = await fetch(`${API}/papelera/${id}/restaurar`, { method: 'POST' });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok) { alert('Paciente restaurado.'); location.reload(); }
+        else alert('No se pudo restaurar: ' + (d.detail || r.status));
+    }
+
+    function abrirIdentidad(id) {
+        const p = window._pacientes[id];
+        document.getElementById('idn-id').value = id;
+        document.getElementById('idn-nombre').value = p.nombre || '';
+        document.getElementById('idn-apellido').value = p.apellido || '';
+        document.getElementById('idn-ci').value = p.ci || '';
+        document.getElementById('idn-error').textContent = '';
+        document.getElementById('dlgIdentidad').showModal();
+    }
+
+    async function guardarIdentidad() {
+        const id = document.getElementById('idn-id').value;
+        const cuerpo = {
+            nombre: document.getElementById('idn-nombre').value,
+            apellido: document.getElementById('idn-apellido').value,
+            ci: document.getElementById('idn-ci').value
+        };
+        const r = await fetch(`${API}/api/pacientes/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) { document.getElementById('idn-error').textContent = d.detail || ('Error ' + r.status); return; }
+        document.getElementById('dlgIdentidad').close();
+        cargarPacientes();
+    }
 
     window.onload = cargarPacientes;
 </script>
+<dialog id="dlgIdentidad" style="border:none;border-radius:14px;padding:22px;background:#0f172a;color:#e2e8f0;width:min(420px,92vw);">
+    <h5 style="font-weight:800;margin-bottom:14px;">Corregir datos de identificación</h5>
+    <input type="hidden" id="idn-id">
+    <label class="form-label small">Nombres</label><input id="idn-nombre" class="form-control mb-2">
+    <label class="form-label small">Apellidos</label><input id="idn-apellido" class="form-control mb-2">
+    <label class="form-label small">CI</label><input id="idn-ci" class="form-control mb-2">
+    <p id="idn-error" style="color:#f87171;font-weight:700;font-size:13px;min-height:18px;"></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="document.getElementById('dlgIdentidad').close()">Cancelar</button>
+        <button id="idn-guardar" class="btn btn-success" onclick="guardarIdentidad()">Guardar</button>
+    </div>
+</dialog>
 </body>
 </html>

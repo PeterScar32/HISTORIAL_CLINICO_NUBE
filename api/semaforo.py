@@ -32,27 +32,27 @@ REGLAS_INICIALES = [
 ]
 
 FUENTES = [
-    ("aptitud", "Aptitud ocupacional", models.FichaAptitud, ["resultado"]),
-    ("aptitud_fisica", "Aptitud física", models.FichaAptitudFisica, ["resultado_fisico", "resultado_psicologico"]),
-    ("psicologia", "Psicología", models.FichaPsicologia, ["resultado_psicologico"]),
-    ("osteomuscular", "Osteomuscular", models.FichaOsteomuscular, ["concepto_aptitud"]),
+    ("aptitud", "Aptitud médico ocupacional", models.FichaAptitud, ["resultado"]),
+    ("aptitud_fisica", "Aptitud física y psicológica", models.FichaAptitudFisica, ["resultado_fisico", "resultado_psicologico"]),
+    ("psicologia", "Evaluación psicológica", models.FichaPsicologia, ["resultado_psicologico"]),
+    ("osteomuscular", "Evaluación osteomuscular", models.FichaOsteomuscular, ["concepto_aptitud"]),
     ("historial_clinico", "Historia clínica", models.HistorialClinico, ["aptitud_no_apto", "aptitud_restriccion", "aptitud_apto"]),
 ]
 
 FICHAS = {
-    "declaracion": ("Declaración jurada P1", models.DeclaracionJurada),
-    "antecedentes": ("Declaración jurada P2", models.AntecedentesP2),
-    "habitos": ("Declaración jurada P3", models.HabitosRiesgosP3),
+    "declaracion": ("Declaración jurada · P1 Filiación", models.DeclaracionJurada),
+    "antecedentes": ("Declaración jurada · P2 Antecedentes", models.AntecedentesP2),
+    "habitos": ("Declaración jurada · P3 Hábitos y riesgos", models.HabitosRiesgosP3),
     "oftalmologia": ("Oftalmología", models.FichaOftalmologica),
-    "psicologia": ("Psicología", models.FichaPsicologia),
+    "psicologia": ("Evaluación psicológica", models.FichaPsicologia),
     "espirometria": ("Espirometría", models.FichaEspirometria),
     "cardiologia": ("Cardiología", models.FichaCardiologia),
-    "altura": ("Altura", models.FichaAltura),
+    "altura": ("Trabajo en altura", models.FichaAltura),
     "electroencefalograma": ("Electroencefalograma", models.FichaElectroencefalograma),
-    "aptitud": ("Aptitud ocupacional", models.FichaAptitud),
-    "aptitud_fisica": ("Aptitud física", models.FichaAptitudFisica),
+    "aptitud": ("Aptitud médico ocupacional", models.FichaAptitud),
+    "aptitud_fisica": ("Aptitud física y psicológica", models.FichaAptitudFisica),
     "historial_clinico": ("Historia clínica", models.HistorialClinico),
-    "osteomuscular": ("Osteomuscular", models.FichaOsteomuscular),
+    "osteomuscular": ("Evaluación osteomuscular", models.FichaOsteomuscular),
 }
 
 
@@ -98,6 +98,13 @@ def ultima(db, modelo, evaluacion_id):
     return db.query(modelo).filter(modelo.evaluacion_id == evaluacion_id).order_by(desc(modelo.id)).first()
 
 
+def ultima_modificacion(db, modelo, ficha):
+    from .auditoria import Auditoria
+    a = db.query(Auditoria).filter(Auditoria.tabla == modelo.__tablename__, Auditoria.registro_id == ficha.id,
+                                   Auditoria.accion == "MODIFICACION").order_by(desc(Auditoria.id)).first()
+    return {"fecha": a.fecha, "usuario": a.usuario} if a else None
+
+
 def requeridas_de(ev):
     if ev.fichas_requeridas:
         claves = [c.strip() for c in ev.fichas_requeridas.split(",") if c.strip() in FICHAS]
@@ -119,7 +126,9 @@ def semaforo_evaluacion(db: Session, ev, reglas):
             "clave": clave, "nombre": nombre, "requerida": requerida,
             "estado": "REGISTRADA" if ficha else "PENDIENTE",
             "fecha": ficha.creado_en if ficha else None,
-            "profesional": ficha.registrado_por if ficha else None,
+            "profesional": ficha.responsable if ficha else None,
+            "registrado_por": ficha.registrado_por if ficha else None,
+            "ultima_modificacion": ultima_modificacion(db, modelo, ficha) if ficha else None,
             "conclusiones": [], "color": None,
         }
         if ficha:

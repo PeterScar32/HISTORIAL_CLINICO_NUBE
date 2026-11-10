@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="560" viewBox="0 0 1060 560" font-family="Liberation Serif, Times New Roman, serif" fill="#000000"><rect width="1060" height="560" fill="#FFFFFF"/><rect x="170.0" y="20.0" width="870.0" height="520.0" rx="0" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+<text x="185.0" y="41.2" font-size="12" text-anchor="start" font-weight="bold" font-style="normal"><tspan x="185.0" dy="0">Módulo de fichas clínico-ocupacionales</tspan></text>
+<ellipse cx="520.0" cy="110.0" rx="76.3" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="520.0" y="107.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="520.0" dy="0">CU-04 Registrar ficha</tspan><tspan x="520.0" dy="14">de especialidad</tspan></text>
+<ellipse cx="870.0" cy="110.0" rx="83.3" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="870.0" y="107.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="870.0" dy="0">CU-05 Buscar trabajador</tspan><tspan x="870.0" dy="14">por CI o nombre</tspan></text>
+<polyline points="596.3,110.0 786.7,110.0" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="6,4"/>
+<polyline points="777.7,105.7 786.7,110.0 777.7,114.3" fill="none" stroke="#000000"/>
+<rect x="679.3" y="92.0" width="51.3" height="15" fill="#FFFFFF"/>
+<text x="705.0" y="104.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="705.0" dy="0">«include»</tspan></text>
+<circle cx="80" cy="94" r="8" fill="#FFFFFF" stroke="#000000"/>
+<line x1="80" y1="102" x2="80" y2="126" stroke="#000000"/>
+<line x1="67" y1="110" x2="93" y2="110" stroke="#000000"/>
+<line x1="80" y1="126" x2="69" y2="144" stroke="#000000"/>
+<line x1="80" y1="126" x2="91" y2="144" stroke="#000000"/>
+<text x="80.0" y="158.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="80.0" dy="0">Profesional de</tspan><tspan x="80.0" dy="14">especialidad</tspan></text>
+<circle cx="80" cy="244" r="8" fill="#FFFFFF" stroke="#000000"/>
+<line x1="80" y1="252" x2="80" y2="276" stroke="#000000"/>
+<line x1="67" y1="260" x2="93" y2="260" stroke="#000000"/>
+<line x1="80" y1="276" x2="69" y2="294" stroke="#000000"/>
+<line x1="80" y1="276" x2="91" y2="294" stroke="#000000"/>
+<text x="80.0" y="308.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="80.0" dy="0">Enfermería</tspan></text>
+<polyline points="98.0,112.0 443.7,110.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="98.0,262.0 452.0,127.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="520.0,235.0 520.0,135.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polygon points="514.7,146.9 520.0,135.0 525.3,146.9" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="300.0,235.0 920.0,235.0" fill="none" stroke="#000000" stroke-width="1"/>
+<ellipse cx="300.0" cy="320.0" rx="72.5" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="300.0" y="324.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="300.0" dy="0">Oftalmología</tspan></text>
+<polyline points="300.0,295.0 300.0,235.0" fill="none" stroke="#000000" stroke-width="1"/>
+<ellipse cx="455.0" cy="320.0" rx="72.5" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="455.0" y="317.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="455.0" dy="0">Evaluación</tspan><tspan x="455.0" dy="14">psicológica</tspan></text>
+<polyline points="455.0,295.0 455.0,235.0" fill="none" stroke="#000000" stroke-width="1"/>
+<ellipse cx="610.0" cy="320.0" rx="72.5" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="610.0" y="324.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="610.0" dy="0">Espirometría</tspan></text>
+<polyline points="610.0,295.0 610.0,235.0" fill="none" stroke="#000000" stroke-width="1"/>
+<ellipse cx="765.0" cy="320.0" rx="72.5" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="765.0" y="324.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="765.0" dy="0">Cardiología</tspan></text>
+<polyline points="765.0,295.0 765.0,235.0" fill="none" stroke="#000000" stroke-width="1"/>
+<ellipse cx="920.0" cy="320.0" rx="72.5" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="920.0" y="317.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="920.0" dy="0">Trabajo</tspan><tspan x="920.0" dy="14">en altura</tspan></text>
+<polyline points="920.0,295.0 920.0,235.0" fill="none" stroke="#000000" stroke-width="1"/>
+<ellipse cx="300.0" cy="450.0" rx="72.5" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="300.0" y="454.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="300.0" dy="0">Electroencefalograma</tspan></text>
+<polyline points="300.0,425.0 300.0,385.0" fill="none" stroke="#000000" stroke-width="1"/>
+<ellipse cx="455.0" cy="450.0" rx="72.5" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="455.0" y="447.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="455.0" dy="0">Aptitud médico</tspan><tspan x="455.0" dy="14">ocupacional</tspan></text>
+<polyline points="455.0,425.0 455.0,385.0" fill="none" stroke="#000000" stroke-width="1"/>
+<ellipse cx="610.0" cy="450.0" rx="72.5" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="610.0" y="447.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="610.0" dy="0">Aptitud física</tspan><tspan x="610.0" dy="14">y psicológica</tspan></text>
+<polyline points="610.0,425.0 610.0,385.0" fill="none" stroke="#000000" stroke-width="1"/>
+<ellipse cx="765.0" cy="450.0" rx="72.5" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="765.0" y="447.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="765.0" dy="0">Evaluación</tspan><tspan x="765.0" dy="14">osteomuscular</tspan></text>
+<polyline points="765.0,425.0 765.0,385.0" fill="none" stroke="#000000" stroke-width="1"/>
+<ellipse cx="920.0" cy="450.0" rx="72.5" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="920.0" y="447.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="920.0" dy="0">Historia</tspan><tspan x="920.0" dy="14">clínica</tspan></text>
+<polyline points="920.0,425.0 920.0,385.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="300.0,385.0 920.0,385.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="205.0,385.0 300.0,385.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="205.0,385.0 205.0,235.0 300.0,235.0" fill="none" stroke="#000000" stroke-width="1"/>
+<text x="600.0" y="528.9" font-size="11" text-anchor="middle" font-weight="normal" font-style="italic"><tspan x="600.0" dy="0">Cada ficha especializa a CU-04: comparte su flujo y registra los campos propios de su especialidad.</tspan></text></svg>

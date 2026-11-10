@@ -1,0 +1,148 @@
+Fecha de ejecución (UTC): 2026-11-10 03:36
+Commit evaluado: 8d20886 (rama desarrollo)
+Entorno: Chromium (Playwright) sobre las páginas reales, API FastAPI local, PostgreSQL 16 local; datos ficticios
+
+== tests/e2e_flujo.py
+OK    el código mostrado es el CI
+OK    P1 muestra el paciente registrado
+OK    P3 muestra el paciente (ya no queda en CARGANDO)
+OK    la lista muestra un solo paciente
+OK    corregir el nombre actualiza el mismo paciente sin duplicarlo
+OK    reporte muestra P1
+OK    reporte muestra P2
+OK    reporte muestra P3
+OK    la ficha de cardiología se abre con el CI y el nombre del paciente
+OK    ficha de cardiología guardada
+OK    consulta oftalmología: USA LENTES devuelve al paciente
+OK    registro avisa que el CI ya existe
+OK    registro completa el nombre del paciente existente
+OK    nueva evaluación: P1 trae los datos de la evaluación anterior
+OK    nueva evaluación: P2 empieza vacía
+OK    sigue habiendo un solo paciente
+OK    el reporte ofrece las dos evaluaciones
+OK    informe muestra la evaluación nueva
+OK    la evaluación anterior se conserva intacta
+OK    Personal lista a los profesionales con sus perfiles
+OK    el especialista aparece con su rol, especialidad y fichas
+OK    el especialista ve la ficha que tiene asignada
+OK    el menú oculta las fichas que no le corresponden
+OK    abrir por URL una ficha no asignada devuelve al portal
+OK    borrar exige escribir el CI del paciente
+OK    el paciente eliminado se restaura desde la papelera
+ERRORES: ninguno
+
+== tests/e2e_semaforo.py
+OK    resumen: 4 total, 1 rojo, 1 amarillo, 1 verde, 1 gris
+OK    alerta roja visible
+OK    suena la alerta al buscar
+OK    fila roja corresponde al NO APTO
+OK    la fila roja muestra el motivo
+OK    sin conclusión queda en gris
+OK    cumplimiento: 0 completas, 4 incompletas (requeridas por defecto)
+OK    verde con fichas faltantes se muestra como incompleta
+OK    todas las conclusiones tienen profesional (sesión iniciada)
+OK    detalle por ficha con conclusión, profesional y pendientes
+OK    el detalle separa responsable, quien registró y última modificación
+OK    tabla de estado por especialidad
+OK    filtrar por color rojo
+OK    el reporte muestra el semáforo de la evaluación
+OK    la lista marca al paciente con alerta
+ERRORES: ninguno
+
+== tests/e2e_login.py
+OK    sin sesión, una página interna redirige al inicio
+OK    pantalla ¿Quién eres? con 5 perfiles
+OK    los 4 médicos tienen foto
+OK    contraseña incorrecta rechazada
+OK    portal muestra a la usuaria con su foto
+OK    médico ve las 5 opciones
+OK    la barra muestra foto y nombre del usuario
+OK    enfermería ve solo registro y pacientes
+OK    enfermería no puede abrir el semáforo
+OK    enfermería abre una ficha con el paciente cargado
+OK    enfermería no ve borrar ni reporte
+OK    el paciente registrado por enfermería aparece al instante en el semáforo del médico
+OK    detalle disponible
+OK    cerrar sesión vuelve a ¿Quién eres?
+OK    tras salir no se puede volver a entrar sin clave
+ERRORES: ninguno
+
+== tests/e2e_fichas.py
+OK    cardiologia: sin datos previos se anuncia ficha nueva 🆕 Ficha nueva para la evaluación del 2026-11-05 (PERIODICO).
+OK    cardiologia: primer guardado en la evaluación correcta
+OK    cardiologia: al volver a abrir, se avisa que la ficha ya existe
+OK    cardiologia: el segundo guardado actualiza la misma ficha (no duplica)
+OK    cardiologia: abrir y guardar sin cambios conserva 21 campos con datos
+OK    psicologia: sin datos previos se anuncia ficha nueva 🆕 FICHA NUEVA PARA LA EVALUACIÓN DEL 2026-11-05 (PERIODICO).
+OK    psicologia: primer guardado en la evaluación correcta
+OK    psicologia: al volver a abrir, se avisa que la ficha ya existe
+OK    psicologia: el segundo guardado actualiza la misma ficha (no duplica)
+OK    psicologia: abrir y guardar sin cambios conserva 12 campos con datos
+OK    espirometria: sin datos previos se anuncia ficha nueva 🆕 Ficha nueva para la evaluación del 2026-11-05 (PERIODICO).
+OK    espirometria: primer guardado en la evaluación correcta
+OK    espirometria: al volver a abrir, se avisa que la ficha ya existe
+OK    espirometria: el segundo guardado actualiza la misma ficha (no duplica)
+OK    espirometria: abrir y guardar sin cambios conserva 21 campos con datos
+OK    altura: sin datos previos se anuncia ficha nueva 🆕 Ficha nueva para la evaluación del 2026-11-05 (PERIODICO).
+OK    altura: primer guardado en la evaluación correcta
+OK    altura: al volver a abrir, se avisa que la ficha ya existe
+OK    altura: el segundo guardado actualiza la misma ficha (no duplica)
+OK    altura: abrir y guardar sin cambios conserva 15 campos con datos
+OK    electroencefalograma: sin datos previos se anuncia ficha nueva 🆕 Ficha nueva para la evaluación del 2026-11-05 (PERIODICO).
+OK    electroencefalograma: primer guardado en la evaluación correcta
+OK    electroencefalograma: al volver a abrir, se avisa que la ficha ya existe
+OK    electroencefalograma: el segundo guardado actualiza la misma ficha (no duplica)
+OK    electroencefalograma: abrir y guardar sin cambios conserva 21 campos con datos
+OK    aptitud: sin datos previos se anuncia ficha nueva 🆕 Ficha nueva para la evaluación del 2026-11-05 (PERIODICO).
+OK    aptitud: primer guardado en la evaluación correcta
+OK    aptitud: al volver a abrir, se avisa que la ficha ya existe
+OK    aptitud: el segundo guardado actualiza la misma ficha (no duplica)
+OK    aptitud: abrir y guardar sin cambios conserva 21 campos con datos
+OK    aptitud_fisica: sin datos previos se anuncia ficha nueva 🆕 Ficha nueva para la evaluación del 2026-11-05 (PERIODICO).
+OK    aptitud_fisica: primer guardado en la evaluación correcta
+OK    aptitud_fisica: al volver a abrir, se avisa que la ficha ya existe
+OK    aptitud_fisica: el segundo guardado actualiza la misma ficha (no duplica)
+OK    aptitud_fisica: abrir y guardar sin cambios conserva 25 campos con datos
+OK    historial_clinico: sin datos previos se anuncia ficha nueva 🆕 Ficha nueva para la evaluación del 2026-11-05 (PERIODICO).
+OK    historial_clinico: primer guardado en la evaluación correcta
+OK    historial_clinico: al volver a abrir, se avisa que la ficha ya existe
+OK    historial_clinico: el segundo guardado actualiza la misma ficha (no duplica)
+OK    historial_clinico: abrir y guardar sin cambios conserva 56 campos con datos
+OK    osteomuscular: sin datos previos se anuncia ficha nueva 🆕 Ficha nueva para la evaluación del 2026-11-05 (PERIODICO).
+OK    osteomuscular: primer guardado en la evaluación correcta
+OK    osteomuscular: al volver a abrir, se avisa que la ficha ya existe
+OK    osteomuscular: el segundo guardado actualiza la misma ficha (no duplica)
+OK    osteomuscular: abrir y guardar sin cambios conserva 80 campos con datos
+OK    oftalmologia: sin datos previos se anuncia ficha nueva 🆕 Ficha nueva para la evaluación del 2026-11-05 (PERIODICO).
+OK    oftalmologia: primer guardado en la evaluación correcta
+OK    oftalmologia: al volver a abrir, se avisa que la ficha ya existe
+OK    oftalmologia: el segundo guardado actualiza la misma ficha (no duplica)
+OK    oftalmologia: abrir y guardar sin cambios conserva 16 campos con datos
+OK    auditoría registra la creación de las 10 fichas
+ERRORES: ninguno
+
+== tests/e2e_informe.py
+OK    informe abre con los datos del trabajador y la evaluación
+OK    incluye la ficha de cardiología registrada
+OK    las 10 fichas sin registrar aparecen marcadas como (sin registrar)
+OK    por defecto solo se incluyen las fichas registradas
+OK    cada ficha muestra fecha y profesional
+OK    cada ficha distingue responsable, registro y última modificación
+OK    las filas de las tablas no se cortan entre páginas
+OK    el PDF descargado contiene lo mismo que la vista previa
+OK    el PDF no incluye el panel de opciones
+OK    desmarcar cardiología la quita del informe
+OK    Ninguno deja solo cabecera y firma
+OK    Marcar todo incluye también las fichas pendientes
+OK    el historial muestra el cambio de HTA
+OK    el cambio muestra valor anterior, nuevo y usuario
+OK    desmarcar 'omitir vacíos' muestra todos los campos
+OK    certificado muestra la conclusión de aptitud
+OK    certificado no muestra información clínica ni personal adicional
+OK    buscar por nombre en el informe abre el expediente exacto del otro paciente
+OK    buscar por CI vuelve al paciente correcto
+OK    el informe consolidado muestra la evaluación consultada
+OK    el consolidado muestra la conclusión de esa evaluación
+OK    el portal descarga un respaldo con los datos
+ERRORES: ninguno
+

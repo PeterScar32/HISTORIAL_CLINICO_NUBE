@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="880" viewBox="0 0 1200 880" font-family="Liberation Serif, Times New Roman, serif" fill="#000000"><rect width="1200" height="880" fill="#FFFFFF"/><rect x="190.0" y="125.0" width="830.0" height="630.0" rx="0" fill="#FFFFFF" stroke="#000000" stroke-width="1"/>
+<text x="205.0" y="146.2" font-size="12" text-anchor="start" font-weight="bold" font-style="normal"><tspan x="205.0" dy="0">Sistema de Gestión de Historias Clínicas Digitales — OHS</tspan></text>
+<ellipse cx="605.0" cy="175.0" rx="73.0" ry="18.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="605.0" y="179.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="605.0" dy="0">CU-01 Iniciar sesión</tspan></text>
+<ellipse cx="330.0" cy="245.0" rx="88.6" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="330.0" y="242.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="330.0" dy="0">CU-02 Registrar trabajador</tspan><tspan x="330.0" dy="14">y evaluación</tspan></text>
+<ellipse cx="560.0" cy="255.0" rx="69.2" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="560.0" y="252.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="560.0" dy="0">CU-10 Verificar CI</tspan><tspan x="560.0" dy="14">registrado</tspan></text>
+<ellipse cx="330.0" cy="325.0" rx="92.0" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="330.0" y="322.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="330.0" dy="0">CU-03 Registrar declaración</tspan><tspan x="330.0" dy="14">jurada (P1, P2, P3)</tspan></text>
+<ellipse cx="250.0" cy="520.0" rx="75.3" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="250.0" y="517.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="250.0" dy="0">CU-12 Corregir datos</tspan><tspan x="250.0" dy="14">de identificación</tspan></text>
+<ellipse cx="600.0" cy="430.0" rx="83.3" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="600.0" y="427.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="600.0" dy="0">CU-05 Buscar trabajador</tspan><tspan x="600.0" dy="14">por CI o nombre</tspan></text>
+<ellipse cx="600.0" cy="560.0" rx="76.3" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="600.0" y="557.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="600.0" dy="0">CU-04 Registrar ficha</tspan><tspan x="600.0" dy="14">de especialidad</tspan></text>
+<ellipse cx="870.0" cy="200.0" rx="80.0" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="870.0" y="197.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="870.0" dy="0">CU-07 Consultar fichas</tspan><tspan x="870.0" dy="14">por especialidad</tspan></text>
+<ellipse cx="870.0" cy="275.0" rx="87.8" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="870.0" y="272.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="870.0" dy="0">CU-11 Consultar semáforo</tspan><tspan x="870.0" dy="14">de alertas</tspan></text>
+<ellipse cx="870.0" cy="350.0" rx="91.6" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="870.0" y="347.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="870.0" dy="0">CU-08 Consultar expediente</tspan><tspan x="870.0" dy="14">del trabajador</tspan></text>
+<ellipse cx="870.0" cy="430.0" rx="80.7" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="870.0" y="427.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="870.0" dy="0">CU-09 Generar informe</tspan><tspan x="870.0" dy="14">y certificado</tspan></text>
+<ellipse cx="870.0" cy="520.0" rx="85.3" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="870.0" y="517.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="870.0" dy="0">CU-15 Consultar historial</tspan><tspan x="870.0" dy="14">de modificaciones</tspan></text>
+<ellipse cx="285.0" cy="705.0" rx="86.0" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="285.0" y="702.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="285.0" dy="0">CU-06 Gestionar personal</tspan><tspan x="285.0" dy="14">y perfiles</tspan></text>
+<ellipse cx="640.0" cy="700.0" rx="88.8" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="640.0" y="697.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="640.0" dy="0">CU-13 Eliminar y restaurar</tspan><tspan x="640.0" dy="14">expediente</tspan></text>
+<ellipse cx="475.0" cy="688.0" rx="65.1" ry="25.0" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="475.0" y="685.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="475.0" dy="0">CU-14 Descargar</tspan><tspan x="475.0" dy="14">respaldo</tspan></text>
+<circle cx="605" cy="26" r="8" fill="#FFFFFF" stroke="#000000"/>
+<line x1="605" y1="34" x2="605" y2="58" stroke="#000000"/>
+<line x1="592" y1="42" x2="618" y2="42" stroke="#000000"/>
+<line x1="605" y1="58" x2="594" y2="76" stroke="#000000"/>
+<line x1="605" y1="58" x2="616" y2="76" stroke="#000000"/>
+<text x="605.0" y="90.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="605.0" dy="0">Usuario del sistema</tspan></text>
+<circle cx="80" cy="304" r="8" fill="#FFFFFF" stroke="#000000"/>
+<line x1="80" y1="312" x2="80" y2="336" stroke="#000000"/>
+<line x1="67" y1="320" x2="93" y2="320" stroke="#000000"/>
+<line x1="80" y1="336" x2="69" y2="354" stroke="#000000"/>
+<line x1="80" y1="336" x2="91" y2="354" stroke="#000000"/>
+<text x="80.0" y="368.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="80.0" dy="0">Enfermería</tspan></text>
+<circle cx="1120" cy="274" r="8" fill="#FFFFFF" stroke="#000000"/>
+<line x1="1120" y1="282" x2="1120" y2="306" stroke="#000000"/>
+<line x1="1107" y1="290" x2="1133" y2="290" stroke="#000000"/>
+<line x1="1120" y1="306" x2="1109" y2="324" stroke="#000000"/>
+<line x1="1120" y1="306" x2="1131" y2="324" stroke="#000000"/>
+<text x="1120.0" y="338.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="1120.0" dy="0">Usuario de</tspan><tspan x="1120.0" dy="14">consulta</tspan></text>
+<circle cx="1120" cy="624" r="8" fill="#FFFFFF" stroke="#000000"/>
+<line x1="1120" y1="632" x2="1120" y2="656" stroke="#000000"/>
+<line x1="1107" y1="640" x2="1133" y2="640" stroke="#000000"/>
+<line x1="1120" y1="656" x2="1109" y2="674" stroke="#000000"/>
+<line x1="1120" y1="656" x2="1131" y2="674" stroke="#000000"/>
+<text x="1120.0" y="688.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="1120.0" dy="0">Profesional de</tspan><tspan x="1120.0" dy="14">especialidad</tspan></text>
+<circle cx="760" cy="786" r="8" fill="#FFFFFF" stroke="#000000"/>
+<line x1="760" y1="794" x2="760" y2="818" stroke="#000000"/>
+<line x1="747" y1="802" x2="773" y2="802" stroke="#000000"/>
+<line x1="760" y1="818" x2="749" y2="836" stroke="#000000"/>
+<line x1="760" y1="818" x2="771" y2="836" stroke="#000000"/>
+<text x="760.0" y="850.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="760.0" dy="0">Médico responsable</tspan></text>
+<polyline points="605.0,100.0 605.0,157.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="98.0,318.0 270.8,263.6" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="98.0,318.0 238.6,322.2" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="98.0,318.0 231.7,495.7" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="98.0,318.0 557.1,539.3" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="1102.0,288.0 920.9,219.3" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="1102.0,288.0 956.1,279.8" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="1102.0,288.0 935.5,332.5" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="1102.0,288.0 906.4,407.7" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="1102.0,638.0 669.0,570.7" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="760.0,778.0 361.0,716.7" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="760.0,778.0 675.3,722.9" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="760.0,778.0 525.3,703.9" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="760.0,778.0 859.4,544.8" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="417.6,248.8 491.3,252.0" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="6,4"/>
+<polyline points="482.5,247.3 491.3,252.0 482.1,256.0" fill="none" stroke="#000000"/>
+<rect x="428.8" y="234.4" width="51.3" height="15" fill="#FFFFFF"/>
+<text x="454.4" y="246.6" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="454.4" dy="0">«include»</tspan></text>
+<polyline points="600.0,535.0 600.0,455.0" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="6,4"/>
+<polyline points="595.7,464.0 600.0,455.0 604.3,464.0" fill="none" stroke="#000000"/>
+<rect x="619.3" y="487.0" width="51.3" height="15" fill="#FFFFFF"/>
+<text x="645.0" y="499.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="645.0" dy="0">«include»</tspan></text>
+<polyline points="807.9,368.4 659.3,412.4" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="6,4"/>
+<polyline points="669.2,414.0 659.3,412.4 666.7,405.7" fill="none" stroke="#000000"/>
+<rect x="709.3" y="367.0" width="51.3" height="15" fill="#FFFFFF"/>
+<text x="735.0" y="379.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="735.0" dy="0">«include»</tspan></text>
+<polyline points="789.3,430.0 683.3,430.0" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="6,4"/>
+<polyline points="692.3,434.3 683.3,430.0 692.3,425.7" fill="none" stroke="#000000"/>
+<rect x="709.3" y="437.0" width="51.3" height="15" fill="#FFFFFF"/>
+<text x="735.0" y="449.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="735.0" dy="0">«include»</tspan></text>
+<polyline points="870.0,495.0 870.0,455.0" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="6,4"/>
+<polyline points="865.7,464.0 870.0,455.0 874.3,464.0" fill="none" stroke="#000000"/>
+<rect x="903.0" y="468.0" width="48.0" height="15" fill="#FFFFFF"/>
+<text x="905.0" y="480.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="905.0" dy="0">«extend»</tspan></text>
+<polyline points="80.0,290.0 80.0,26.0 583.0,26.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polygon points="571.1,20.7 583.0,26.0 571.1,31.3" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="1120.0,262.0 1120.0,26.0 627.0,26.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polygon points="638.9,31.3 627.0,26.0 638.9,20.7" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="1120.0,616.0 1120.0,368.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polygon points="1114.7,379.9 1120.0,368.0 1125.3,379.9" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="740.0,830.0 40.0,830.0 40.0,322.0 66.0,322.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polygon points="54.1,316.7 66.0,322.0 54.1,327.3" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="780.0,830.0 1165.0,830.0 1165.0,642.0 1134.0,642.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polygon points="1145.9,647.3 1134.0,642.0 1145.9,636.7" fill="#FFFFFF" stroke="#000000"/></svg>

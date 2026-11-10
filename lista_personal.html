@@ -3,101 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Médico - OHS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <title>HC NUBE | Personal y accesos</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👥</text></svg>">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #020617; color: #e2e8f0; font-family: "Segoe UI", system-ui, sans-serif; padding: 64px 16px 40px; }
+        .contenedor { max-width: 1180px; margin: 0 auto; }
+        h1 { font-size: 26px; margin: 0 0 4px; }
+        .sub { color: #94a3b8; font-size: 13px; margin: 0 0 20px; }
+        .barra { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+        button { cursor: pointer; border: none; border-radius: 10px; font-weight: 800; font-size: 12px; padding: 10px 14px; letter-spacing: .03em; }
+        .principal { background: #16a34a; color: #fff; }
+        .sec { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; }
+        .peligro { background: #450a0a; color: #fecaca; border: 1px solid #7f1d1d; }
+        .caja { background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #94a3b8; padding: 12px 14px; border-bottom: 1px solid #1e293b; }
+        td { padding: 12px 14px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
+        tr.inactivo td { opacity: .45; }
+        .foto { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid #1e293b; display: inline-flex; align-items: center; justify-content: center; background: #0f766e; font-size: 16px; }
+        .rol { display: inline-block; font-size: 10px; font-weight: 900; letter-spacing: .08em; padding: 3px 8px; border-radius: 999px; border: 1px solid; }
+        .MEDICO { color: #86efac; border-color: #166534; } .ESPECIALISTA { color: #93c5fd; border-color: #1e40af; }
+        .ENFERMERIA { color: #fcd34d; border-color: #92400e; } .LECTURA { color: #cbd5e1; border-color: #475569; }
+        .tenue { color: #94a3b8; font-size: 11px; }
+        .acciones { display: flex; gap: 6px; flex-wrap: wrap; }
+        .acciones button { padding: 7px 10px; font-size: 11px; }
+        dialog { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; border-radius: 18px; padding: 22px; width: min(560px, calc(100vw - 32px)); }
+        dialog::backdrop { background: rgba(2, 6, 23, .7); }
+        dialog h2 { margin: 0 0 14px; font-size: 18px; }
+        label.campo { display: block; font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #94a3b8; margin: 12px 0 6px; }
+        input[type=text], select { width: 100%; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 10px; padding: 10px; font-size: 14px; }
+        .fichas { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 13px; }
+        .fichas label { display: flex; gap: 6px; align-items: center; }
+        .pie-dialogo { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+        .error { color: #f87171; font-size: 12px; font-weight: 700; min-height: 16px; margin-top: 10px; }
+        .clave { background: #052e16; border: 1px solid #166534; color: #bbf7d0; border-radius: 12px; padding: 14px; margin-top: 12px; font-size: 13px; }
+        .clave code { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: .06em; }
+        .nota { color: #94a3b8; font-size: 12px; line-height: 1.5; margin-top: 14px; }
+        @media print { body { background: #fff; color: #000; padding: 0; } .barra, .acciones, .no-print { display: none !important; } .caja { border-color: #ccc; background: #fff; } th, .tenue { color: #333; } }
     </style>
-    <script src="config.js?v=8"></script>
+    <script src="config.js?v=9"></script>
 </head>
-<body class="p-10">
-
-    <div class="max-w-6xl mx-auto bg-white p-10 rounded-3xl shadow-xl">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-black text-blue-900">PERSONAL MÉDICO</h1>
-            <div class="flex gap-3 shrink-0">
-                <a href="registro_personal.html" class="bg-blue-700 text-white px-8 py-3 rounded-full font-black text-[11px] hover:bg-blue-800 whitespace-nowrap">
-                    + REGISTRAR NUEVO PROFESIONAL
-                </a>
-                <button onclick="generarPDF()" class="bg-red-600 text-white px-6 py-3 rounded-full font-black text-[11px] hover:bg-red-700 whitespace-nowrap">
-                    <i class="fa-solid fa-file-pdf mr-2"></i> EXPORTAR PDF
-                </button>
-            </div>
-        </div>
-
-        <a href="index.html" class="inline-block mb-8 text-[13px] font-bold text-slate-500 uppercase tracking-[0.3em] hover:text-blue-400 transition-colors">
-            ← Volver al Portal Principal
-        </a>
-        
-        <table class="w-full text-left">
-            <thead>
-                <tr class="bg-blue-700 text-white text-[11px] font-black uppercase">
-                    <th class="p-5">C.I.</th>
-                    <th class="p-5">Nombre Completo</th>
-                    <th class="p-5">Especialidad / Cargo</th>
-                    <th class="p-5 text-center">Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tabla-personal" class="text-[12px] font-bold text-gray-700"></tbody>
+<body>
+<div class="contenedor">
+    <h1>👥 Personal y accesos</h1>
+    <p class="sub">Cada profesional tiene su propio usuario, rol y especialidad. Las fichas y los cambios quedan registrados a su nombre.</p>
+    <div class="barra no-print">
+        <button class="principal" type="button" onclick="abrirNuevo()">➕ Nuevo profesional</button>
+        <button class="sec" type="button" onclick="window.print()">🖨️ Imprimir listado</button>
+    </div>
+    <div class="caja">
+        <table>
+            <thead><tr><th></th><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Especialidad / cargo</th><th>Fichas que llena</th><th>Estado</th><th class="no-print">Acciones</th></tr></thead>
+            <tbody id="tabla"><tr><td colspan="8" class="tenue">Cargando…</td></tr></tbody>
         </table>
     </div>
+    <p class="nota"><strong>Roles:</strong> <span class="rol MEDICO">MÉDICO</span> acceso completo y administración · <span class="rol ESPECIALISTA">ESPECIALISTA</span> llena solo sus fichas y consulta expedientes · <span class="rol ENFERMERIA">ENFERMERÍA</span> registra pacientes, declaración y fichas, sin semáforo ni informes · <span class="rol LECTURA">LECTURA</span> solo consulta, no modifica nada.</p>
+</div>
 
-    <script>
-        const BASE_API = CONFIG.API_BASE;
-        
-        async function cargar() {
-            const res = await fetch(`${BASE_API}/personal/`);
-            const data = await res.json();
-            const t = document.getElementById('tabla-personal');
-            t.innerHTML = '';
-            
-            const personal = [...data.doctores.map(d => ({...d, tipo: 'doctor', id: d.id_doc, ci: d.ci_doc, nom: d.nombre_doc, ap: d.appaterno_doc})), 
-                            ...data.enfermeras.map(e => ({...e, tipo: 'enfermera', id: e.id_enfe, ci: e.ci_enfe, nom: e.nombre_enfe, ap: e.appaterno_enfe}))];
+<dialog id="dlg">
+    <form id="form" method="dialog">
+        <h2 id="dlg-titulo">Nuevo profesional</h2>
+        <label class="campo" for="f-nombre">Nombre completo</label>
+        <input type="text" id="f-nombre" required>
+        <label class="campo" for="f-rol">Rol</label>
+        <select id="f-rol">
+            <option value="ESPECIALISTA">Especialista</option>
+            <option value="MEDICO">Médico (acceso completo)</option>
+            <option value="ENFERMERIA">Enfermería</option>
+            <option value="LECTURA">Solo lectura</option>
+        </select>
+        <label class="campo" for="f-especialidad">Especialidad</label>
+        <input type="text" id="f-especialidad" placeholder="EJ. OFTALMOLOGÍA">
+        <label class="campo" for="f-cargo">Cargo</label>
+        <input type="text" id="f-cargo" placeholder="EJ. MÉDICO OFTALMÓLOGO">
+        <div id="bloque-fichas">
+            <label class="campo">Fichas que llena</label>
+            <div class="fichas" id="f-fichas"></div>
+        </div>
+        <div class="error" id="f-error"></div>
+        <div id="f-clave"></div>
+        <div class="pie-dialogo">
+            <button class="sec" type="button" onclick="cerrarDialogo()">Cerrar</button>
+            <button class="principal" type="submit" id="f-guardar">Guardar</button>
+        </div>
+    </form>
+</dialog>
 
-            personal.forEach(p => {
-                const color = p.tipo === 'doctor' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
-                t.innerHTML += `
-                    <tr class="border-b">
-                        <td class="p-5">${esc(p.ci)}</td>
-                        <td class="p-5">${esc(p.nom)} ${esc(p.ap)}</td>
-                        <td class="p-5">
-                            <span class="${color} px-3 py-1 rounded-full text-[10px] uppercase font-black">
-                                <i class="fa-solid fa-user-md mr-1"></i> ${esc(p.tipo)}: ${esc(p.especialidad)}
-                            </span>
-                        </td>
-                        <td class="p-5 flex gap-2 justify-center">
-                            <button onclick="window.location.href='registro_personal.html?id=${esc(p.id)}&tipo=${esc(p.tipo)}'" class="bg-orange-500 text-white p-3 rounded"><i class="fa-solid fa-pen"></i></button>
-                            <button onclick="eliminar('${esc(p.id)}', '${esc(p.tipo)}')" class="bg-red-500 text-white p-3 rounded"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>`;
-            });
-        }
+<script>
+    const API = CONFIG.API_BASE;
+    const FICHAS = [
+        ["declaracion", "Declaración jurada · P1"], ["antecedentes", "Declaración jurada · P2"], ["habitos", "Declaración jurada · P3"],
+        ["historial_clinico", "Historia clínica"], ["aptitud", "Aptitud médico ocupacional"], ["aptitud_fisica", "Aptitud física y psicológica"],
+        ["psicologia", "Evaluación psicológica"], ["oftalmologia", "Oftalmología"], ["cardiologia", "Cardiología"],
+        ["espirometria", "Espirometría"], ["altura", "Trabajo en altura"], ["electroencefalograma", "Electroencefalograma"],
+        ["osteomuscular", "Evaluación osteomuscular"]
+    ];
+    const NOMBRE_FICHA = Object.fromEntries(FICHAS);
+    const ROL_TXT = { MEDICO: "MÉDICO", ESPECIALISTA: "ESPECIALISTA", ENFERMERIA: "ENFERMERÍA", LECTURA: "LECTURA" };
+    let usuarios = [];
+    let editando = null;
 
-        async function generarPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text("Reporte de Personal Médico", 14, 15);
-            doc.autoTable({
-                startY: 20,
-                head: [['C.I.', 'Nombre Completo', 'Especialidad / Cargo']],
-                body: Array.from(document.querySelectorAll('#tabla-personal tr')).map(tr => 
-                    Array.from(tr.querySelectorAll('td')).slice(0, 3).map(td => td.innerText)
-                )
-            });
-            doc.save('personal_medico.pdf');
-        }
+    document.getElementById("f-fichas").innerHTML = FICHAS.map(([k, n]) => `<label><input type="checkbox" class="f-ficha" value="${k}"> ${esc(n)}</label>`).join("");
+    document.getElementById("f-rol").addEventListener("change", () => {
+        document.getElementById("bloque-fichas").hidden = document.getElementById("f-rol").value !== "ESPECIALISTA";
+    });
 
-        async function eliminar(id, tipo) {
-            if(!confirm('¿ELIMINAR ESTE REGISTRO?')) return;
-            const res = await fetch(`${BASE_API}/${tipo === 'doctor' ? 'doctores' : 'enfermeras'}/${id}`, { method: 'DELETE' });
-            if(res.ok) cargar();
-        }
+    function fotoDe(u) {
+        return u.foto ? `<img class="foto" src="${esc(u.foto)}" alt="">` : `<span class="foto">${u.rol === "ENFERMERIA" ? "⚕️" : "👤"}</span>`;
+    }
 
+    async function cargar() {
+        const r = await fetch(`${API}/auth/usuarios`);
+        if (!r.ok) { document.getElementById("tabla").innerHTML = '<tr><td colspan="8" class="tenue">No se pudo cargar el personal.</td></tr>'; return; }
+        usuarios = await r.json();
+        const yo = (sesion() || {}).usuario || {};
+        document.getElementById("tabla").innerHTML = usuarios.map(u => `
+            <tr class="${u.activo ? "" : "inactivo"}">
+                <td>${fotoDe(u)}</td>
+                <td><strong>${esc(u.nombre)}</strong></td>
+                <td class="tenue">${esc(u.usuario)}</td>
+                <td><span class="rol ${esc(u.rol)}">${esc(ROL_TXT[u.rol] || u.rol)}</span></td>
+                <td>${esc(u.especialidad || "—")}<div class="tenue">${esc(u.cargo || "")}</div></td>
+                <td class="tenue">${u.rol === "ESPECIALISTA" ? esc(u.fichas_permitidas.map(f => NOMBRE_FICHA[f] || f).join(", ")) : (u.rol === "MEDICO" ? "Todas" : u.rol === "ENFERMERIA" ? "Registro de datos" : "Ninguna")}</td>
+                <td>${u.activo ? "Activo" : "Desactivado"}${u.debe_cambiar ? '<div class="tenue">Clave temporal pendiente</div>' : ""}</td>
+                <td class="no-print"><div class="acciones">
+                    <button class="sec" type="button" onclick="abrirEdicion(${u.id})">Editar</button>
+                    <button class="sec" type="button" onclick="restablecer(${u.id})">Nueva clave temporal</button>
+                    ${u.id === yo.id ? "" : `<button class="${u.activo ? "peligro" : "sec"}" type="button" onclick="alternar(${u.id}, ${!u.activo})">${u.activo ? "Desactivar" : "Activar"}</button>`}
+                </div></td>
+            </tr>`).join("");
+    }
+
+    function llenarFormulario(u) {
+        document.getElementById("f-nombre").value = u ? u.nombre : "";
+        document.getElementById("f-rol").value = u ? u.rol : "ESPECIALISTA";
+        document.getElementById("f-especialidad").value = u ? (u.especialidad || "") : "";
+        document.getElementById("f-cargo").value = u ? (u.cargo || "") : "";
+        document.querySelectorAll(".f-ficha").forEach(c => { c.checked = !!u && (u.fichas_permitidas || []).includes(c.value); });
+        document.getElementById("bloque-fichas").hidden = document.getElementById("f-rol").value !== "ESPECIALISTA";
+        document.getElementById("f-error").textContent = "";
+        document.getElementById("f-clave").innerHTML = "";
+        document.getElementById("f-guardar").hidden = false;
+    }
+
+    function abrirNuevo() {
+        editando = null;
+        document.getElementById("dlg-titulo").textContent = "Nuevo profesional";
+        llenarFormulario(null);
+        document.getElementById("dlg").showModal();
+    }
+
+    function abrirEdicion(id) {
+        editando = usuarios.find(u => u.id === id);
+        document.getElementById("dlg-titulo").textContent = "Editar profesional";
+        llenarFormulario(editando);
+        document.getElementById("dlg").showModal();
+    }
+
+    function cerrarDialogo() {
+        document.getElementById("dlg").close();
         cargar();
-    </script>
+    }
+
+    function mostrarClave(usuario, temporal) {
+        document.getElementById("f-clave").innerHTML = `<div class="clave">Usuario: <strong>${esc(usuario)}</strong><br>Contraseña temporal: <code>${esc(temporal)}</code><br><span class="tenue">Entréguela en privado. Se pedirá cambiarla en el primer ingreso y no se volverá a mostrar.</span></div>`;
+    }
+
+    document.getElementById("form").addEventListener("submit", async e => {
+        e.preventDefault();
+        const datos = {
+            nombre: document.getElementById("f-nombre").value,
+            rol: document.getElementById("f-rol").value,
+            especialidad: document.getElementById("f-especialidad").value,
+            cargo: document.getElementById("f-cargo").value,
+            fichas_permitidas: [...document.querySelectorAll(".f-ficha:checked")].map(c => c.value)
+        };
+        const r = await fetch(`${API}/auth/usuarios${editando ? "/" + editando.id : ""}`, {
+            method: editando ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos)
+        });
+        const d = await r.json();
+        if (!r.ok) { document.getElementById("f-error").textContent = d.detail || "No se pudo guardar"; return; }
+        if (!editando) { mostrarClave(d.usuario, d.temporal); document.getElementById("f-guardar").hidden = true; }
+        else cerrarDialogo();
+    });
+
+    async function restablecer(id) {
+        const u = usuarios.find(x => x.id === id);
+        if (!confirm(`¿Generar una nueva contraseña temporal para ${u.nombre}? Su contraseña actual dejará de funcionar.`)) return;
+        const r = await fetch(`${API}/auth/usuarios/${id}/restablecer`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+        const d = await r.json();
+        if (!r.ok) { alert(d.detail || "No se pudo restablecer"); return; }
+        editando = u;
+        document.getElementById("dlg-titulo").textContent = "Contraseña restablecida";
+        llenarFormulario(u);
+        mostrarClave(d.usuario, d.temporal);
+        document.getElementById("f-guardar").hidden = true;
+        document.getElementById("dlg").showModal();
+    }
+
+    async function alternar(id, activo) {
+        const u = usuarios.find(x => x.id === id);
+        if (!confirm(`¿${activo ? "Activar" : "Desactivar"} a ${u.nombre}?${activo ? "" : " No podrá ingresar al sistema; sus registros se conservan."}`)) return;
+        const r = await fetch(`${API}/auth/usuarios/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ activo }) });
+        if (!r.ok) { const d = await r.json(); alert(d.detail || "No se pudo actualizar"); }
+        cargar();
+    }
+
+    window.addEventListener("load", cargar);
+</script>
 </body>
 </html>

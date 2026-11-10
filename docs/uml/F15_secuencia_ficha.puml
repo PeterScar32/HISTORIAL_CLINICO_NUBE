@@ -1,0 +1,39 @@
+@startuml F15_secuencia_ficha
+!include estilo.iuml
+skinparam SequenceMessageAlignment left
+skinparam ParticipantPadding 10
+autonumber
+actor "Profesional de\nespecialidad" as U
+boundary "doc_cardiologia.html" as P
+control "auth.control_acceso" as A
+control "main.py" as M
+entity "auditoria.py /\ncrud.py" as C
+database "PostgreSQL" as B
+
+P -> M : GET /fichas/cardiologia/{paciente_id}?evaluacion_id
+M --> P : ficha registrada en la evaluación o vacío
+U -> P : Completa la ficha y elige al profesional responsable
+U -> P : Presiona «Guardar»
+P -> A : POST /guardar-cardiologia {codigo_paciente, campos}\nAuthorization, X-Evaluacion, X-Responsable
+A -> A : Validar token, rol y fichas permitidas;\nvalidar al responsable indicado
+alt Perfil sin permiso para esta ficha
+  A --> P : 403 Su perfil no tiene permiso
+else Autorizado
+  A -> M : Petición autorizada
+  M -> C : buscar_paciente(codigo_paciente)
+  alt Paciente inexistente
+    M --> P : 404 Paciente no encontrado
+  else Paciente registrado
+    M -> C : guardar_en_evaluacion(ficha)
+    C -> B : SELECT ficha WHERE paciente_id y evaluacion_id
+    alt No existe ficha en la evaluación
+      C -> B : INSERT ficha_cardiologia\n(registrado_por, responsable)
+    else Ya existe
+      C -> B : UPDATE de los campos modificados
+    end
+    C -> B : INSERT auditoria (CREACION o MODIFICACION por campo)
+    M --> P : 200 ficha guardada
+    P -> U : Confirma el registro
+  end
+end
+@enduml

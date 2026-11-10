@@ -3,17 +3,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Request
 from api.models import FichaElectroencefalograma, Paciente 
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import and_, or_, func
 from .database import SessionLocal, engine, Base
-from .crud import PROFESIONAL_ACTUAL, EVALUACION_ACTUAL, crear_evaluacion, evaluacion_vigente, create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
+from .crud import normalizar_ci, PROFESIONAL_ACTUAL, EVALUACION_ACTUAL, RESPONSABLE_ACTUAL, crear_evaluacion, evaluacion_vigente, create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
 import os
+import logging
 from . import models
 from .models import FichaAptitudFisica 
 from .database import get_db
 from sqlalchemy import desc
 
 from . import semaforo, auth, auditoria, demo
-from .auditoria import guardar_en_evaluacion, registrar_eliminacion
+from .auditoria import guardar_en_evaluacion, registrar_eliminacion, enviar_a_papelera
 Base.metadata.create_all(bind=engine)
 from .migraciones import aplicar_migraciones
 aplicar_migraciones(engine)
@@ -21,6 +22,8 @@ with SessionLocal() as _db:
     semaforo.sembrar_reglas(_db)
     auth.sembrar_usuarios(_db)
 app = FastAPI()
+log = logging.getLogger("ohs")
+ERROR_INTERNO = "Error interno del servidor; el detalle quedó registrado en el servidor"
 
 ORIGENES = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 
@@ -48,6 +51,14 @@ def paciente_o_404(db, codigo):
     return p
 
 
+def exigir_paciente(db, data):
+    pid = data.get("paciente_id")
+    if not pid:
+        raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    if not str(pid).isdigit() or not db.query(models.Paciente.id).filter(models.Paciente.id == int(pid)).first():
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+
+
 def ultimo(db, modelo, paciente_id):
     return db.query(modelo).filter(modelo.paciente_id == paciente_id).order_by(desc(modelo.id)).first()
 
@@ -65,11 +76,14 @@ async def seguridad(request, call_next):
         token = PROFESIONAL_ACTUAL.set(f"usr:{datos['uid']}" if datos else None)
         ev = req.headers.get("x-evaluacion", "")
         token_ev = EVALUACION_ACTUAL.set(int(ev) if ev.isdigit() else None)
+        resp = req.headers.get("x-responsable", "")
+        token_resp = RESPONSABLE_ACTUAL.set(int(resp) if resp.isdigit() else None)
         try:
             return await call_next(req)
         finally:
             PROFESIONAL_ACTUAL.reset(token)
             EVALUACION_ACTUAL.reset(token_ev)
+            RESPONSABLE_ACTUAL.reset(token_resp)
     return await auth.control_acceso(request, siguiente)
 
 
@@ -90,7 +104,7 @@ def estado_api():
 # ----------- BLOQUE P1: FILIACION -----------
 @app.post("/filiacion/")
 def guardar_filiacion(data: dict, db: Session = Depends(get_db)):
-    if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    exigir_paciente(db, data)
     return upsert_filiacion(db, data)
 
 @app.get("/api/paciente-completo/{paciente_id}")
@@ -135,12 +149,12 @@ def verificar_estado_paciente(paciente_id: int, db: Session = Depends(get_db)):
 # ----------- BLOQUE P2 y P3 -----------
 @app.post("/p2/")
 def guardar_p2(data: dict, db: Session = Depends(get_db)):
-    if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    exigir_paciente(db, data)
     return upsert_p2(db, data)
 
 @app.post("/p3/")
 def guardar_p3(data: dict, db: Session = Depends(get_db)):
-    if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    exigir_paciente(db, data)
     return upsert_p3(db, data)
 
 # ----------- GESTION PACIENTES -----------
@@ -174,15 +188,57 @@ def listar_evaluaciones(paciente_id: int, db: Session = Depends(get_db)):
         res.append({"id": ev.id, "fecha": ev.fecha, "empresa": ev.empresa, "puesto": ev.puesto, "tipo": ev.tipo, "fichas": fichas})
     return res
 
+@app.get("/pacientes/busqueda")
+def buscar_pacientes(q: str = "", db: Session = Depends(get_db)):
+    texto = " ".join(q.upper().split())
+    if len(texto) < 2:
+        return []
+    filtros = [models.Paciente.ci.ilike(f"{texto}%")]
+    palabras = texto.split()
+    nombre_completo = func.upper(func.concat(models.Paciente.apellido, " ", models.Paciente.nombre))
+    filtros.append(and_(*[nombre_completo.ilike(f"%{w}%") for w in palabras]))
+    filas = db.query(models.Paciente).filter(or_(*filtros)).order_by(models.Paciente.apellido, models.Paciente.nombre).limit(20).all()
+    return [{"id": x.id, "ci": x.ci, "nombre": f"{x.apellido} {x.nombre}",
+             "evaluaciones": db.query(models.Evaluacion).filter(models.Evaluacion.paciente_id == x.id).count()} for x in filas]
+
 @app.get("/pacientes/buscar/{ci}")
 def buscar_paciente_ci(ci: str, db: Session = Depends(get_db)):
     return paciente_o_404(db, ci)
 
-@app.delete("/api/pacientes/{paciente_id}")
-def eliminar_paciente(paciente_id: int, db: Session = Depends(get_db)):
+@app.put("/api/pacientes/{paciente_id}")
+def actualizar_paciente(paciente_id: int, data: dict, db: Session = Depends(get_db)):
     p = db.query(models.Paciente).filter(models.Paciente.id == paciente_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+    cambios = {}
+    for k in ("nombre", "apellido"):
+        if k in data:
+            valor = str(data[k] or "").strip().upper()
+            if not valor:
+                raise HTTPException(status_code=400, detail=f"El campo {k} no puede quedar vacío")
+            cambios[k] = valor
+    if "ci" in data:
+        ci = normalizar_ci(data["ci"])
+        if not ci:
+            raise HTTPException(status_code=400, detail="El CI es obligatorio")
+        otro = buscar_paciente(db, ci)
+        if otro and otro.id != p.id:
+            raise HTTPException(status_code=409, detail=f"El CI {ci} ya pertenece a otro paciente")
+        cambios["ci"] = ci
+        cambios["codigo_paciente"] = ci
+    for k, v in cambios.items():
+        setattr(p, k, v)
+    db.commit()
+    db.refresh(p)
+    return {c.name: getattr(p, c.name) for c in models.Paciente.__table__.columns}
+
+@app.delete("/api/pacientes/{paciente_id}")
+def eliminar_paciente(paciente_id: int, confirmar_ci: str = "", db: Session = Depends(get_db)):
+    p = db.query(models.Paciente).filter(models.Paciente.id == paciente_id).first()
+    if p and str(confirmar_ci).strip().upper() != str(p.ci).strip().upper():
+        raise HTTPException(status_code=400, detail="Para eliminar debe confirmar escribiendo el CI del paciente")
     if p:
-        registrar_eliminacion(db, "pacientes", p.id, p.id, f"{p.apellido} {p.nombre} · CI {p.ci}")
+        enviar_a_papelera(db, p)
     if not delete_paciente(db, paciente_id):
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
     return {"message": "Eliminado"}
@@ -196,7 +252,7 @@ def buscar_id_por_codigo(codigo: str, db: Session = Depends(get_db)):
 def guardar_ficha_oftalmo(data: dict, db: Session = Depends(get_db)):
     if not data.get("paciente_id") and data.get("codigo_paciente"):
         data["paciente_id"] = paciente_o_404(db, data["codigo_paciente"]).id
-    if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    exigir_paciente(db, data)
     nueva = guardar_en_evaluacion(db, models.FichaOftalmologica(**filtrar(models.FichaOftalmologica, data))); db.commit(); db.refresh(nueva); return nueva
 
 @app.get("/ficha-oftalmo/{paciente_id}")
@@ -258,8 +314,8 @@ async def guardar_psicologia(data: dict, db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error al guardar: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Error al guardar")
+        raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 
 @app.get("/ficha-psicologia/{paciente_id}")
 def obtener_ficha_psicologia(paciente_id: int, db: Session = Depends(get_db)):
@@ -494,9 +550,8 @@ async def guardar_espirometria(data: dict, db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        # Esto imprimirá el error real en los logs de Render
-        print(f"ERROR DETALLADO: {str(e)}") 
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Error al guardar")
+        log.exception("Error interno"); raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 # ----------------------------
 @app.get("/consultar-espirometria/{codigo_paciente}")
 async def consultar_espirometria(codigo_paciente: str, db: Session = Depends(get_db)):
@@ -607,7 +662,7 @@ async def guardar_altura(data: dict, db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Error interno"); raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 
 @app.get("/consultar-altura/{codigo_paciente}")
 async def consultar_altura(codigo_paciente: str, db: Session = Depends(get_db)):
@@ -696,7 +751,7 @@ async def guardar_electro(data: dict, db: Session = Depends(get_db)):
         
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Error interno"); raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 
 @app.get("/consultar-electro-por-campo/{campo}")
 async def consultar_electro_por_campo(campo: str, db: Session = Depends(get_db)):
@@ -725,7 +780,7 @@ async def guardar_aptitud(data: dict, db: Session = Depends(get_db)):
         codigo = str(data.get("codigo_paciente", "")).strip().upper()
         paciente = buscar_paciente(db, codigo)
         if not paciente:
-            return {"status": "error", "message": "Paciente no encontrado"}
+            raise HTTPException(status_code=404, detail="Paciente no encontrado")
 
         # Crear objeto con mapeo estricto
         nueva_ficha = models.FichaAptitud(
@@ -757,8 +812,9 @@ async def guardar_aptitud(data: dict, db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"ERROR: {e}")
-        return {"status": "error", "message": str(e)}
+        db.rollback()
+        log.exception("Error al guardar")
+        raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 
 @app.get("/consultar-aptitud/{codigo_paciente}")
 async def consultar_aptitud(codigo_paciente: str, db: Session = Depends(get_db)):
@@ -833,7 +889,7 @@ def guardar_aptitud_fisica(data: dict, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        log.exception("Datos rechazados"); raise HTTPException(status_code=400, detail="No se pudieron guardar los datos enviados")
 
 @app.get("/buscar-aptitud-fisica/{codigo_paciente}")
 def buscar_aptitud_fisica(codigo_paciente: str, db: Session = Depends(get_db)):
@@ -893,7 +949,7 @@ async def guardar_historial_clinico(data: dict, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Error interno"); raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 
 
 @app.get("/historial-filtrado/{estado}")
@@ -1097,7 +1153,7 @@ async def guardar_osteomuscular(data: dict, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Error interno"); raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 
 @app.get("/filtrar-osteomuscular/{estado}")
 async def filtrar_osteomuscular(estado: str, db: Session = Depends(get_db)):
@@ -1108,37 +1164,46 @@ async def filtrar_osteomuscular(estado: str, db: Session = Depends(get_db)):
     return [{"codigo": r.codigo_paciente, "nombre": r.nombre_completo, "resultado": r.concepto_aptitud} for r in resultados]
 
 @app.get("/api/informe-consolidado/{codigo_paciente}")
-async def obtener_informe_consolidado(codigo_paciente: str, db: Session = Depends(get_db)):
+def obtener_informe_consolidado(codigo_paciente: str, evaluacion_id: int = None, db: Session = Depends(get_db)):
     p = paciente_o_404(db, codigo_paciente)
+    q_ev = db.query(models.Evaluacion).filter(models.Evaluacion.paciente_id == p.id)
+    ev = (q_ev.filter(models.Evaluacion.id == evaluacion_id).first() if evaluacion_id else None) or q_ev.order_by(desc(models.Evaluacion.id)).first()
 
-    apt = ultimo(db, models.FichaAptitud, p.id)
-    fis = ultimo(db, models.FichaAptitudFisica, p.id)
-    ost = ultimo(db, models.FichaOsteomuscular, p.id)
-    esp = ultimo(db, models.FichaEspirometria, p.id)
-    oft = ultimo(db, models.FichaOftalmologica, p.id)
-    car = ultimo(db, models.FichaCardiologia, p.id)
-    ele = ultimo(db, models.FichaElectroencefalograma, p.id)
-    alt = ultimo(db, models.FichaAltura, p.id)
-    dec = ultimo(db, models.AntecedentesP2, p.id)
-    his = ultimo(db, models.HistorialClinico, p.id)
-    psi = ultimo(db, models.FichaPsicologia, p.id)
+    def de_ev(modelo):
+        if not ev:
+            return None
+        return db.query(modelo).filter(modelo.paciente_id == p.id, modelo.evaluacion_id == ev.id).order_by(desc(modelo.id)).first()
+
+    apt = de_ev(models.FichaAptitud)
+    fis = de_ev(models.FichaAptitudFisica)
+    ost = de_ev(models.FichaOsteomuscular)
+    esp = de_ev(models.FichaEspirometria)
+    oft = de_ev(models.FichaOftalmologica)
+    car = de_ev(models.FichaCardiologia)
+    ele = de_ev(models.FichaElectroencefalograma)
+    alt = de_ev(models.FichaAltura)
+    dec = de_ev(models.AntecedentesP2)
+    his = de_ev(models.HistorialClinico)
+    psi = de_ev(models.FichaPsicologia)
 
     return {
         "datos_generales": {"codigo": p.codigo_paciente, "ci": p.ci, "nombre": f"{p.nombre} {p.apellido}"},
+        "evaluacion": {"id": ev.id, "fecha": ev.fecha, "tipo": ev.tipo, "empresa": ev.empresa, "puesto": ev.puesto} if ev else None,
+        "evaluaciones": [{"id": e.id, "fecha": e.fecha, "tipo": e.tipo, "empresa": e.empresa} for e in q_ev.order_by(desc(models.Evaluacion.id)).all()],
         "resultados_medicos": {
             "01_aptitud_ocupacional": apt.resultado if apt and hasattr(apt, 'resultado') else "SIN EXAMEN",
             "02_aptitud_fisica_psicologica": {
-                "fisico": fis.resultado_fisico if fis else "Sin examén", 
-                "psico": fis.resultado_psicologico if fis else "Sin examén"
+                "fisico": fis.resultado_fisico if fis else "SIN EXAMEN", 
+                "psico": fis.resultado_psicologico if fis else "SIN EXAMEN"
             },
-            "03_osteomuscular": ost.concepto_aptitud if ost else "Sin examén",
-            "04_espirometria": "Examen realizado" if esp else "Sin examén",
+            "03_osteomuscular": ost.concepto_aptitud if ost else "SIN EXAMEN",
+            "04_espirometria": "Examen realizado" if esp else "SIN EXAMEN",
             "05_oftalmologia": f"LENTES: {oft.lentes or 'NO'}, ESTRABISMO: {oft.estrabismo or 'NO'}, DALTONISMO: {oft.daltonismo or 'NO'}" if oft else "SIN EXAMEN",
             "06_cardiologia": f"NIÑEZ: {car.ninez or 'NO'}, ADOLESCENTE: {car.adolescente or 'NO'}, ADULTEZ: {car.adultez or 'NO'}" if car else "SIN EXAMEN",
             "07_electroencefalograma": f"CEFALEAS: {ele.cefaleas or 'NO'}, EPILEPSIA: {ele.epilepsia or 'NO'}, CONVULSIONES: {ele.convulsiones or 'NO'}" if ele else "SIN EXAMEN",
             "08_altura": f"SOPLO CARDIACO: {alt.soplo_cardiaco or 'NO'}, ARRITMIAS: {alt.arritmias_cardiacas or 'NO'}" if alt else "SIN EXAMEN",
-            "09_declaracion_jurada": "Completada" if dec else "Sin examén",
-            "10_historial_clinico": "Completado" if his else "Sin examén",
+            "09_declaracion_jurada": "Completada" if dec else "SIN EXAMEN",
+            "10_historial_clinico": "Completado" if his else "SIN EXAMEN",
             "11_psicologia_detallada": psi.resultado_psicologico if psi and psi.resultado_psicologico else "SIN EXAMEN"
         }
     }

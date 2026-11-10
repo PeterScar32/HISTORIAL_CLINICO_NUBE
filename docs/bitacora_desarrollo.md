@@ -109,6 +109,57 @@ Repositorio: `PeterScar32/HISTORIAL_CLINICO_NUBE`. Cada incremento se desarroll�
   - que el certificado no contenga datos clínicos;
   - la descarga del respaldo.
 
+## Incremento 6 · Revisión y modificación 2: personal, autoría, informes, integridad y permisos (08-11-2026)
+
+Origen: documento «Revisión y modificación 2 de sistema». No se reconstruyó ningún módulo; todos los cambios de la base de datos son aditivos (columnas nuevas y tabla `papelera`).
+
+- **Personal médico.** La lista estaba vacía porque leía las tablas antiguas `doctores` y `enfermeras`, mientras que las identidades reales viven en `usuarios`. La pantalla Personal ahora administra `usuarios`:
+  - alta de profesionales con rol, especialidad, cargo y fichas que llena;
+  - edición;
+  - contraseña temporal;
+  - activar y desactivar.
+  - Roles nuevos: ESPECIALISTA (solo sus fichas) y LECTURA (solo consulta). `registro_personal.html` redirige a Personal.
+- **Autoría.** Cada ficha distingue tres datos:
+  - quién la registró (`registrado_por`);
+  - el profesional responsable (`responsable`, elegido en un selector y validado en el servidor);
+  - quién la modificó después (auditoría).
+  - Una ficha cargada por enfermería ya no se atribuye a un médico.
+- **Informes.**
+  - Búsqueda por CI o nombre (`/pacientes/busqueda`) y selección de la evaluación.
+  - Cada ficha muestra el responsable, el registro y la última modificación.
+  - El certificado muestra el responsable de la conclusión y avisa si falta.
+  - El informe consolidado quedó ligado a una evaluación concreta y tiene selector de evaluación.
+- **PDF.**
+  - Las filas y los títulos no se cortan entre páginas.
+  - Esquema de color claro forzado.
+  - Prueba automática que compara el texto del PDF con la vista previa.
+- **Semáforo.** El detalle añade las columnas Responsable, Registrado por y Última modificación.
+- **Integridad.**
+  - Eliminar un paciente exige escribir su CI.
+  - El expediente completo pasa a una papelera restaurable y queda auditado.
+- **Permisos.** El servidor valida el rol en cada petición (no confía en el token para el rol); el menú oculta las fichas que el perfil no puede abrir.
+- **Nombres.** Las especialidades y el nombre del sistema se unificaron en menús, consultas e informes.
+- **Pruebas:**
+  - API: 42/42, incluidas `tests/test_verificacion.py` V01–V11.
+  - Navegador: flujo 25/25, semáforo 15/15, login 15/15, fichas 51/51, informe 22/22.
+- **Error encontrado por las pruebas:** al editar `lista_historial.html` se había perdido la llamada que carga la lista de pacientes; se restauró.
+
+## Incremento 7 · Revisión técnica integral de la tesis frente al sistema (09-11-2026)
+
+Origen: encargo de revisión técnica integral (correspondencia entre tesis, UML, requisitos, base de datos y código).
+
+- **Fallas encontradas y corregidas:**
+  - Registrar un CI existente sobrescribía el nombre del paciente.
+  - P1, P2 y P3 con un paciente inexistente producían un error 500.
+  - La aptitud con un paciente inexistente respondía «guardado».
+  - Ocho rutas devolvían al cliente el detalle interno de la base de datos.
+  - El botón «Historia clínica» de Consultas abría la consulta osteomuscular.
+  - Faltaba la ruta para corregir el nombre o el CI (RF-04): se agregó `PUT /api/pacientes/{id}`, con 409 si el CI pertenece a otro paciente, y el diálogo 🪪 en Pacientes.
+- **Pruebas nuevas:** `tests/test_tesis.py`, con los identificadores CP, ID, FO y SE citados en la tesis.
+- **Diagramas UML:** se rehicieron a partir del código en `docs/uml` (PNG, SVG y fuentes .drawio, .puml y .py).
+- **Anexos C y D:** se generaron desde los modelos y el esquema OpenAPI.
+- **Resultado:** API 86/86; navegador 129/129 (`docs/evidencias/registro_pruebas_*.txt`).
+
 ## Cómo reproducir las pruebas
 
 ```bash
@@ -127,8 +178,6 @@ Los flujos del navegador requieren la API local en el puerto 8000 y las páginas
 
 - Declaración jurada dinámica con firma táctil.
 - Documentos adjuntos.
-- Búsqueda por nombre.
 - Datos de la enfermera.
-- Pantalla para restablecer contraseñas.
 - Comparación campo por campo con las fichas originales de OHS.
 - Prueba de usabilidad (SUS) con el personal.

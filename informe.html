@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="only light">
     <title>OHS | Informe PDF</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>">
     <style>
@@ -29,8 +30,14 @@
         .datos div span { display: block; color: var(--tenue); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
         .datos div strong { font-size: 12px; }
         section { margin-top: 12px; break-inside: avoid-page; }
-        section h3 { font-size: 12px; background: #f1f5f9; border-left: 4px solid var(--azul); padding: 5px 8px; margin: 0 0 6px; letter-spacing: .04em; text-transform: uppercase; }
+        section h3 { break-after: avoid; page-break-after: avoid; font-size: 12px; background: #f1f5f9; border-left: 4px solid var(--azul); padding: 5px 8px; margin: 0 0 6px; letter-spacing: .04em; text-transform: uppercase; }
         .meta { font-size: 10px; color: var(--tenue); margin: -2px 0 6px; }
+        table.campos tr, table.cambios tr, .cert table tr { break-inside: avoid; page-break-inside: avoid; }
+        .buscador { width: 100%; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 8px; padding: 8px; font-size: 13px; }
+        .resultados { margin: 4px 0 14px; }
+        .resultados button { display: block; width: 100%; text-align: left; background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 8px; padding: 6px 8px; margin-top: 4px; font-size: 12px; cursor: pointer; }
+        .resultados button:hover { border-color: #22c55e; }
+        .aviso-firma { color: #b91c1c; font-weight: 700; }
         table.campos { width: 100%; border-collapse: collapse; font-size: 10.5px; }
         table.campos td { border-bottom: 1px solid #e2e8f0; padding: 3px 6px; vertical-align: top; }
         table.campos td:first-child { color: var(--tenue); width: 42%; }
@@ -63,11 +70,14 @@
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
-    <script src="config.js?v=8"></script>
+    <script src="config.js?v=9"></script>
 </head>
 <body>
 <div class="marco">
     <aside class="panel" aria-label="Contenido del informe">
+        <h2>Paciente</h2>
+        <input id="buscar-paciente" class="buscador" type="search" placeholder="Buscar por CI o nombre" autocomplete="off" aria-label="Buscar paciente por CI o nombre">
+        <div id="resultados" class="resultados"></div>
         <h2>Evaluación</h2>
         <select id="sel-evaluacion" aria-label="Evaluación"></select>
 
@@ -103,17 +113,17 @@
         ["antecedentes", "Declaración jurada · P2 Antecedentes", "antecedentes"],
         ["habitos", "Declaración jurada · P3 Hábitos y riesgos", "habitos"],
         ["historial_clinico", "Historia clínica", "historial_clinico"],
-        ["aptitud", "Aptitud ocupacional", "aptitud"],
-        ["aptitud_fisica", "Aptitud física", "aptitud_fisica"],
-        ["psicologia", "Psicología", "psicologia"],
+        ["aptitud", "Aptitud médico ocupacional", "aptitud"],
+        ["aptitud_fisica", "Aptitud física y psicológica", "aptitud_fisica"],
+        ["psicologia", "Evaluación psicológica", "psicologia"],
         ["oftalmologia", "Oftalmología", "oftalmologia"],
         ["cardiologia", "Cardiología", "cardiologia"],
         ["espirometria", "Espirometría", "espirometria"],
         ["altura", "Trabajo en altura", "altura"],
         ["electroencefalograma", "Electroencefalograma", "electroencefalograma"],
-        ["osteomuscular", "Osteomuscular", "osteomuscular"],
+        ["osteomuscular", "Evaluación osteomuscular", "osteomuscular"],
     ];
-    const INTERNOS = new Set(["id", "paciente_id", "evaluacion_id", "codigo_paciente", "creado_en", "registrado_por"]);
+    const INTERNOS = new Set(["id", "paciente_id", "evaluacion_id", "codigo_paciente", "creado_en", "registrado_por", "responsable_id", "responsable"]);
     let exp = null, sem = null, cambios = [], evaluaciones = [];
 
     function etiqueta(campo) {
@@ -177,8 +187,18 @@
         const f = exp.fichas[clave];
         if (!f) return `<section><h3>${esc(titulo)}</h3><p class="meta">Ficha no registrada en esta evaluación.</p></section>`;
         return `<section><h3>${esc(titulo)}</h3>
-            <p class="meta">Registrada: ${fecha(f.creado_en, true)}${f.registrado_por ? " · " + esc(f.registrado_por) : ""}</p>
+            <p class="meta">${autoria(clave, f)}</p>
             ${tablaCampos(f)}</section>`;
+    }
+
+    function ultimaModificacion(clave) {
+        const m = cambios.filter(c => c.ficha === clave && c.accion === "MODIFICACION");
+        return m.length ? m[m.length - 1] : null;
+    }
+
+    function autoria(clave, f) {
+        const u = ultimaModificacion(clave);
+        return `Profesional responsable: <strong>${f.responsable ? esc(f.responsable) : "sin asignar"}</strong> · Registrada: ${fecha(f.creado_en, true)}${f.registrado_por ? " por " + esc(f.registrado_por) : ""}${u ? ` · Última modificación: ${fecha(u.fecha, true)} por ${esc(u.usuario)}` : ""}`;
     }
 
     function seccionCambios() {
@@ -218,7 +238,7 @@
                     <tr><td>Fecha de evaluación</td><td>${fecha(ev.fecha)}</td></tr>
                 </table>
                 <div class="conclusion">${c ? esc(c.valor) : "CONCLUSIÓN PENDIENTE"}</div>
-                <p style="font-size:11px;color:#475569">${c ? `Conclusión registrada el ${fecha(c.fuente.creado_en, true)}${c.fuente.registrado_por ? " por " + esc(c.fuente.registrado_por) : ""}.` : "El profesional aún no registró la conclusión de aptitud."}</p>
+                <p style="font-size:11px;color:#475569">${c ? `Profesional responsable de la conclusión: ${c.fuente.responsable ? `<strong>${esc(c.fuente.responsable)}</strong>` : '<span class="aviso-firma">sin profesional responsable asignado</span>'} · Registrada el ${fecha(c.fuente.creado_en, true)}${c.fuente.registrado_por ? " por " + esc(c.fuente.registrado_por) : ""}.` : "El profesional aún no registró la conclusión de aptitud."}</p>
                 <p style="font-size:11px;color:#475569">Este certificado no contiene información clínica. Los resultados detallados son confidenciales y quedan bajo custodia de OHS.</p>
             </div>${pie()}`;
     }
@@ -277,6 +297,27 @@
         sel.onchange = () => { try { localStorage.setItem("p_eval", sel.value); } catch (e) {} location.reload(); };
         pintarCasillas();
         pintar();
+    }
+
+    let temporizador = null;
+    document.getElementById("buscar-paciente").addEventListener("input", e => {
+        clearTimeout(temporizador);
+        const q = e.target.value.trim();
+        const caja = document.getElementById("resultados");
+        if (q.length < 2) { caja.innerHTML = ""; return; }
+        temporizador = setTimeout(async () => {
+            try {
+                const lista = await (await fetch(`${API}/pacientes/busqueda?q=${encodeURIComponent(q)}`)).json();
+                caja.innerHTML = lista.length ? lista.map(x => `<button type="button" data-id="${x.id}">${esc(x.ci)} · ${esc(x.nombre)} <span class="vacia">(${x.evaluaciones} eval.)</span></button>`).join("") : '<p class="nota-panel">Sin coincidencias.</p>';
+                caja.querySelectorAll("button").forEach((b, i) => b.onclick = () => elegirPaciente(lista[i]));
+            } catch (err) { caja.innerHTML = '<p class="nota-panel">No se pudo buscar.</p>'; }
+        }, 300);
+    });
+
+    function elegirPaciente(x) {
+        fijarPacienteActual({ id: x.id, ci: x.ci, nombre: x.nombre });
+        try { localStorage.setItem("p_id_reporte", x.id); localStorage.removeItem("p_eval"); } catch (e) {}
+        location.reload();
     }
 
     document.querySelectorAll('input[name="plantilla"]').forEach(r => r.addEventListener("change", pintar));

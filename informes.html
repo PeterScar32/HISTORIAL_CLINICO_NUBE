@@ -30,7 +30,7 @@
             #footerFirma { display: block !important; }
         }
     </style>
-    <script src="config.js?v=8"></script>
+    <script src="config.js?v=9"></script>
 </head>
 <body>
 
@@ -53,6 +53,7 @@
     <div class="search-box">
         <input type="text" id="codigoInput" placeholder="INGRESE CÓDIGO PACIENTE">
         <button class="btn-buscar" onclick="buscarInforme()">BUSCAR</button>
+        <select id="selEvaluacion" style="display:none; padding: 12px; border-radius: 5px; margin-left: 8px;" aria-label="Evaluación" onchange="buscarInforme(this.value)"></select>
     </div>
 
     <div id="infoPaciente"></div>
@@ -76,18 +77,26 @@
     }
     obtenerFecha();
 
-    async function buscarInforme() {
+    async function buscarInforme(evaluacionId) {
         const codigo = document.getElementById('codigoInput').value.trim().toUpperCase();
         if(!codigo) return;
 
         try {
-            const response = await fetch(`${CONFIG.API_BASE}/api/informe-consolidado/${codigo}`);
+            const response = await fetch(`${CONFIG.API_BASE}/api/informe-consolidado/${encodeURIComponent(codigo)}` + (evaluacionId ? `?evaluacion_id=${evaluacionId}` : ""));
+            if (!response.ok) { alert("No existe un paciente con ese CI o código."); return; }
             const data = await response.json();
+            const ev = data.evaluacion;
+            const sel = document.getElementById('selEvaluacion');
+            sel.innerHTML = (data.evaluaciones || []).map(e => `<option value="${e.id}">${esc(e.fecha || "")} · ${esc(e.tipo || "")}${e.empresa ? " · " + esc(e.empresa) : ""}</option>`).join("");
+            sel.style.display = (data.evaluaciones || []).length ? "inline-block" : "none";
+            if (ev) sel.value = ev.id;
             
             document.getElementById('infoPaciente').innerHTML = `
                 <div class="ficha-paciente">
                     <div><span class="label-dato">PACIENTE</span><div class="valor-dato">${esc(data.datos_generales.nombre)}</div></div>
                     <div><span class="label-dato">CÓDIGO</span><div class="valor-dato">${esc(data.datos_generales.codigo)}</div></div>
+                    <div><span class="label-dato">EVALUACIÓN</span><div class="valor-dato">${ev ? `${esc(ev.fecha || "")} · ${esc(ev.tipo || "")}` : "SIN EVALUACIÓN REGISTRADA"}</div></div>
+                    <div><span class="label-dato">EMPRESA / PUESTO</span><div class="valor-dato">${ev ? `${esc(ev.empresa || "—")} · ${esc(ev.puesto || "—")}` : "—"}</div></div>
                 </div>`;
             
             const body = document.getElementById('resultadosBody');
@@ -96,18 +105,18 @@
             
             // Mapeo dinámico: [Nombre, Valor recibido del servidor]
             const filas = [
-                ["01. APTITUD OCUPACIONAL", res["01_aptitud_ocupacional"]],
+                ["01. APTITUD MÉDICO OCUPACIONAL", res["01_aptitud_ocupacional"]],
                 ["02. APTITUD FÍSICA", res["02_aptitud_fisica_psicologica"]?.fisico],
                 ["03. APTITUD PSICOLÓGICA", res["02_aptitud_fisica_psicologica"]?.psico],
-                ["04. OSTEOMUSCULAR", res["03_osteomuscular"]],
+                ["04. EVALUACIÓN OSTEOMUSCULAR", res["03_osteomuscular"]],
                 ["05. ESPIROMETRÍA", res["04_espirometria"]],
                 ["06. OFTALMOLOGÍA", res["05_oftalmologia"]],
                 ["07. CARDIOLOGÍA", res["06_cardiologia"]],
                 ["08. ELECTROENCEFALOGRAMA", res["07_electroencefalograma"]],
-                ["09. ALTURA", res["08_altura"]],
+                ["09. TRABAJO EN ALTURA", res["08_altura"]],
                 ["10. DECLARACIÓN JURADA", res["09_declaracion_jurada"]],
-                ["11. HISTORIAL CLÍNICO", res["10_historial_clinico"]],
-                ["12. PSICOLOGÍA DETALLADA", res["11_psicologia_detallada"]]
+                ["11. HISTORIA CLÍNICA", res["10_historial_clinico"]],
+                ["12. EVALUACIÓN PSICOLÓGICA", res["11_psicologia_detallada"]]
             ];
 
             filas.forEach(f => {
@@ -126,7 +135,7 @@
                 const valorDisplay = esInvalido ? "SIN EXAMEN" : String(val).toUpperCase();
                 const icono = esInvalido ? '<span class="status-icon text-red">✘</span>' : '<span class="status-icon text-green">✔</span>';
                 
-                body.innerHTML += `<tr><td>${esc(f[0])}</td><td style="text-align: center">${valorDisplay}</td><td style="text-align: center">${icono}</td></tr>`;
+                body.innerHTML += `<tr><td>${esc(f[0])}</td><td style="text-align: center">${esc(valorDisplay)}</td><td style="text-align: center">${icono}</td></tr>`;
             });
             
             document.getElementById('tablaInforme').style.display = 'table';
