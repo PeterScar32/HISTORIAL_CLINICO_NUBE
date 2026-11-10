@@ -195,3 +195,15 @@ Los flujos del navegador requieren la API local en el puerto 8000 y las páginas
 - **Búsqueda en consultas:** ruta `GET /consultas/{ficha}/buscar?q=` (por CI o por todas las palabras del nombre, en cualquier orden) y un buscador común en las 11 páginas `co_*.html`, con enlace al informe de la evaluación.
 
 **Pruebas:** API 96/96 (`tests/test_adjuntos.py`: AD01–AD08, CS01–CS02); navegador 147/147 (nuevo `tests/e2e_adjuntos.py`, 18).
+
+## Incremento 9 · Exportación a Excel (10-11-2026)
+
+**Pedido:** que el médico y Enfermería puedan ver los datos en una planilla, porque el respaldo JSON no se abre con un programa común.
+
+**Decisiones**
+- Ruta `GET /exportar/excel` con openpyxl: hojas de pacientes, evaluaciones, una por cada ficha (declaración jurada P1–P3 y las diez especialidades) y la lista de archivos adjuntos (sin su contenido).
+- Encabezados legibles, filtros, primera fila fija y fechas en hora de Bolivia.
+- Solo médico y Enfermería; cada exportación queda en `auditoria` (acción EXPORTACION).
+- El respaldo JSON se mantiene como copia de recuperación; el Excel es para consulta.
+
+**Pruebas:** API 99/99 (`tests/test_exportar.py`); navegador 153/153 (nuevo `tests/e2e_exportar.py`, 6).
