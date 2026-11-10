@@ -144,6 +144,22 @@ Origen: documento «Revisión y modificación 2 de sistema». No se reconstruyó
   - Navegador: flujo 25/25, semáforo 15/15, login 15/15, fichas 51/51, informe 22/22.
 - **Error encontrado por las pruebas:** al editar `lista_historial.html` se había perdido la llamada que carga la lista de pacientes; se restauró.
 
+## Incremento 7 · Revisión técnica integral de la tesis frente al sistema (09-11-2026)
+
+Origen: encargo de revisión técnica integral (correspondencia entre tesis, UML, requisitos, base de datos y código).
+
+- **Fallas encontradas y corregidas:**
+  - Registrar un CI existente sobrescribía el nombre del paciente.
+  - P1, P2 y P3 con un paciente inexistente producían un error 500.
+  - La aptitud con un paciente inexistente respondía «guardado».
+  - Ocho rutas devolvían al cliente el detalle interno de la base de datos.
+  - El botón «Historia clínica» de Consultas abría la consulta osteomuscular.
+  - Faltaba la ruta para corregir el nombre o el CI (RF-04): se agregó `PUT /api/pacientes/{id}`, con 409 si el CI pertenece a otro paciente, y el diálogo 🪪 en Pacientes.
+- **Pruebas nuevas:** `tests/test_tesis.py`, con los identificadores CP, ID, FO y SE citados en la tesis.
+- **Diagramas UML:** se rehicieron a partir del código en `docs/uml` (PNG, SVG y fuentes .drawio, .puml y .py).
+- **Anexos C y D:** se generaron desde los modelos y el esquema OpenAPI.
+- **Resultado:** API 86/86; navegador 129/129 (`docs/evidencias/registro_pruebas_*.txt`).
+
 ## Cómo reproducir las pruebas
 
 ```bash
