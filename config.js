@@ -166,6 +166,60 @@ function rellenarFicha(clave, ficha) {
     });
 }
 
+function _poner(id, valor) {
+    const el = document.getElementById(id);
+    if (!el || valor === undefined || valor === null || String(valor).trim() === "") return;
+    if (el.type === "checkbox" || el.type === "radio") { el.checked = true; return; }
+    if (String(el.value || "").trim() !== "") return;
+    el.value = valor;
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function _marcarNombre(nombre, valor) {
+    if (!valor) return;
+    document.querySelectorAll(`input[name="${nombre}"]`).forEach(i => { if (i.value === valor) i.checked = true; });
+}
+
+async function autocompletarFicha(pacienteId) {
+    const pagina = paginaActual();
+    try {
+        const r = await fetch(urlPacienteCompleto(pacienteId));
+        if (!r.ok) return;
+        const d = await r.json();
+        const p = d.paciente || {}, ev = d.evaluacion || {}, f = d.filiacion || {};
+        const apellidos = String(p.apellido || "").trim().split(/\s+/);
+        const paterno = apellidos[0] || "", materno = apellidos.slice(1).join(" ");
+        const completo = `${p.apellido || ""} ${p.nombre || ""}`.trim();
+        let edad = String(f.edad || "").replace(/\D/g, "");
+        if (!edad && f.fecha_nacimiento && ev.fecha) {
+            const n = new Date(f.fecha_nacimiento), e = new Date(ev.fecha);
+            if (!isNaN(n) && !isNaN(e)) edad = String(e.getFullYear() - n.getFullYear() - ((e.getMonth() < n.getMonth() || (e.getMonth() === n.getMonth() && e.getDate() < n.getDate())) ? 1 : 0));
+        }
+        const sexo = String(f.sexo || "").toUpperCase();
+        const fecha = String(ev.fecha || "").slice(0, 10);
+        const [anio, mes, dia] = fecha ? fecha.split("-") : ["", "", ""];
+        const tipo = String(ev.tipo || "").toUpperCase();
+        const tipoCert = { PREOCUPACIONAL: "PREOCUPACIONAL", PERIODICO: "CONTROL PERIÓDICO", RETIRO: "POST-OCUPACIONAL" }[tipo];
+        if (pagina === "doc_aptitud.html" || pagina === "doc_aptifi.html") {
+            _poner("ape_pat", paterno); _poner("ape_mat", materno); _poner("nombres", p.nombre);
+            _poner("edad", edad); _poner("genero", sexo); _poner("doc_id", p.ci);
+            _poner("puesto", ev.puesto); _poner("puesto_trabajo", ev.puesto); _poner("razon_social", ev.empresa);
+            _poner("dia", dia); _poner("mes", mes); _poner("anio", anio);
+            _marcarNombre(pagina === "doc_aptitud.html" ? "tipo" : "tipo_examen", tipoCert);
+            if (tipo === "OTRO") _poner("otros_tipo", "OTRO");
+        } else if (pagina === "doc_hiscli.html") {
+            _poner("empresa", ev.empresa); _poner("nombre", completo); _poner("fecha_atencion", fecha);
+            _poner("carnet_identidad", p.ci); _poner("sexo", sexo); _poner("edad", edad); _poner("puesto_cargo", ev.puesto);
+            _poner({ PREOCUPACIONAL: "tipo_pre", PERIODICO: "tipo_per", RETIRO: "tipo_post", OTRO: "tipo_otro" }[tipo], true);
+        } else if (pagina === "doc_osteomuscular.html") {
+            _poner("nombre_completo", completo); _poner("edad", edad); _poner("ci", p.ci); _poner("fecha", fecha);
+            if (sexo.startsWith("M")) _poner("sexo_m", true);
+            if (sexo.startsWith("F")) _poner("sexo_f", true);
+        }
+    } catch (e) {}
+}
+
 async function precargarFicha(pacienteId, etiqueta) {
     const clave = FICHA_DE_PAGINA[paginaActual()];
     if (!clave) return;
@@ -197,7 +251,9 @@ async function precargarFicha(pacienteId, etiqueta) {
             aviso.textContent = `📝 Esta ficha ya está registrada en la ${evTxt} (registrada el ${cuando}${d.ficha.registrado_por ? " por " + d.ficha.registrado_por : ""}${d.ficha.responsable ? " · responsable: " + d.ficha.responsable : " · sin profesional responsable"}). Se cargaron sus datos: al guardar se actualizarán y cada cambio quedará en el historial.`;
         } else {
             aviso.style.background = "#dcfce7"; aviso.style.color = "#166534";
-            aviso.textContent = `🆕 Ficha nueva para la ${evTxt}.`;
+            const conDatos = ["doc_aptitud.html", "doc_aptifi.html", "doc_hiscli.html", "doc_osteomuscular.html"].includes(paginaActual());
+            aviso.textContent = `🆕 Ficha nueva para la ${evTxt}.` + (conDatos ? " Los datos del trabajador se completaron desde su registro; revíselos antes de guardar." : "");
+            await autocompletarFicha(pacienteId);
         }
     } catch (e) {}
 }

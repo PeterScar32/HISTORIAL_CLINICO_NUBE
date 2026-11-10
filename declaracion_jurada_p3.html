@@ -22,13 +22,14 @@
         .table-responsive-custom { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
         .table-responsive-custom th { background: white; color: var(--ohs-cyan); padding: 10px; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid var(--ohs-cyan); text-align: center; }
         .table-responsive-custom td { padding: 5px; }
+        .table-responsive-custom .quitar { border: none; background: #fee2e2; color: #b91c1c; border-radius: 8px; width: 32px; height: 34px; font-weight: 800; }
         .table-responsive-custom input, .table-responsive-custom select { width: 100%; border: 1px solid #cbd5e1; padding: 8px; border-radius: 8px; font-size: 12px; text-transform: uppercase; }
         .risk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; padding: 15px; background: #f8fafc; border-radius: 15px; border: 1px solid #e2e8f0; }
         .risk-item { font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .btn-save { background: var(--ohs-green); color: white; width: 100%; padding: 18px; border-radius: 15px; border: none; font-weight: 800; font-size: 15px; margin-top: 30px; text-transform: uppercase; transition: 0.3s; box-shadow: 0 8px 20px rgba(34, 197, 94, 0.2); }
         .btn-save:hover { background: #16a34a; transform: translateY(-3px); }
     </style>
-    <script src="config.js?v=10"></script>
+    <script src="config.js?v=11"></script>
 </head>
 <body>
 <div class="form-container">
@@ -63,20 +64,13 @@
                         <th>TIEMPO (AÑOS/MESES)</th>
                         <th>RIESGOS EXPUESTOS</th>
                         <th>USO EPP</th>
+                        <th></th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td><input type="text" id="lab_edad" placeholder="EJ. 18"></td>
-                        <td><input type="text" id="lab_empresa" placeholder="EMPRESA"></td>
-                        <td><input type="text" id="lab_cargo" placeholder="CARGO"></td>
-                        <td><input type="text" id="lab_tiempo" placeholder="2 AÑOS"></td>
-                        <td><input type="text" id="lab_riesgos" placeholder="RUIDO, POLVO"></td>
-                        <td><select id="lab_epp"><option value="NO">NO</option><option value="SI">SI</option></select></td>
-                    </tr>
-                </tbody>
+                <tbody id="labFilas"></tbody>
             </table>
         </div>
+        <button type="button" id="btnAgregarTrabajo" class="btn btn-outline-secondary btn-sm fw-bold" onclick="agregarTrabajo()">+ AGREGAR OTRO TRABAJO</button>
 
         <div class="section-title">III. RIESGOS ESPECÍFICOS EN VIDA LABORAL (MARQUE)</div>
         <div class="risk-grid" id="riesgosCheck">
@@ -102,6 +96,46 @@
 <script>
     const API = CONFIG.API_BASE;
     const id_p = localStorage.getItem('p_id');
+    const CAMPOS_LAB = [["edad", "EDAD", "EJ. 18"], ["empresa", "EMPRESA", "EMPRESA"], ["cargo", "CARGO", "CARGO"], ["tiempo", "TIEMPO", "2 AÑOS"], ["riesgos", "RIESGOS", "RUIDO, POLVO"]];
+
+    function agregarTrabajo(datos = {}) {
+        const tr = document.createElement('tr');
+        tr.className = 'fila-lab';
+        tr.innerHTML = CAMPOS_LAB.map(([k, , ph]) => `<td><input type="text" class="lab-${k}" placeholder="${ph}"></td>`).join('')
+            + `<td><select class="lab-epp"><option value="NO">NO</option><option value="SI">SI</option></select></td>`
+            + `<td><button type="button" class="quitar" title="Quitar este trabajo" onclick="quitarTrabajo(this)">✕</button></td>`;
+        CAMPOS_LAB.forEach(([k]) => { if (datos[k]) tr.querySelector('.lab-' + k).value = datos[k]; });
+        if (datos.epp) tr.querySelector('.lab-epp').value = datos.epp === 'SI' ? 'SI' : 'NO';
+        document.getElementById('labFilas').appendChild(tr);
+    }
+
+    function quitarTrabajo(boton) {
+        boton.closest('tr').remove();
+        if (!document.querySelector('#labFilas tr')) agregarTrabajo();
+    }
+
+    function leerHistoriaLaboral(texto) {
+        return String(texto || '').split(/\n+/).map(linea => {
+            const d = {};
+            linea.split('|').forEach(parte => {
+                const m = parte.match(/^\s*([A-ZÁÉÍÓÚ]+):\s*(.*?)\s*$/i);
+                if (!m) return;
+                const k = { EDAD: 'edad', EMPRESA: 'empresa', CARGO: 'cargo', TIEMPO: 'tiempo', RIESGOS: 'riesgos', EPP: 'epp' }[m[1].toUpperCase()];
+                if (k) d[k] = m[2];
+            });
+            return d;
+        }).filter(d => ['edad', 'empresa', 'cargo', 'tiempo', 'riesgos'].some(k => d[k]));
+    }
+
+    function historiaLaboral() {
+        return Array.from(document.querySelectorAll('#labFilas tr')).map(tr => {
+            const v = k => tr.querySelector('.lab-' + k).value.trim();
+            if (!CAMPOS_LAB.some(([k]) => v(k))) return null;
+            return CAMPOS_LAB.map(([k, rotulo]) => `${rotulo}: ${v(k)}`).join(' | ') + ` | EPP: ${v('epp')}`;
+        }).filter(Boolean).join('\n');
+    }
+
+    agregarTrabajo();
 
     window.onload = async () => {
         if(!id_p) return;
@@ -117,6 +151,13 @@
                 const el = document.getElementById(k);
                 if (el && h[k]) el.value = h[k];
             });
+            const trabajos = leerHistoriaLaboral(h.historia_laboral);
+            if (trabajos.length) {
+                document.getElementById('labFilas').innerHTML = '';
+                trabajos.forEach(t => agregarTrabajo(t));
+            }
+            const marcados = String(h.riesgos_expuestos || '').split(',').map(x => x.trim());
+            document.querySelectorAll('#riesgosCheck input').forEach(i => { if (marcados.includes(i.value)) i.checked = true; });
         } catch(e) { console.error("Error banner"); }
     };
 
@@ -129,8 +170,7 @@
         const riesgosArr = [];
         document.querySelectorAll('#riesgosCheck input:checked').forEach(i => riesgosArr.push(i.value));
 
-        // CONSTRUIMOS EL TEXTO DE HISTORIA LABORAL DESDE LA TABLA
-        const h_laboral = `EDAD: ${document.getElementById('lab_edad').value} | EMPRESA: ${document.getElementById('lab_empresa').value} | CARGO: ${document.getElementById('lab_cargo').value} | TIEMPO: ${document.getElementById('lab_tiempo').value} | RIESGOS: ${document.getElementById('lab_riesgos').value} | EPP: ${document.getElementById('lab_epp').value}`;
+        const h_laboral = historiaLaboral();
 
         // PAYLOAD P2 (MAPEADO A SCHEMAS.PY)
         const payloadP2 = {
@@ -172,7 +212,7 @@
             deporte: document.getElementById('deporte').value,
             deporte_detalle: document.getElementById('deporte_detalle').value.toUpperCase() || "NINGUNO",
             grupo_sanguineo: document.getElementById('grupo_sanguineo').value.toUpperCase() || "S/D",
-            historia_laboral: h_laboral.toUpperCase(),
+            historia_laboral: h_laboral.toUpperCase() || "SIN ANTECEDENTES LABORALES",
             riesgos_expuestos: riesgosArr.join(', ') || "NINGUNO",
             observaciones: document.getElementById('observaciones').value.toUpperCase() || "SIN OBSERVACIONES"
         };

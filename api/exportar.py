@@ -9,7 +9,7 @@ from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.utils import get_column_letter
 from sqlalchemy.orm import Session
 
-from . import models
+from . import models, semaforo
 from .auditoria import FICHAS, Auditoria, get_db, usuario_actual
 
 router = APIRouter()
@@ -23,6 +23,8 @@ TITULOS = {
 }
 INTERNOS = {"id", "paciente_id", "evaluacion_id", "codigo_paciente", "responsable_id", "creado_en", "registrado_por", "responsable"}
 CABECERA = PatternFill("solid", fgColor="1F3864")
+TONOS = {"ROJO": "F8B4B4", "AMARILLO": "FDE68A", "VERDE": "BBF7D0", "GRIS": "E5E7EB", "REALIZADO": "DCFCE7", "PENDIENTE": "FEF3C7"}
+COLOR_TEXTO = {"ROJO": "ROJO · alerta prioritaria", "AMARILLO": "AMARILLO · requiere revisión", "VERDE": "VERDE · sin alertas", "GRIS": "GRIS · sin conclusión"}
 BLANCO = Font(bold=True, color="FFFFFF")
 
 
@@ -82,6 +84,40 @@ def exportar_excel(db: Session = Depends(get_db)):
         filas.append([p.ci, p.apellido, p.nombre, len(evs), ult.fecha if ult else None, ult.tipo if ult else None,
                       ult.empresa if ult else None, ult.puesto if ult else None])
     hoja(wb, "Pacientes", ["CI", "Apellidos", "Nombres", "N.º evaluaciones", "Última evaluación", "Tipo", "Empresa", "Puesto"], filas)
+
+    reglas = semaforo.reglas_activas(db)
+    claves = list(semaforo.FICHAS)
+    filas, colores = [], []
+    for e in sorted(evaluaciones.values(), key=lambda e: (nombre(e.paciente_id), e.fecha or datetime.date.min, e.id)):
+        sem = semaforo.semaforo_evaluacion(db, e, reglas)
+        por_clave = {f["clave"]: f for f in sem["fichas"]}
+        comp = sem["completitud"]
+        celdas = []
+        for clave in claves:
+            f = por_clave.get(clave)
+            if not f:
+                celdas.append("")
+            elif f["estado"] == "PENDIENTE":
+                celdas.append("PENDIENTE")
+            else:
+                res = ", ".join(str(c["valor"]) for c in f["conclusiones"])
+                celdas.append("REALIZADO" + (f" · {res}" if res else ""))
+        hechas = [semaforo.FICHAS[c][0] for c in claves if por_clave.get(c, {}).get("estado") == "REGISTRADA"]
+        filas.append([ci(e.paciente_id), nombre(e.paciente_id), e.fecha, e.tipo, e.empresa, e.puesto,
+                      COLOR_TEXTO.get(sem["color"], sem["color"]), sem["motivo"],
+                      f'{comp["estado"]} ({comp["registradas"]} de {comp["requeridas"]})', ", ".join(comp["faltantes"]) or "—",
+                      len(hechas), ", ".join(hechas) or "—"] + celdas)
+        colores.append(sem["color"])
+    ws = hoja(wb, "Exámenes por evaluación", ["CI", "Paciente", "Fecha", "Tipo", "Empresa", "Puesto", "Semáforo", "Motivo",
+                                              "Cumplimiento", "Exámenes pendientes", "N.º exámenes realizados", "Exámenes realizados"]
+              + [semaforo.FICHAS[c][0].replace("Declaración jurada · ", "") for c in claves], filas)
+    for i, color in enumerate(colores, 2):
+        ws.cell(i, 7).fill = PatternFill("solid", fgColor=TONOS.get(color, "FFFFFF"))
+        for j in range(13, 13 + len(claves)):
+            v = str(ws.cell(i, j).value or "")
+            if v:
+                ws.cell(i, j).fill = PatternFill("solid", fgColor=TONOS["REALIZADO" if v.startswith("REALIZADO") else "PENDIENTE"])
+    ws.column_dimensions["L"].width = 45
 
     filas = [[ci(e.paciente_id), nombre(e.paciente_id), e.fecha, e.tipo, e.empresa, e.puesto, e.fichas_requeridas, e.observaciones, e.creado_en]
              for e in sorted(evaluaciones.values(), key=lambda e: (nombre(e.paciente_id), e.fecha or datetime.date.min, e.id))]
