@@ -145,7 +145,7 @@ def delete_paciente(db: Session, paciente_id: int):
     if not paciente:
         return False
     try:
-        for modelo in FICHAS_POR_ID:
+        for modelo in FICHAS_POR_ID + [models.Adjunto]:
             db.query(modelo).filter(modelo.paciente_id == paciente_id).delete(synchronize_session=False)
         codigos = {c for c in (paciente.codigo_paciente, paciente.ci) if c}
         for modelo in FICHAS_POR_CODIGO:

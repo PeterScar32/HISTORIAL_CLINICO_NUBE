@@ -167,6 +167,32 @@ def ficha_actual(clave: str, paciente_id: int, evaluacion_id: Optional[int] = No
     return {"evaluacion_id": ev.id, "evaluacion": fila_a_dict(ev), "ficha": fila_a_dict(fila)}
 
 
+@router.get("/consultas/{clave}/buscar")
+def buscar_en_consulta(clave: str, q: str = "", db: Session = Depends(get_db)):
+    modelo = FICHAS.get(clave)
+    if not modelo:
+        raise HTTPException(status_code=404, detail="Ficha desconocida")
+    palabras = [w for w in q.strip().upper().split() if w]
+    if not palabras:
+        raise HTTPException(status_code=400, detail="Escriba un CI o un nombre")
+    pacientes = [p for p in db.query(models.Paciente).all()
+                 if all(w in f"{p.ci or ''} {p.apellido or ''} {p.nombre or ''} {p.nombre or ''} {p.apellido or ''}".upper() for w in palabras)][:50]
+    salida = []
+    for p in sorted(pacientes, key=lambda x: (x.apellido or "", x.nombre or "")):
+        evs = {e.id: e for e in db.query(models.Evaluacion).filter(models.Evaluacion.paciente_id == p.id)}
+        filas = db.query(modelo).filter(modelo.paciente_id == p.id).order_by(desc(modelo.id)).all()
+        base = {"paciente_id": p.id, "ci": p.ci, "codigo_paciente": p.codigo_paciente, "nombre": p.nombre, "apellido": p.apellido}
+        if not filas:
+            salida.append({**base, "registrada": False})
+        for f in filas:
+            ev = evs.get(f.evaluacion_id)
+            salida.append({**base, "registrada": True, "ficha_id": f.id, "evaluacion_id": f.evaluacion_id,
+                           "fecha": ev.fecha if ev else None, "tipo": ev.tipo if ev else None, "empresa": ev.empresa if ev else None,
+                           "responsable": getattr(f, "responsable", None), "registrado_por": getattr(f, "registrado_por", None),
+                           "creado_en": f.creado_en})
+    return salida
+
+
 @router.get("/api/expediente/{paciente_id}")
 def expediente(paciente_id: int, evaluacion_id: Optional[int] = None, db: Session = Depends(get_db)):
     p = db.query(models.Paciente).filter(models.Paciente.id == paciente_id).first()
@@ -220,7 +246,7 @@ class Papelera(Base):
     restaurado_por = Column(String)
 
 
-TABLAS_PACIENTE = [models.Evaluacion] + list(FICHAS.values())
+TABLAS_PACIENTE = [models.Evaluacion] + list(FICHAS.values()) + [models.Adjunto]
 
 
 def instantanea_paciente(db: Session, p) -> dict:
@@ -244,7 +270,7 @@ def enviar_a_papelera(db: Session, p) -> Papelera:
 def ver_papelera(db: Session = Depends(get_db)):
     return [{"id": x.id, "paciente_id": x.paciente_id, "ci": x.ci, "nombre": x.nombre, "eliminado_en": x.eliminado_en,
              "eliminado_por": x.eliminado_por, "restaurado_en": x.restaurado_en, "restaurado_por": x.restaurado_por,
-             "evaluaciones": len(json.loads(x.datos).get("evaluaciones", []))}
+             "evaluaciones": len(json.loads(x.datos).get("evaluaciones", [])), "adjuntos": len(json.loads(x.datos).get("adjuntos", []))}
             for x in db.query(Papelera).order_by(desc(Papelera.id)).all()]
 
 
@@ -257,7 +283,7 @@ def restaurar_paciente(item_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="Ya existe un paciente con ese CI; no se puede restaurar sin duplicar")
     datos = json.loads(item.datos)
     tablas = {t.name: t for t in Base.metadata.sorted_tables}
-    for nombre in ["pacientes", "evaluaciones"] + [m.__tablename__ for m in FICHAS.values()]:
+    for nombre in ["pacientes", "evaluaciones"] + [m.__tablename__ for m in FICHAS.values()] + ["adjuntos"]:
         filas = datos.get(nombre) or []
         if filas:
             validas = {c.name for c in tablas[nombre].columns}

@@ -19,6 +19,13 @@
         .btn-editar { background-color: #f59e0b; color: white; }
         .btn-editar:hover { background-color: #d97706; transform: scale(1.1); }
         .btn-borrar { background-color: #ef4444; color: white; }
+        .btn-adjuntos { background-color: #7c3aed; color: white; }
+        .btn-adjuntos:hover { background-color: #6d28d9; transform: scale(1.1); }
+        #dlgAdjuntos { border: none; border-radius: 14px; padding: 22px; background: #0f172a; color: #e2e8f0; width: min(760px, 94vw); }
+        #dlgAdjuntos::backdrop { background: rgba(2, 6, 23, .7); }
+        #dlgAdjuntos table td, #dlgAdjuntos table th { font-size: .8rem; text-transform: none; vertical-align: middle; }
+        .zona-subida { border: 2px dashed #334155; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+        .zona-subida.encima { border-color: #7c3aed; background: #1e1b4b; }
         .btn-borrar:hover { background-color: #dc2626; transform: scale(1.1); }
         .top-bar { width: 100%; background: #343a40; padding: 10px 20px; color: white; margin-bottom: 20px; }
         .top-bar a { color: white; text-decoration: none; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; }
@@ -39,7 +46,7 @@
         #papelera h3 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #94a3b8; }
         #papelera table td, #papelera table th { font-size: .78rem; text-transform: none; }
     </style>
-    <script src="config.js?v=9"></script>
+    <script src="config.js?v=10"></script>
 </head>
 <body>
 
@@ -118,6 +125,7 @@
                             <button class="btn-action btn-reporte" title="REPORTE" onclick="verReporte(${id})">📄</button>
                             <button class="btn-action btn-editar btn-identidad" title="CORREGIR NOMBRE O CI" onclick="abrirIdentidad(${id})">🪪</button>
                             <button class="btn-action btn-editar" title="EDITAR DECLARACIÓN JURADA" onclick="editarPaciente(${id})">✏️</button>
+                            <button class="btn-action btn-adjuntos" title="ARCHIVOS: PDF Y FOTOS" onclick="abrirAdjuntos(${id})">📎</button>
                             <button class="btn-action btn-borrar" title="BORRAR" onclick="eliminarPaciente(${id})">🗑️</button>
                         </td>
                     </tr>`;
@@ -221,6 +229,119 @@
         cargarPacientes();
     }
 
+    const LIMITE_ADJUNTO = 5 * 1024 * 1024;
+
+    function tamanoLegible(n) {
+        return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+    }
+
+    async function abrirAdjuntos(id) {
+        const p = window._pacientes[id];
+        document.getElementById('adj-id').value = id;
+        document.getElementById('adj-paciente').textContent = `${p.apellido} ${p.nombre} · CI ${p.ci}`;
+        document.getElementById('adj-archivo').value = '';
+        document.getElementById('adj-descripcion').value = '';
+        document.getElementById('adj-estado').textContent = '';
+        const rol = (sesion() || { usuario: {} }).usuario.rol;
+        document.getElementById('adj-subida').style.display = rol === 'LECTURA' ? 'none' : '';
+        document.getElementById('dlgAdjuntos').showModal();
+        await listarAdjuntos();
+    }
+
+    async function listarAdjuntos() {
+        const id = document.getElementById('adj-id').value;
+        const cuerpo = document.getElementById('adj-filas');
+        cuerpo.innerHTML = '<tr><td colspan="4">Cargando…</td></tr>';
+        const r = await fetch(`${API}/pacientes/${id}/adjuntos`);
+        if (!r.ok) { cuerpo.innerHTML = '<tr><td colspan="4">No se pudo cargar la lista de archivos.</td></tr>'; return; }
+        const lista = await r.json();
+        const medico = esMedico();
+        cuerpo.innerHTML = lista.length ? lista.map(a => `
+            <tr><td>${a.tipo === 'application/pdf' ? '📄' : '🖼️'} ${esc(a.nombre)}<div style="color:#94a3b8">${esc(a.descripcion || '')}</div></td>
+            <td>${tamanoLegible(a.tamano)}</td>
+            <td>${fechaServidor(a.creado_en).toLocaleString('es-BO')}<div style="color:#94a3b8">${esc(a.subido_por || '')}</div></td>
+            <td style="white-space:nowrap">
+                <button class="btn btn-sm btn-outline-light" onclick="verAdjunto(${a.id})">Ver</button>
+                <button class="btn btn-sm btn-outline-light" onclick="verAdjunto(${a.id}, '${esc(a.nombre).replace(/'/g, '')}')">Descargar</button>
+                ${medico ? `<button class="btn btn-sm btn-outline-danger" onclick="borrarAdjunto(${a.id})">Eliminar</button>` : ''}
+            </td></tr>`).join('')
+            : '<tr><td colspan="4" style="color:#94a3b8">Este paciente todavía no tiene archivos.</td></tr>';
+    }
+
+    function leerComoDataURL(archivo) {
+        return new Promise((ok, mal) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.onerror = mal; fr.readAsDataURL(archivo); });
+    }
+
+    async function reducirImagen(archivo) {
+        if (!['image/jpeg', 'image/png'].includes(archivo.type) || archivo.size <= 1.5 * 1048576) return { nombre: archivo.name, datos: await leerComoDataURL(archivo) };
+        const img = new Image();
+        img.src = await leerComoDataURL(archivo);
+        await img.decode();
+        const escala = Math.min(1, 2000 / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * escala); c.height = Math.round(img.height * escala);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        return { nombre: archivo.name.replace(/\.\w+$/, '') + '.jpg', datos: c.toDataURL('image/jpeg', 0.85) };
+    }
+
+    async function subirAdjuntos(archivos) {
+        const id = document.getElementById('adj-id').value;
+        const estado = document.getElementById('adj-estado');
+        const descripcion = document.getElementById('adj-descripcion').value;
+        archivos = Array.from(archivos || document.getElementById('adj-archivo').files);
+        if (!archivos.length) { estado.textContent = 'Elija uno o más archivos PDF, JPG o PNG.'; return; }
+        let bien = 0;
+        const errores = [];
+        for (const f of archivos) {
+            if (!['application/pdf', 'image/jpeg', 'image/png'].includes(f.type)) { errores.push(`${f.name}: solo PDF, JPG o PNG`); continue; }
+            estado.textContent = `Subiendo ${f.name}…`;
+            try {
+                const { nombre, datos } = await reducirImagen(f);
+                if (datos.length * 0.75 > LIMITE_ADJUNTO) { errores.push(`${f.name}: supera 5 MB`); continue; }
+                const r = await fetch(`${API}/pacientes/${id}/adjuntos`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, contenido: datos, descripcion, evaluacion_id: evaluacionActual() && String(localStorage.getItem('p_id')) === String(id) ? evaluacionActual() : null })
+                });
+                const d = await r.json().catch(() => ({}));
+                if (r.ok) bien++; else errores.push(`${f.name}: ${d.detail || r.status}`);
+            } catch (e) { errores.push(`${f.name}: no se pudo leer o enviar`); }
+        }
+        estado.textContent = (bien ? `${bien} archivo(s) subido(s). ` : '') + errores.join(' · ');
+        document.getElementById('adj-archivo').value = '';
+        await listarAdjuntos();
+    }
+
+    async function verAdjunto(id, descargarComo) {
+        const ventana = descargarComo ? null : window.open('', '_blank');
+        const r = await fetch(`${API}/adjuntos/${id}`);
+        if (!r.ok) { if (ventana) ventana.close(); alert('No se pudo abrir el archivo.'); return; }
+        const url = URL.createObjectURL(await r.blob());
+        if (descargarComo) {
+            const a = document.createElement('a');
+            a.href = url; a.download = descargarComo;
+            document.body.appendChild(a); a.click(); a.remove();
+        } else if (ventana) {
+            ventana.location.href = url;
+        } else {
+            window.location.href = url;
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
+
+    async function borrarAdjunto(id) {
+        if (!confirm('¿Eliminar este archivo? Esta acción queda registrada y no se puede deshacer.')) return;
+        const r = await fetch(`${API}/adjuntos/${id}`, { method: 'DELETE' });
+        if (!r.ok) { const d = await r.json().catch(() => ({})); alert('No se eliminó: ' + (d.detail || r.status)); }
+        await listarAdjuntos();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const zona = document.getElementById('adj-subida');
+        ['dragenter', 'dragover'].forEach(t => zona.addEventListener(t, e => { e.preventDefault(); zona.classList.add('encima'); }));
+        ['dragleave', 'drop'].forEach(t => zona.addEventListener(t, e => { e.preventDefault(); zona.classList.remove('encima'); }));
+        zona.addEventListener('drop', e => subirAdjuntos(e.dataTransfer.files));
+    });
+
     window.onload = cargarPacientes;
 </script>
 <dialog id="dlgIdentidad" style="border:none;border-radius:14px;padding:22px;background:#0f172a;color:#e2e8f0;width:min(420px,92vw);">
@@ -234,6 +355,21 @@
         <button class="btn btn-secondary" onclick="document.getElementById('dlgIdentidad').close()">Cancelar</button>
         <button id="idn-guardar" class="btn btn-success" onclick="guardarIdentidad()">Guardar</button>
     </div>
+</dialog>
+<dialog id="dlgAdjuntos">
+    <div style="display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:12px;">
+        <div><h5 style="font-weight:800;margin:0;">Archivos del paciente</h5><div id="adj-paciente" style="color:#94a3b8;font-size:13px;"></div></div>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('dlgAdjuntos').close(); cargarPacientes();">Cerrar</button>
+    </div>
+    <input type="hidden" id="adj-id">
+    <div id="adj-subida" class="zona-subida">
+        <label class="form-label small fw-bold">Subir PDF o fotos (JPG o PNG, hasta 5 MB cada uno). También puede arrastrarlos aquí.</label>
+        <input type="file" id="adj-archivo" class="form-control mb-2" accept="application/pdf,image/jpeg,image/png" multiple>
+        <input type="text" id="adj-descripcion" class="form-control mb-2" maxlength="300" placeholder="Descripción (opcional): radiografía de tórax, laboratorio, etc.">
+        <button id="adj-subir" class="btn btn-success btn-sm fw-bold" onclick="subirAdjuntos()">⬆️ Subir</button>
+        <span id="adj-estado" style="margin-left:10px;font-size:13px;color:#fbbf24;"></span>
+    </div>
+    <div class="table-responsive"><table class="table mb-0"><thead><tr><th>Archivo</th><th>Tamaño</th><th>Subido</th><th></th></tr></thead><tbody id="adj-filas"></tbody></table></div>
 </dialog>
 </body>
 </html>

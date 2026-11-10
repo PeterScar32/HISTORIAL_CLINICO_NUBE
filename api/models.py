@@ -608,3 +608,17 @@ class FichaOsteomuscular(Base):
     observaciones_final = Column(Text)
     restricciones = Column(Text)
     fecha_firma = Column(String)
+
+
+class Adjunto(Base):
+    __tablename__ = "adjuntos"
+    id = Column(Integer, primary_key=True, index=True)
+    paciente_id = Column(Integer, ForeignKey("pacientes.id", ondelete="CASCADE"), nullable=False, index=True)
+    evaluacion_id = Column(Integer, ForeignKey("evaluaciones.id", ondelete="SET NULL"), index=True)
+    nombre = Column(String, nullable=False)
+    tipo = Column(String, nullable=False)
+    tamano = Column(Integer, nullable=False)
+    descripcion = Column(String)
+    contenido = Column(Text, nullable=False)
+    subido_por = Column(String)
+    creado_en = Column(DateTime, server_default=func.now())

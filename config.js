@@ -395,11 +395,74 @@ function ocultarEnlacesNoPermitidos() {
     });
 }
 
+const CONSULTA_DE_PAGINA = {
+    "co_altura.html": "altura", "co_aptifi.html": "aptitud_fisica", "co_aptitud.html": "aptitud", "co_cardiologia.html": "cardiologia",
+    "co_declaracion.html": "declaracion", "co_electroencefalograma.html": "electroencefalograma", "co_espirometria.html": "espirometria",
+    "co_hiscli.html": "historial_clinico", "co_oftalmologia.html": "oftalmologia", "co_osteomuscular.html": "osteomuscular",
+    "co_psicologia.html": "psicologia"
+};
+
+function buscadorConsulta() {
+    const clave = CONSULTA_DE_PAGINA[paginaActual()];
+    const tabla = document.querySelector(".container table");
+    if (!clave || !tabla || document.getElementById("busqueda-consulta")) return;
+    const caja = document.createElement("div");
+    caja.id = "busqueda-consulta";
+    caja.className = "no-print";
+    caja.style.cssText = "background:#16213a;border:1px solid #1e293b;border-radius:12px;padding:16px;margin:0 0 22px";
+    caja.innerHTML = `
+        <div style="font-weight:800;font-size:13px;letter-spacing:.06em;color:#cbd5e1;margin-bottom:10px">BUSCAR PACIENTE POR CI O NOMBRE COMPLETO</div>
+        <form id="bc-form" style="display:flex;gap:10px;flex-wrap:wrap">
+            <input id="bc-q" type="search" class="form-control" style="flex:1;min-width:220px" placeholder="Ej.: 7012345 o Jorge Quispe Huanca" aria-label="CI o nombre completo">
+            <button type="submit" class="btn btn-success fw-bold">BUSCAR</button>
+            <button type="button" id="bc-limpiar" class="btn btn-outline-light">LIMPIAR</button>
+        </form>
+        <div id="bc-resultado" style="margin-top:12px"></div>`;
+    tabla.parentNode.insertBefore(caja, tabla);
+    const salida = caja.querySelector("#bc-resultado");
+    caja.querySelector("#bc-limpiar").onclick = () => { caja.querySelector("#bc-q").value = ""; salida.innerHTML = ""; };
+    caja.querySelector("#bc-form").onsubmit = async ev => {
+        ev.preventDefault();
+        const q = caja.querySelector("#bc-q").value.trim();
+        if (!q) { salida.innerHTML = '<div style="color:#fbbf24">Escriba un CI o un nombre.</div>'; return; }
+        salida.innerHTML = '<div style="color:#94a3b8">Buscando…</div>';
+        try {
+            const r = await fetch(`${CONFIG.API_BASE}/consultas/${clave}/buscar?q=${encodeURIComponent(q)}`);
+            const d = await r.json().catch(() => ({}));
+            if (!r.ok) { salida.innerHTML = `<div style="color:#f87171">${esc(d.detail || "Error " + r.status)}</div>`; return; }
+            if (!d.length) { salida.innerHTML = '<div style="color:#fbbf24">No se encontró ningún paciente con ese CI o nombre.</div>'; return; }
+            window._bcFilas = d;
+            salida.innerHTML = `<div class="table-responsive"><table class="table table-bordered mb-0"><thead><tr>
+                <th>CI</th><th>NOMBRE COMPLETO</th><th>EVALUACIÓN</th><th>ESTADO</th><th>RESPONSABLE</th><th></th></tr></thead><tbody>
+                ${d.map((x, i) => `<tr><td>${esc(x.ci)}</td><td>${esc(x.apellido)} ${esc(x.nombre)}</td>
+                    <td>${x.registrada ? `${esc(x.fecha || "")} · ${esc(x.tipo || "")}<div style="font-size:12px;opacity:.75">${esc(x.empresa || "")}</div>` : "—"}</td>
+                    <td>${x.registrada ? '<span style="color:#22c55e;font-weight:800">REGISTRADA</span>' : '<span style="color:#94a3b8;font-weight:800">SIN REGISTRO</span>'}</td>
+                    <td>${esc(x.responsable || x.registrado_por || "—")}</td>
+                    <td><button type="button" class="btn btn-sm btn-primary" onclick="verDesdeConsulta(${i})">VER INFORME</button></td></tr>`).join("")}
+                </tbody></table></div>`;
+        } catch (e) {
+            salida.innerHTML = '<div style="color:#f87171">El servidor no responde.</div>';
+        }
+    };
+}
+
+function verDesdeConsulta(i) {
+    const x = (window._bcFilas || [])[i];
+    if (!x) return;
+    fijarPacienteActual({ id: x.paciente_id, ci: x.ci, codigo_paciente: x.codigo_paciente, nombre: x.nombre, apellido: x.apellido });
+    try {
+        localStorage.setItem("p_id_reporte", x.paciente_id);
+        if (x.evaluacion_id) localStorage.setItem("p_eval", x.evaluacion_id); else localStorage.removeItem("p_eval");
+    } catch (e) {}
+    window.location.href = "informe.html";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     barraNavegacion();
     ocultarEnlacesNoPermitidos();
     insigniaUsuario();
     selectorResponsable();
     vincularCampoPaciente();
+    buscadorConsulta();
     despertarServidor();
 });
