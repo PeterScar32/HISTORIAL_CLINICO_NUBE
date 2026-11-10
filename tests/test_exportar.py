@@ -26,8 +26,24 @@ def test_EX01_excel_con_pacientes_evaluaciones_fichas_y_archivos(client):
     car = list(wb["Cardiología"].values)
     assert car[1][0] == "7900001" and "Hta" in car[0] and car[1][car[0].index("Hta")] == "SI"
     assert list(wb["Archivos"].values)[1][3] == "lab.pdf"
+    assert wb.sheetnames[1] == "Exámenes por evaluación"
+    ex = list(wb["Exámenes por evaluación"].values)
+    cab, fila = ex[0], ex[1]
+    assert fila[0] == "7900001" and fila[cab.index("Cardiología")] == "REALIZADO" and fila[cab.index("Historia clínica")] == "PENDIENTE"
+    assert fila[cab.index("Oftalmología")] is None and fila[cab.index("N.º exámenes realizados")] == 1
+    assert fila[cab.index("Cumplimiento")].startswith("INCOMPLETA") and "GRIS" in fila[cab.index("Semáforo")]
     acciones = [x["accion"] for x in client.get("/auditoria").json()]
     assert "EXPORTACION" in acciones
+
+
+def test_EX04_examenes_con_conclusion(client):
+    client.post("/pacientes/", json={"nombre": "beto", "apellido": "ficticio", "ci": "7900002"})
+    p = client.get("/pacientes/buscar/7900002").json()
+    client.post("/evaluaciones/", json={"paciente_id": p["id"], "tipo": "PERIODICO"})
+    client.post("/guardar-aptitud", json={"codigo_paciente": "7900002", "resultado": "NO APTO"})
+    wb = libro(client.get("/exportar/excel"))
+    cab, fila = list(wb["Exámenes por evaluación"].values)[:2]
+    assert fila[cab.index("Aptitud médico ocupacional")] == "REALIZADO · NO APTO" and "ROJO" in fila[cab.index("Semáforo")]
 
 
 def test_EX02_excel_vacio(client):

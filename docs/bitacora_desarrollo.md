@@ -207,3 +207,19 @@ Los flujos del navegador requieren la API local en el puerto 8000 y las páginas
 - El respaldo JSON se mantiene como copia de recuperación; el Excel es para consulta.
 
 **Pruebas:** API 99/99 (`tests/test_exportar.py`); navegador 153/153 (nuevo `tests/e2e_exportar.py`, 6).
+
+## Incremento 10 · Comentarios de OHS del 10-11-2026
+
+**Pedidos** (documento `comentarios_software_10_11_2026.docx` y mensaje de la Dra. Condarco):
+1. P3 solo admitía un trabajo anterior en la historia laboral.
+2. El certificado de aptitud y las demás fichas pedían escribir otra vez los datos del trabajador.
+3. Quitar «Occupational Health Services» donde aparezca.
+4. Que el Excel muestre qué exámenes se hicieron.
+
+**Decisiones**
+- P3: filas dinámicas («+ Agregar otro trabajo» y ✕). Se guardan en el mismo campo `historia_laboral`, una línea por trabajo, sin cambiar la base. Al editar P3 se recuperan los trabajos y los riesgos marcados (antes se perdían).
+- Ficha nueva de aptitud, aptitud física, historia clínica y osteomuscular: se completan apellidos, nombres, CI, edad, sexo, empresa, puesto, fecha y tipo de evaluación desde el registro y la P1. Solo se llenan campos vacíos y nunca se tocan fichas ya guardadas.
+- El informe y el certificado dicen solo «Historial Clínico Nube».
+- Excel: hoja «Exámenes por evaluación» con semáforo, cumplimiento, exámenes pendientes y una columna por examen (REALIZADO con su conclusión o PENDIENTE).
+
+**Pruebas:** API 100/100; navegador 171/171 (nuevo `tests/e2e_comentarios.py`, 18).

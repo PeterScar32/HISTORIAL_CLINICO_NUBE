@@ -69,8 +69,9 @@
             .hoja { box-shadow: none; border-radius: 0; max-width: none; min-height: auto; }
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
-    </style>
-    <script src="config.js?v=10"></script>
+            table.campos td { white-space: pre-line; }
+</style>
+    <script src="config.js?v=11"></script>
 </head>
 <body>
 <div class="marco">
@@ -157,7 +158,7 @@
 
     function cabecera(titulo) {
         const ev = exp.evaluacion || {};
-        return `<div class="cabecera"><img src="img/logo_ohs_circulo.png" alt="OHS"><div><h1>${esc(titulo)}</h1><p>Occupational Health Services · Historial Clínico Nube</p></div></div>`;
+        return `<div class="cabecera"><img src="img/logo_ohs_circulo.png" alt="OHS"><div><h1>${esc(titulo)}</h1><p>Historial Clínico Nube</p></div></div>`;
     }
 
     function datosTrabajador() {
