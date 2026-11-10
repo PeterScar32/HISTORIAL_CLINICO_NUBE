@@ -116,7 +116,8 @@
                         <td><span class="badge bg-light text-dark border">${esc(p.codigo_paciente) || '---'}</span></td>
                         <td class="text-center">
                             <button class="btn-action btn-reporte" title="REPORTE" onclick="verReporte(${id})">📄</button>
-                            <button class="btn-action btn-editar" title="EDITAR" onclick="editarPaciente(${id})">✏️</button>
+                            <button class="btn-action btn-editar btn-identidad" title="CORREGIR NOMBRE O CI" onclick="abrirIdentidad(${id})">🪪</button>
+                            <button class="btn-action btn-editar" title="EDITAR DECLARACIÓN JURADA" onclick="editarPaciente(${id})">✏️</button>
                             <button class="btn-action btn-borrar" title="BORRAR" onclick="eliminarPaciente(${id})">🗑️</button>
                         </td>
                     </tr>`;
@@ -196,7 +197,43 @@
         else alert('No se pudo restaurar: ' + (d.detail || r.status));
     }
 
+    function abrirIdentidad(id) {
+        const p = window._pacientes[id];
+        document.getElementById('idn-id').value = id;
+        document.getElementById('idn-nombre').value = p.nombre || '';
+        document.getElementById('idn-apellido').value = p.apellido || '';
+        document.getElementById('idn-ci').value = p.ci || '';
+        document.getElementById('idn-error').textContent = '';
+        document.getElementById('dlgIdentidad').showModal();
+    }
+
+    async function guardarIdentidad() {
+        const id = document.getElementById('idn-id').value;
+        const cuerpo = {
+            nombre: document.getElementById('idn-nombre').value,
+            apellido: document.getElementById('idn-apellido').value,
+            ci: document.getElementById('idn-ci').value
+        };
+        const r = await fetch(`${API}/api/pacientes/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) { document.getElementById('idn-error').textContent = d.detail || ('Error ' + r.status); return; }
+        document.getElementById('dlgIdentidad').close();
+        cargarPacientes();
+    }
+
     window.onload = cargarPacientes;
 </script>
+<dialog id="dlgIdentidad" style="border:none;border-radius:14px;padding:22px;background:#0f172a;color:#e2e8f0;width:min(420px,92vw);">
+    <h5 style="font-weight:800;margin-bottom:14px;">Corregir datos de identificación</h5>
+    <input type="hidden" id="idn-id">
+    <label class="form-label small">Nombres</label><input id="idn-nombre" class="form-control mb-2">
+    <label class="form-label small">Apellidos</label><input id="idn-apellido" class="form-control mb-2">
+    <label class="form-label small">CI</label><input id="idn-ci" class="form-control mb-2">
+    <p id="idn-error" style="color:#f87171;font-weight:700;font-size:13px;min-height:18px;"></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="document.getElementById('dlgIdentidad').close()">Cancelar</button>
+        <button id="idn-guardar" class="btn btn-success" onclick="guardarIdentidad()">Guardar</button>
+    </div>
+</dialog>
 </body>
 </html>

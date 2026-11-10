@@ -5,8 +5,9 @@ from api.models import FichaElectroencefalograma, Paciente
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
 from .database import SessionLocal, engine, Base
-from .crud import PROFESIONAL_ACTUAL, EVALUACION_ACTUAL, RESPONSABLE_ACTUAL, crear_evaluacion, evaluacion_vigente, create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
+from .crud import normalizar_ci, PROFESIONAL_ACTUAL, EVALUACION_ACTUAL, RESPONSABLE_ACTUAL, crear_evaluacion, evaluacion_vigente, create_doctor, create_enfermera, buscar_paciente, filtrar, upsert_filiacion, upsert_p2, upsert_p3, create_paciente, delete_paciente
 import os
+import logging
 from . import models
 from .models import FichaAptitudFisica 
 from .database import get_db
@@ -21,6 +22,8 @@ with SessionLocal() as _db:
     semaforo.sembrar_reglas(_db)
     auth.sembrar_usuarios(_db)
 app = FastAPI()
+log = logging.getLogger("ohs")
+ERROR_INTERNO = "Error interno del servidor; el detalle quedó registrado en el servidor"
 
 ORIGENES = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 
@@ -46,6 +49,14 @@ def paciente_o_404(db, codigo):
     if not p:
         raise HTTPException(status_code=404, detail="Paciente no encontrado")
     return p
+
+
+def exigir_paciente(db, data):
+    pid = data.get("paciente_id")
+    if not pid:
+        raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    if not str(pid).isdigit() or not db.query(models.Paciente.id).filter(models.Paciente.id == int(pid)).first():
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
 
 
 def ultimo(db, modelo, paciente_id):
@@ -93,7 +104,7 @@ def estado_api():
 # ----------- BLOQUE P1: FILIACION -----------
 @app.post("/filiacion/")
 def guardar_filiacion(data: dict, db: Session = Depends(get_db)):
-    if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    exigir_paciente(db, data)
     return upsert_filiacion(db, data)
 
 @app.get("/api/paciente-completo/{paciente_id}")
@@ -138,12 +149,12 @@ def verificar_estado_paciente(paciente_id: int, db: Session = Depends(get_db)):
 # ----------- BLOQUE P2 y P3 -----------
 @app.post("/p2/")
 def guardar_p2(data: dict, db: Session = Depends(get_db)):
-    if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    exigir_paciente(db, data)
     return upsert_p2(db, data)
 
 @app.post("/p3/")
 def guardar_p3(data: dict, db: Session = Depends(get_db)):
-    if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    exigir_paciente(db, data)
     return upsert_p3(db, data)
 
 # ----------- GESTION PACIENTES -----------
@@ -194,6 +205,33 @@ def buscar_pacientes(q: str = "", db: Session = Depends(get_db)):
 def buscar_paciente_ci(ci: str, db: Session = Depends(get_db)):
     return paciente_o_404(db, ci)
 
+@app.put("/api/pacientes/{paciente_id}")
+def actualizar_paciente(paciente_id: int, data: dict, db: Session = Depends(get_db)):
+    p = db.query(models.Paciente).filter(models.Paciente.id == paciente_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Paciente no encontrado")
+    cambios = {}
+    for k in ("nombre", "apellido"):
+        if k in data:
+            valor = str(data[k] or "").strip().upper()
+            if not valor:
+                raise HTTPException(status_code=400, detail=f"El campo {k} no puede quedar vacío")
+            cambios[k] = valor
+    if "ci" in data:
+        ci = normalizar_ci(data["ci"])
+        if not ci:
+            raise HTTPException(status_code=400, detail="El CI es obligatorio")
+        otro = buscar_paciente(db, ci)
+        if otro and otro.id != p.id:
+            raise HTTPException(status_code=409, detail=f"El CI {ci} ya pertenece a otro paciente")
+        cambios["ci"] = ci
+        cambios["codigo_paciente"] = ci
+    for k, v in cambios.items():
+        setattr(p, k, v)
+    db.commit()
+    db.refresh(p)
+    return {c.name: getattr(p, c.name) for c in models.Paciente.__table__.columns}
+
 @app.delete("/api/pacientes/{paciente_id}")
 def eliminar_paciente(paciente_id: int, confirmar_ci: str = "", db: Session = Depends(get_db)):
     p = db.query(models.Paciente).filter(models.Paciente.id == paciente_id).first()
@@ -214,7 +252,7 @@ def buscar_id_por_codigo(codigo: str, db: Session = Depends(get_db)):
 def guardar_ficha_oftalmo(data: dict, db: Session = Depends(get_db)):
     if not data.get("paciente_id") and data.get("codigo_paciente"):
         data["paciente_id"] = paciente_o_404(db, data["codigo_paciente"]).id
-    if not data.get("paciente_id"): raise HTTPException(status_code=400, detail="paciente_id es obligatorio")
+    exigir_paciente(db, data)
     nueva = guardar_en_evaluacion(db, models.FichaOftalmologica(**filtrar(models.FichaOftalmologica, data))); db.commit(); db.refresh(nueva); return nueva
 
 @app.get("/ficha-oftalmo/{paciente_id}")
@@ -276,8 +314,8 @@ async def guardar_psicologia(data: dict, db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error al guardar: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Error al guardar")
+        raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 
 @app.get("/ficha-psicologia/{paciente_id}")
 def obtener_ficha_psicologia(paciente_id: int, db: Session = Depends(get_db)):
@@ -512,9 +550,8 @@ async def guardar_espirometria(data: dict, db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        # Esto imprimirá el error real en los logs de Render
-        print(f"ERROR DETALLADO: {str(e)}") 
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Error al guardar")
+        log.exception("Error interno"); raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 # ----------------------------
 @app.get("/consultar-espirometria/{codigo_paciente}")
 async def consultar_espirometria(codigo_paciente: str, db: Session = Depends(get_db)):
@@ -625,7 +662,7 @@ async def guardar_altura(data: dict, db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Error interno"); raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 
 @app.get("/consultar-altura/{codigo_paciente}")
 async def consultar_altura(codigo_paciente: str, db: Session = Depends(get_db)):
@@ -714,7 +751,7 @@ async def guardar_electro(data: dict, db: Session = Depends(get_db)):
         
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Error interno"); raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 
 @app.get("/consultar-electro-por-campo/{campo}")
 async def consultar_electro_por_campo(campo: str, db: Session = Depends(get_db)):
@@ -743,7 +780,7 @@ async def guardar_aptitud(data: dict, db: Session = Depends(get_db)):
         codigo = str(data.get("codigo_paciente", "")).strip().upper()
         paciente = buscar_paciente(db, codigo)
         if not paciente:
-            return {"status": "error", "message": "Paciente no encontrado"}
+            raise HTTPException(status_code=404, detail="Paciente no encontrado")
 
         # Crear objeto con mapeo estricto
         nueva_ficha = models.FichaAptitud(
@@ -775,8 +812,9 @@ async def guardar_aptitud(data: dict, db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"ERROR: {e}")
-        return {"status": "error", "message": str(e)}
+        db.rollback()
+        log.exception("Error al guardar")
+        raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 
 @app.get("/consultar-aptitud/{codigo_paciente}")
 async def consultar_aptitud(codigo_paciente: str, db: Session = Depends(get_db)):
@@ -851,7 +889,7 @@ def guardar_aptitud_fisica(data: dict, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        log.exception("Datos rechazados"); raise HTTPException(status_code=400, detail="No se pudieron guardar los datos enviados")
 
 @app.get("/buscar-aptitud-fisica/{codigo_paciente}")
 def buscar_aptitud_fisica(codigo_paciente: str, db: Session = Depends(get_db)):
@@ -911,7 +949,7 @@ async def guardar_historial_clinico(data: dict, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Error interno"); raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 
 
 @app.get("/historial-filtrado/{estado}")
@@ -1115,7 +1153,7 @@ async def guardar_osteomuscular(data: dict, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        log.exception("Error interno"); raise HTTPException(status_code=500, detail=ERROR_INTERNO)
 
 @app.get("/filtrar-osteomuscular/{estado}")
 async def filtrar_osteomuscular(estado: str, db: Session = Depends(get_db)):

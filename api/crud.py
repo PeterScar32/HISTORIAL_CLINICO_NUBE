@@ -95,9 +95,6 @@ def create_paciente(db: Session, data: dict):
             data[k] = str(data[k]).strip().upper()
     existente = get_paciente_by_ci(db, data["ci"])
     if existente:
-        for key, value in data.items(): setattr(existente, key, value)
-        db.commit()
-        db.refresh(existente)
         return existente
     db_obj = models.Paciente(**data)
     db.add(db_obj)
