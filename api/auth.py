@@ -151,6 +151,8 @@ def permitido(u: Usuario, metodo: str, ruta: str) -> bool:
         return True
     if ruta.startswith(PREFIJOS_ADMIN):
         return False
+    if ruta.startswith("/exportar"):
+        return u.rol == ROL_ENFERMERIA and metodo == "GET"
     if u.rol == ROL_LECTURA:
         return metodo == "GET" and not ruta.startswith("/auditoria")
     if u.rol == ROL_ESPECIALISTA:

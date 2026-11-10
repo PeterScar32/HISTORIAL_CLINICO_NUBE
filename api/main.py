@@ -13,7 +13,7 @@ from .models import FichaAptitudFisica
 from .database import get_db
 from sqlalchemy import desc
 
-from . import semaforo, auth, auditoria, demo, adjuntos
+from . import semaforo, auth, auditoria, demo, adjuntos, exportar
 from .auditoria import guardar_en_evaluacion, registrar_eliminacion, enviar_a_papelera
 Base.metadata.create_all(bind=engine)
 from .migraciones import aplicar_migraciones
@@ -68,6 +68,7 @@ app.include_router(auth.router)
 app.include_router(auditoria.router)
 app.include_router(demo.router)
 app.include_router(adjuntos.router)
+app.include_router(exportar.router)
 
 
 @app.middleware("http")

@@ -158,6 +158,10 @@
         }[u.rol] || [];
         document.getElementById("opciones").innerHTML = opciones.map(([href, ico, texto]) =>
             `<button class="opcion" onclick="location.href='${href}'"><div class="ico">${ico}</div><span>${texto}</span></button>`).join("");
+        if (u.rol === "MEDICO" || u.rol === "ENFERMERIA") {
+            document.getElementById("opciones").insertAdjacentHTML("afterend",
+                `<p><button id="btn-excel" class="btn btn-texto" style="width:auto;color:#22c55e" type="button" onclick="exportarExcel(this)">📊 Exportar datos a Excel</button></p>`);
+        }
         if (u.rol === "MEDICO") {
             document.getElementById("opciones").insertAdjacentHTML("afterend",
                 `<p><button class="btn btn-texto" style="width:auto;color:#94a3b8" type="button" onclick="descargarRespaldo(this)">💾 Descargar respaldo de la base de datos</button>
@@ -183,6 +187,29 @@
             boton.textContent = cargar ? `✅ ${d.creados} pacientes ficticios cargados` : `✅ ${d.borrados} pacientes ficticios quitados`;
         } catch (e) {
             boton.textContent = "❌ No se pudo completar";
+        }
+        boton.disabled = false;
+        setTimeout(() => { boton.textContent = texto; }, 6000);
+    }
+
+    async function exportarExcel(boton) {
+        const texto = boton.textContent;
+        boton.disabled = true;
+        boton.textContent = "Preparando Excel…";
+        try {
+            const r = await fetch(`${API}/exportar/excel`);
+            if (!r.ok) throw new Error();
+            const blob = await r.blob();
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `historial_clinico_nube_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+            boton.textContent = "✅ Excel descargado";
+        } catch (e) {
+            boton.textContent = "❌ No se pudo exportar";
         }
         boton.disabled = false;
         setTimeout(() => { boton.textContent = texto; }, 6000);
