@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="790" height="820" viewBox="0 0 790 820" font-family="Inter, Arial, Helvetica, sans-serif" fill="#1F2A44">
+<defs><marker id="punta" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 L3,5 z" fill="#1F2A44"/></marker></defs>
+<rect width="790" height="820" fill="white"/>
+<rect x="0" y="0" width="790" height="44" fill="#E9EDF3"/>
+<text x="140.0" y="26.0" font-size="12" font-weight="bold" text-anchor="middle"><tspan x="140.0" dy="0">Enfermería</tspan></text>
+<text x="420.0" y="26.0" font-size="12" font-weight="bold" text-anchor="middle"><tspan x="420.0" dy="0">Profesionales de especialidad</tspan></text>
+<text x="675.0" y="18.0" font-size="12" font-weight="bold" text-anchor="middle"><tspan x="675.0" dy="0">Responsable del informe</tspan><tspan x="675.0" dy="16">médico-ocupacional</tspan></text>
+<line x1="0.5" y1="0" x2="0.5" y2="820" stroke="#1F2A44" stroke-width="1"/>
+<line x1="280" y1="0" x2="280" y2="820" stroke="#1F2A44" stroke-width="1"/>
+<line x1="560" y1="0" x2="560" y2="820" stroke="#1F2A44" stroke-width="1"/>
+<line x1="789.5" y1="0" x2="789.5" y2="820" stroke="#1F2A44" stroke-width="1"/>
+<rect x="51.4" y="100.0" width="177.3" height="50.0" rx="11" fill="white" stroke="#1F2A44" stroke-width="1"/>
+<text x="63.4" y="121.0" font-size="12" font-weight="normal" text-anchor="start"><tspan x="63.4" dy="0">Recibir al trabajador</tspan><tspan x="63.4" dy="16">y verificar su identificación</tspan></text>
+<rect x="19.7" y="175.0" width="240.6" height="50.0" rx="11" fill="white" stroke="#1F2A44" stroke-width="1"/>
+<text x="31.7" y="196.0" font-size="12" font-weight="normal" text-anchor="start"><tspan x="31.7" dy="0">Registrar datos personales y laborales</tspan><tspan x="31.7" dy="16">en el formulario físico</tspan></text>
+<rect x="36.6" y="250.0" width="206.8" height="50.0" rx="11" fill="white" stroke="#1F2A44" stroke-width="1"/>
+<text x="48.6" y="271.0" font-size="12" font-weight="normal" text-anchor="start"><tspan x="48.6" dy="0">Registrar antecedentes de salud</tspan><tspan x="48.6" dy="16">en la declaración jurada física</tspan></text>
+<rect x="16.5" y="326.0" width="246.9" height="34.0" rx="11" fill="white" stroke="#1F2A44" stroke-width="1"/>
+<text x="28.5" y="347.0" font-size="12" font-weight="normal" text-anchor="start"><tspan x="28.5" dy="0">Derivar a las especialidades requeridas</tspan></text>
+<rect x="346.8" y="535.0" width="146.5" height="50.0" rx="11" fill="white" stroke="#1F2A44" stroke-width="1"/>
+<text x="358.8" y="556.0" font-size="12" font-weight="normal" text-anchor="start"><tspan x="358.8" dy="0">Realizar la evaluación</tspan><tspan x="358.8" dy="16">por especialidad</tspan></text>
+<rect x="313.6" y="615.0" width="212.8" height="50.0" rx="11" fill="white" stroke="#1F2A44" stroke-width="1"/>
+<text x="325.6" y="636.0" font-size="12" font-weight="normal" text-anchor="start"><tspan x="325.6" dy="0">Registrar los resultados</tspan><tspan x="325.6" dy="16">en la ficha física correspondiente</tspan></text>
+<rect x="595.1" y="630.0" width="159.8" height="50.0" rx="11" fill="white" stroke="#1F2A44" stroke-width="1"/>
+<text x="607.1" y="651.0" font-size="12" font-weight="normal" text-anchor="start"><tspan x="607.1" dy="0">Revisar y consolidar</tspan><tspan x="607.1" dy="16">las fichas de evaluación</tspan></text>
+<rect x="604.8" y="705.0" width="140.4" height="50.0" rx="11" fill="white" stroke="#1F2A44" stroke-width="1"/>
+<text x="616.8" y="726.0" font-size="12" font-weight="normal" text-anchor="start"><tspan x="616.8" dy="0">Elaborar el informe</tspan><tspan x="616.8" dy="16">médico-ocupacional</tspan></text>
+<polygon points="420,407 433,420 420,433 407,420" fill="white" stroke="#1F2A44" stroke-width="1"/>
+<polygon points="420,467 433,480 420,493 407,480" fill="white" stroke="#1F2A44" stroke-width="1"/>
+<text x="401.0" y="476.0" font-size="12" font-weight="normal" text-anchor="end"><tspan x="401.0" dy="0">¿Faltan</tspan><tspan x="401.0" dy="16">evaluaciones?</tspan></text>
+<circle cx="140" cy="72" r="11" fill="#1F2A44"/>
+<circle cx="675" cy="785" r="12" fill="white" stroke="#1F2A44" stroke-width="1.2"/>
+<circle cx="675" cy="785" r="7" fill="#1F2A44"/>
+<polyline points="140.0,83.0 140.0,100.0" fill="none" stroke="#1F2A44" stroke-width="1.1" marker-end="url(#punta)"/>
+<polyline points="140.0,150.0 140.0,175.0" fill="none" stroke="#1F2A44" stroke-width="1.1" marker-end="url(#punta)"/>
+<polyline points="140.0,225.0 140.0,250.0" fill="none" stroke="#1F2A44" stroke-width="1.1" marker-end="url(#punta)"/>
+<polyline points="140.0,300.0 140.0,326.0" fill="none" stroke="#1F2A44" stroke-width="1.1" marker-end="url(#punta)"/>
+<polyline points="140.0,360.0 140.0,382.0 420.0,382.0 420.0,407.0" fill="none" stroke="#1F2A44" stroke-width="1.1" marker-end="url(#punta)"/>
+<polyline points="420.0,433.0 420.0,467.0" fill="none" stroke="#1F2A44" stroke-width="1.1" marker-end="url(#punta)"/>
+<polyline points="420.0,493.0 420.0,535.0" fill="none" stroke="#1F2A44" stroke-width="1.1" marker-end="url(#punta)"/>
+<text x="427.0" y="510.0" font-size="12" font-weight="normal" text-anchor="start"><tspan x="427.0" dy="0">[Sí]</tspan></text>
+<polyline points="420.0,585.0 420.0,615.0" fill="none" stroke="#1F2A44" stroke-width="1.1" marker-end="url(#punta)"/>
+<polyline points="313.6,640.0 292.0,640.0 292.0,420.0 407.0,420.0" fill="none" stroke="#1F2A44" stroke-width="1.1" marker-end="url(#punta)"/>
+<polyline points="433.0,480.0 675.0,480.0 675.0,630.0" fill="none" stroke="#1F2A44" stroke-width="1.1" marker-end="url(#punta)"/>
+<text x="441.0" y="474.0" font-size="12" font-weight="normal" text-anchor="start"><tspan x="441.0" dy="0">[No]</tspan></text>
+<polyline points="675.0,680.0 675.0,705.0" fill="none" stroke="#1F2A44" stroke-width="1.1" marker-end="url(#punta)"/>
+<polyline points="675.0,755.0 675.0,773.0" fill="none" stroke="#1F2A44" stroke-width="1.1" marker-end="url(#punta)"/>
+</svg>

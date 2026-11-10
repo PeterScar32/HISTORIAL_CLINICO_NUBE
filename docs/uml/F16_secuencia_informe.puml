@@ -1,0 +1,31 @@
+@startuml F16_secuencia_informe
+!include estilo.iuml
+skinparam SequenceMessageAlignment left
+autonumber
+actor "Usuario de\nconsulta" as U
+boundary "informes.html" as P
+control "auth.control_acceso" as A
+control "main.py" as M
+database "PostgreSQL" as B
+
+U -> P : Ingresa el CI y presiona «Buscar»
+P -> A : GET /api/informe-consolidado/{ci}[?evaluacion_id]
+A -> A : Validar token y rol (lectura permitida)
+alt Perfil sin acceso (Enfermería)
+  A --> P : 403
+else Autorizado
+  A -> M : Petición autorizada
+  M -> B : SELECT pacientes WHERE ci = :ci
+  alt CI inexistente
+    M --> P : 404 Paciente no encontrado
+  else Paciente encontrado
+    M -> B : SELECT evaluación elegida (o la más reciente)
+    loop 11 tablas de fichas
+      M -> B : SELECT ficha WHERE paciente_id y evaluacion_id
+    end
+    M --> P : 200 {datos generales, evaluación,\nevaluaciones, resultados o "SIN EXAMEN"}
+    P -> U : Muestra resultados y selector de evaluación
+    U -> P : Imprime o guarda como PDF (navegador)
+  end
+end
+@enduml

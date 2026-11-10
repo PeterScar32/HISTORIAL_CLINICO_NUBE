@@ -1,0 +1,50 @@
+@startuml F11_estados_navegacion
+!include estilo.iuml
+hide empty description
+skinparam linetype ortho
+[*] --> Acceso
+state "Acceso (index.html)" as Acceso {
+  state "Selección de perfil" as Perfil
+  state "Ingreso de contraseña" as Clave
+  state "Cambio de contraseña" as Cambio
+  [*] --> Perfil
+  Perfil --> Clave : elige su perfil
+  Clave --> Cambio : [clave temporal]
+}
+state "Sesión iniciada" as S {
+  state "Menú según rol (index.html)" as Menu
+  state "Área de enfermería" as AE {
+    state "Registro del trabajador\ny la evaluación" as Reg
+    state "Declaración jurada\nP1 → P2 → P3" as DJ
+    [*] --> Reg
+    Reg --> DJ : guarda registro
+  }
+  state "Menú de especialidades\n(d_menu)" as DM
+  state "Ficha de especialidad\n(doc_*)" as Ficha
+  state "Pacientes\n(lista_historial)" as LH
+  state "Informe y certificado\n(informe.html)" as INF
+  state "Semáforo de alertas" as SEM
+  state "Visor: consultas co_*\ne informe consolidado" as VIS
+  state "Personal\n(lista_personal)" as PER
+  [*] --> Menu
+  Menu --> AE : Registro [Médico o Enfermería]
+  Menu --> DM : Especialidades / Mis fichas
+  DM --> Ficha : elige ficha [permitida al rol]
+  Ficha --> DM : guarda o Atrás
+  Menu --> LH : Pacientes
+  DJ --> LH : finaliza P3
+  LH --> DJ : editar declaración
+  LH --> INF : ver reporte
+  Menu --> SEM : Semáforo [no Enfermería]
+  SEM --> INF : REPORTE
+  Menu --> VIS : Visor [no Enfermería]
+  Menu --> PER : Personal [Médico]
+}
+Clave --> S : [clave válida]
+Cambio --> S : guarda nueva clave
+S --> [*] : cerrar sesión o token vencido
+note bottom of S
+  Desde cualquier pantalla, «Inicio» vuelve al menú y «Atrás/Adelante» recorren el historial.
+  Una página no permitida para el rol devuelve al menú.
+end note
+@enduml

@@ -1,0 +1,319 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1250" height="820" viewBox="0 0 1250 820" font-family="Liberation Serif, Times New Roman, serif" fill="#000000"><rect width="1250" height="820" fill="#FFFFFF"/><rect x="15" y="15" width="200" height="142" fill="#FFF" stroke="#000"/>
+<rect x="15" y="15" width="200" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="115.0" y="31.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="115.0" dy="0">usuarios</tspan></text>
+<text x="22.0" y="52.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">PK id</tspan></text>
+<text x="22.0" y="66.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">UQ usuario NN</tspan></text>
+<text x="22.0" y="80.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">nombre NN</tspan></text>
+<text x="22.0" y="94.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">rol NN</tspan></text>
+<text x="22.0" y="108.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">especialidad</tspan></text>
+<text x="22.0" y="122.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">fichas_permitidas</tspan></text>
+<text x="22.0" y="136.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">pass_hash</tspan></text>
+<text x="22.0" y="150.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">activo</tspan></text>
+<rect x="15" y="169" width="200" height="156" fill="#FFF" stroke="#000"/>
+<rect x="15" y="169" width="200" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="115.0" y="185.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="115.0" dy="0">auditoria</tspan></text>
+<text x="22.0" y="206.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">PK id</tspan></text>
+<text x="22.0" y="220.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">fecha</tspan></text>
+<text x="22.0" y="234.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">usuario</tspan></text>
+<text x="22.0" y="248.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">accion NN</tspan></text>
+<text x="22.0" y="262.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">tabla NN</tspan></text>
+<text x="22.0" y="276.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">paciente_id</tspan></text>
+<text x="22.0" y="290.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">evaluacion_id</tspan></text>
+<text x="22.0" y="304.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">campo, valor_anterior,</tspan></text>
+<text x="22.0" y="318.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">valor_nuevo</tspan></text>
+<rect x="15" y="337" width="200" height="100" fill="#FFF" stroke="#000"/>
+<rect x="15" y="337" width="200" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="115.0" y="353.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="115.0" dy="0">papelera</tspan></text>
+<text x="22.0" y="374.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">PK id</tspan></text>
+<text x="22.0" y="388.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">paciente_id</tspan></text>
+<text x="22.0" y="402.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">ci</tspan></text>
+<text x="22.0" y="416.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">datos NN (JSON)</tspan></text>
+<text x="22.0" y="430.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">eliminado_en, eliminado_por</tspan></text>
+<rect x="15" y="449" width="200" height="86" fill="#FFF" stroke="#000"/>
+<rect x="15" y="449" width="200" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="115.0" y="465.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="115.0" dy="0">reglas_semaforo</tspan></text>
+<text x="22.0" y="486.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">PK id</tspan></text>
+<text x="22.0" y="500.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">patron NN</tspan></text>
+<text x="22.0" y="514.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">color NN</tspan></text>
+<text x="22.0" y="528.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">prioridad</tspan></text>
+<rect x="15" y="547" width="200" height="58" fill="#FFF" stroke="#000"/>
+<rect x="15" y="547" width="200" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="115.0" y="563.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="115.0" dy="0">doctores</tspan></text>
+<text x="22.0" y="584.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">PK id_doc</tspan></text>
+<text x="22.0" y="598.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">UQ ci_doc</tspan></text>
+<rect x="15" y="617" width="200" height="58" fill="#FFF" stroke="#000"/>
+<rect x="15" y="617" width="200" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="115.0" y="633.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="115.0" dy="0">enfermeras</tspan></text>
+<text x="22.0" y="654.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">PK id_enfe</tspan></text>
+<text x="22.0" y="668.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">UQ ci_enfe</tspan></text>
+<text x="115.0" y="698.9" font-size="11" text-anchor="middle" font-weight="normal" font-style="italic"><tspan x="115.0" dy="0">Tablas sin claves foráneas</tspan></text>
+<rect x="470" y="20" width="170" height="100" fill="#FFF" stroke="#000"/>
+<rect x="470" y="20" width="170" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="555.0" y="36.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="555.0" dy="0">pacientes</tspan></text>
+<text x="477.0" y="57.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="477.0" dy="0">PK id</tspan></text>
+<text x="477.0" y="71.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="477.0" dy="0">nombre</tspan></text>
+<text x="477.0" y="85.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="477.0" dy="0">apellido</tspan></text>
+<text x="477.0" y="99.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="477.0" dy="0">UQ ci</tspan></text>
+<text x="477.0" y="113.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="477.0" dy="0">codigo_paciente</tspan></text>
+<rect x="860" y="20" width="190" height="100" fill="#FFF" stroke="#000"/>
+<rect x="860" y="20" width="190" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="955.0" y="36.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="955.0" dy="0">evaluaciones</tspan></text>
+<text x="867.0" y="57.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">PK id</tspan></text>
+<text x="867.0" y="71.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">FK paciente_id NN</tspan></text>
+<text x="867.0" y="85.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">fecha</tspan></text>
+<text x="867.0" y="99.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">empresa, puesto, tipo</tspan></text>
+<text x="867.0" y="113.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">fichas_requeridas</tspan></text>
+<polyline points="640.0,80.0 860.0,80.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="848.0" y1="80.0" x2="860.0" y2="73.0" stroke="#000000"/>
+<line x1="848.0" y1="80.0" x2="860.0" y2="80.0" stroke="#000000"/>
+<line x1="848.0" y1="80.0" x2="860.0" y2="87.0" stroke="#000000"/>
+<circle cx="842.0" cy="80.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<line x1="646.0" y1="74.0" x2="646.0" y2="86.0" stroke="#000000"/>
+<line x1="650.0" y1="74.0" x2="650.0" y2="86.0" stroke="#000000"/>
+<polyline points="555.0,120.0 555.0,205.0 252.0,205.0 252.0,580.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="561.0" y1="126.0" x2="549.0" y2="126.0" stroke="#000000"/>
+<line x1="561.0" y1="130.0" x2="549.0" y2="130.0" stroke="#000000"/>
+<polyline points="955.0,120.0 955.0,180.0 1240.0,180.0 1240.0,598.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="961.0" y1="126.0" x2="949.0" y2="126.0" stroke="#000000"/>
+<line x1="961.0" y1="130.0" x2="949.0" y2="130.0" stroke="#000000"/>
+<polyline points="252.0,220.0 1084.0,220.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="410.0,238.0 1240.0,238.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="268" y="270" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="268" y="270" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="359.0" y="286.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="359.0" dy="0">declaraciones_p1</tspan></text>
+<text x="275.0" y="307.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">PK id</tspan></text>
+<text x="275.0" y="321.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">FK paciente_id</tspan></text>
+<text x="275.0" y="335.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="275.0" y="349.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="275.0" y="363.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="308.0,220.0 308.0,270.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="308.0" y1="258.0" x2="315.0" y2="270.0" stroke="#000000"/>
+<line x1="308.0" y1="258.0" x2="308.0" y2="270.0" stroke="#000000"/>
+<line x1="308.0" y1="258.0" x2="301.0" y2="270.0" stroke="#000000"/>
+<circle cx="308.0" cy="252.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="410.0,238.0 410.0,270.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="410.0" y1="258.0" x2="417.0" y2="270.0" stroke="#000000"/>
+<line x1="410.0" y1="258.0" x2="410.0" y2="270.0" stroke="#000000"/>
+<line x1="410.0" y1="258.0" x2="403.0" y2="270.0" stroke="#000000"/>
+<circle cx="410.0" cy="252.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<rect x="462" y="270" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="462" y="270" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="553.0" y="286.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="553.0" dy="0">antecedentes_p2</tspan></text>
+<text x="469.0" y="307.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">PK id</tspan></text>
+<text x="469.0" y="321.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">FK paciente_id</tspan></text>
+<text x="469.0" y="335.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="469.0" y="349.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="469.0" y="363.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="502.0,220.0 502.0,270.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="502.0" y1="258.0" x2="509.0" y2="270.0" stroke="#000000"/>
+<line x1="502.0" y1="258.0" x2="502.0" y2="270.0" stroke="#000000"/>
+<line x1="502.0" y1="258.0" x2="495.0" y2="270.0" stroke="#000000"/>
+<circle cx="502.0" cy="252.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="604.0,238.0 604.0,270.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="604.0" y1="258.0" x2="611.0" y2="270.0" stroke="#000000"/>
+<line x1="604.0" y1="258.0" x2="604.0" y2="270.0" stroke="#000000"/>
+<line x1="604.0" y1="258.0" x2="597.0" y2="270.0" stroke="#000000"/>
+<circle cx="604.0" cy="252.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<rect x="656" y="270" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="656" y="270" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="747.0" y="286.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="747.0" dy="0">habitos_p3</tspan></text>
+<text x="663.0" y="307.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">PK id</tspan></text>
+<text x="663.0" y="321.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">FK paciente_id</tspan></text>
+<text x="663.0" y="335.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="663.0" y="349.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="663.0" y="363.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="696.0,220.0 696.0,270.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="696.0" y1="258.0" x2="703.0" y2="270.0" stroke="#000000"/>
+<line x1="696.0" y1="258.0" x2="696.0" y2="270.0" stroke="#000000"/>
+<line x1="696.0" y1="258.0" x2="689.0" y2="270.0" stroke="#000000"/>
+<circle cx="696.0" cy="252.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="798.0,238.0 798.0,270.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="798.0" y1="258.0" x2="805.0" y2="270.0" stroke="#000000"/>
+<line x1="798.0" y1="258.0" x2="798.0" y2="270.0" stroke="#000000"/>
+<line x1="798.0" y1="258.0" x2="791.0" y2="270.0" stroke="#000000"/>
+<circle cx="798.0" cy="252.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<rect x="850" y="270" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="850" y="270" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="941.0" y="286.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="941.0" dy="0">ficha_oftalmologica</tspan></text>
+<text x="857.0" y="307.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">PK id</tspan></text>
+<text x="857.0" y="321.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">FK paciente_id</tspan></text>
+<text x="857.0" y="335.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="857.0" y="349.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="857.0" y="363.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="890.0,220.0 890.0,270.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="890.0" y1="258.0" x2="897.0" y2="270.0" stroke="#000000"/>
+<line x1="890.0" y1="258.0" x2="890.0" y2="270.0" stroke="#000000"/>
+<line x1="890.0" y1="258.0" x2="883.0" y2="270.0" stroke="#000000"/>
+<circle cx="890.0" cy="252.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="992.0,238.0 992.0,270.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="992.0" y1="258.0" x2="999.0" y2="270.0" stroke="#000000"/>
+<line x1="992.0" y1="258.0" x2="992.0" y2="270.0" stroke="#000000"/>
+<line x1="992.0" y1="258.0" x2="985.0" y2="270.0" stroke="#000000"/>
+<circle cx="992.0" cy="252.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<rect x="1044" y="270" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="1044" y="270" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="1135.0" y="286.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="1135.0" dy="0">fichas_psicologia</tspan></text>
+<text x="1051.0" y="307.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="1051.0" dy="0">PK id</tspan></text>
+<text x="1051.0" y="321.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="1051.0" dy="0">FK paciente_id</tspan></text>
+<text x="1051.0" y="335.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="1051.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="1051.0" y="349.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="1051.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="1051.0" y="363.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="1051.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="1084.0,220.0 1084.0,270.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="1084.0" y1="258.0" x2="1091.0" y2="270.0" stroke="#000000"/>
+<line x1="1084.0" y1="258.0" x2="1084.0" y2="270.0" stroke="#000000"/>
+<line x1="1084.0" y1="258.0" x2="1077.0" y2="270.0" stroke="#000000"/>
+<circle cx="1084.0" cy="252.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="1186.0,238.0 1186.0,270.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="1186.0" y1="258.0" x2="1193.0" y2="270.0" stroke="#000000"/>
+<line x1="1186.0" y1="258.0" x2="1186.0" y2="270.0" stroke="#000000"/>
+<line x1="1186.0" y1="258.0" x2="1179.0" y2="270.0" stroke="#000000"/>
+<circle cx="1186.0" cy="252.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="252.0,400.0 890.0,400.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="410.0,418.0 1240.0,418.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="268" y="450" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="268" y="450" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="359.0" y="466.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="359.0" dy="0">ficha_espirometria</tspan></text>
+<text x="275.0" y="487.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">PK id</tspan></text>
+<text x="275.0" y="501.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">FK paciente_id</tspan></text>
+<text x="275.0" y="515.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="275.0" y="529.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="275.0" y="543.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="308.0,400.0 308.0,450.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="308.0" y1="438.0" x2="315.0" y2="450.0" stroke="#000000"/>
+<line x1="308.0" y1="438.0" x2="308.0" y2="450.0" stroke="#000000"/>
+<line x1="308.0" y1="438.0" x2="301.0" y2="450.0" stroke="#000000"/>
+<circle cx="308.0" cy="432.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="410.0,418.0 410.0,450.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="410.0" y1="438.0" x2="417.0" y2="450.0" stroke="#000000"/>
+<line x1="410.0" y1="438.0" x2="410.0" y2="450.0" stroke="#000000"/>
+<line x1="410.0" y1="438.0" x2="403.0" y2="450.0" stroke="#000000"/>
+<circle cx="410.0" cy="432.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<rect x="462" y="450" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="462" y="450" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="553.0" y="466.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="553.0" dy="0">ficha_cardiologia</tspan></text>
+<text x="469.0" y="487.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">PK id</tspan></text>
+<text x="469.0" y="501.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">FK paciente_id NN</tspan></text>
+<text x="469.0" y="515.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="469.0" y="529.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="469.0" y="543.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="502.0,400.0 502.0,450.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="502.0" y1="438.0" x2="509.0" y2="450.0" stroke="#000000"/>
+<line x1="502.0" y1="438.0" x2="502.0" y2="450.0" stroke="#000000"/>
+<line x1="502.0" y1="438.0" x2="495.0" y2="450.0" stroke="#000000"/>
+<circle cx="502.0" cy="432.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="604.0,418.0 604.0,450.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="604.0" y1="438.0" x2="611.0" y2="450.0" stroke="#000000"/>
+<line x1="604.0" y1="438.0" x2="604.0" y2="450.0" stroke="#000000"/>
+<line x1="604.0" y1="438.0" x2="597.0" y2="450.0" stroke="#000000"/>
+<circle cx="604.0" cy="432.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<rect x="656" y="450" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="656" y="450" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="747.0" y="466.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="747.0" dy="0">ficha_altura</tspan></text>
+<text x="663.0" y="487.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">PK id</tspan></text>
+<text x="663.0" y="501.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">FK paciente_id</tspan></text>
+<text x="663.0" y="515.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="663.0" y="529.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="663.0" y="543.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="696.0,400.0 696.0,450.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="696.0" y1="438.0" x2="703.0" y2="450.0" stroke="#000000"/>
+<line x1="696.0" y1="438.0" x2="696.0" y2="450.0" stroke="#000000"/>
+<line x1="696.0" y1="438.0" x2="689.0" y2="450.0" stroke="#000000"/>
+<circle cx="696.0" cy="432.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="798.0,418.0 798.0,450.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="798.0" y1="438.0" x2="805.0" y2="450.0" stroke="#000000"/>
+<line x1="798.0" y1="438.0" x2="798.0" y2="450.0" stroke="#000000"/>
+<line x1="798.0" y1="438.0" x2="791.0" y2="450.0" stroke="#000000"/>
+<circle cx="798.0" cy="432.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<rect x="850" y="450" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="850" y="450" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="941.0" y="466.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="941.0" dy="0">ficha_electroencefalograma</tspan></text>
+<text x="857.0" y="487.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">PK id</tspan></text>
+<text x="857.0" y="501.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">FK paciente_id</tspan></text>
+<text x="857.0" y="515.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="857.0" y="529.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="857.0" y="543.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="890.0,400.0 890.0,450.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="890.0" y1="438.0" x2="897.0" y2="450.0" stroke="#000000"/>
+<line x1="890.0" y1="438.0" x2="890.0" y2="450.0" stroke="#000000"/>
+<line x1="890.0" y1="438.0" x2="883.0" y2="450.0" stroke="#000000"/>
+<circle cx="890.0" cy="432.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="992.0,418.0 992.0,450.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="992.0" y1="438.0" x2="999.0" y2="450.0" stroke="#000000"/>
+<line x1="992.0" y1="438.0" x2="992.0" y2="450.0" stroke="#000000"/>
+<line x1="992.0" y1="438.0" x2="985.0" y2="450.0" stroke="#000000"/>
+<circle cx="992.0" cy="432.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="252.0,580.0 890.0,580.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="410.0,598.0 1240.0,598.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="268" y="630" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="268" y="630" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="359.0" y="646.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="359.0" dy="0">ficha_aptitud</tspan></text>
+<text x="275.0" y="667.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">PK id</tspan></text>
+<text x="275.0" y="681.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">FK paciente_id NN</tspan></text>
+<text x="275.0" y="695.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="275.0" y="709.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="275.0" y="723.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="275.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="308.0,580.0 308.0,630.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="308.0" y1="618.0" x2="315.0" y2="630.0" stroke="#000000"/>
+<line x1="308.0" y1="618.0" x2="308.0" y2="630.0" stroke="#000000"/>
+<line x1="308.0" y1="618.0" x2="301.0" y2="630.0" stroke="#000000"/>
+<circle cx="308.0" cy="612.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="410.0,598.0 410.0,630.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="410.0" y1="618.0" x2="417.0" y2="630.0" stroke="#000000"/>
+<line x1="410.0" y1="618.0" x2="410.0" y2="630.0" stroke="#000000"/>
+<line x1="410.0" y1="618.0" x2="403.0" y2="630.0" stroke="#000000"/>
+<circle cx="410.0" cy="612.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<rect x="462" y="630" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="462" y="630" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="553.0" y="646.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="553.0" dy="0">ficha_aptitud_fisica</tspan></text>
+<text x="469.0" y="667.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">PK id</tspan></text>
+<text x="469.0" y="681.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">FK paciente_id</tspan></text>
+<text x="469.0" y="695.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="469.0" y="709.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="469.0" y="723.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="469.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="502.0,580.0 502.0,630.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="502.0" y1="618.0" x2="509.0" y2="630.0" stroke="#000000"/>
+<line x1="502.0" y1="618.0" x2="502.0" y2="630.0" stroke="#000000"/>
+<line x1="502.0" y1="618.0" x2="495.0" y2="630.0" stroke="#000000"/>
+<circle cx="502.0" cy="612.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="604.0,598.0 604.0,630.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="604.0" y1="618.0" x2="611.0" y2="630.0" stroke="#000000"/>
+<line x1="604.0" y1="618.0" x2="604.0" y2="630.0" stroke="#000000"/>
+<line x1="604.0" y1="618.0" x2="597.0" y2="630.0" stroke="#000000"/>
+<circle cx="604.0" cy="612.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<rect x="656" y="630" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="656" y="630" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="747.0" y="646.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="747.0" dy="0">ficha_osteomuscular</tspan></text>
+<text x="663.0" y="667.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">PK id</tspan></text>
+<text x="663.0" y="681.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">FK paciente_id</tspan></text>
+<text x="663.0" y="695.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="663.0" y="709.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="663.0" y="723.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="663.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="696.0,580.0 696.0,630.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="696.0" y1="618.0" x2="703.0" y2="630.0" stroke="#000000"/>
+<line x1="696.0" y1="618.0" x2="696.0" y2="630.0" stroke="#000000"/>
+<line x1="696.0" y1="618.0" x2="689.0" y2="630.0" stroke="#000000"/>
+<circle cx="696.0" cy="612.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="798.0,598.0 798.0,630.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="798.0" y1="618.0" x2="805.0" y2="630.0" stroke="#000000"/>
+<line x1="798.0" y1="618.0" x2="798.0" y2="630.0" stroke="#000000"/>
+<line x1="798.0" y1="618.0" x2="791.0" y2="630.0" stroke="#000000"/>
+<circle cx="798.0" cy="612.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<rect x="850" y="630" width="182" height="100" fill="#FFF" stroke="#000"/>
+<rect x="850" y="630" width="182" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="941.0" y="646.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="941.0" dy="0">historial_clinico</tspan></text>
+<text x="857.0" y="667.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">PK id</tspan></text>
+<text x="857.0" y="681.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">FK paciente_id</tspan></text>
+<text x="857.0" y="695.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">FK evaluacion_id</tspan></text>
+<text x="857.0" y="709.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">creado_en, registrado_por</tspan></text>
+<text x="857.0" y="723.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">responsable_id, responsable</tspan></text>
+<polyline points="890.0,580.0 890.0,630.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="890.0" y1="618.0" x2="897.0" y2="630.0" stroke="#000000"/>
+<line x1="890.0" y1="618.0" x2="890.0" y2="630.0" stroke="#000000"/>
+<line x1="890.0" y1="618.0" x2="883.0" y2="630.0" stroke="#000000"/>
+<circle cx="890.0" cy="612.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<polyline points="992.0,598.0 992.0,630.0" fill="none" stroke="#000000" stroke-width="1"/>
+<line x1="992.0" y1="618.0" x2="999.0" y2="630.0" stroke="#000000"/>
+<line x1="992.0" y1="618.0" x2="992.0" y2="630.0" stroke="#000000"/>
+<line x1="992.0" y1="618.0" x2="985.0" y2="630.0" stroke="#000000"/>
+<circle cx="992.0" cy="612.0" r="4" fill="#FFFFFF" stroke="#000000"/>
+<text x="268.0" y="803.9" font-size="11" text-anchor="start" font-weight="normal" font-style="italic"><tspan x="268.0" dy="0">PK: clave primaria · FK: clave foránea (ON DELETE CASCADE) · UQ: valor único · NN: no admite nulos. Las fichas tienen además los campos propios de cada formulario (Anexo C).</tspan></text></svg>

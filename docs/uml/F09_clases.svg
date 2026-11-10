@@ -1,0 +1,198 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="920" viewBox="0 0 1180 920" font-family="Liberation Serif, Times New Roman, serif" fill="#000000"><rect width="1180" height="920" fill="#FFFFFF"/><rect x="470" y="20" width="116.953125" height="100" fill="#FFF" stroke="#000"/>
+<rect x="470" y="20" width="116.953125" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="528.5" y="36.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="528.5" dy="0">Paciente</tspan></text>
+<text x="477.0" y="57.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="477.0" dy="0">-id: int</tspan></text>
+<text x="477.0" y="71.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="477.0" dy="0">-nombre: str</tspan></text>
+<text x="477.0" y="85.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="477.0" dy="0">-apellido: str</tspan></text>
+<text x="477.0" y="99.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="477.0" dy="0">-ci: str {unique}</tspan></text>
+<text x="477.0" y="113.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="477.0" dy="0">-codigo_paciente: str</tspan></text>
+<rect x="455" y="190" width="122.96875" height="142" fill="#FFF" stroke="#000"/>
+<rect x="455" y="190" width="122.96875" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="516.5" y="206.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="516.5" dy="0">Evaluacion</tspan></text>
+<text x="462.0" y="227.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="462.0" dy="0">-id: int</tspan></text>
+<text x="462.0" y="241.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="462.0" dy="0">-paciente_id: int</tspan></text>
+<text x="462.0" y="255.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="462.0" dy="0">-fecha: date</tspan></text>
+<text x="462.0" y="269.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="462.0" dy="0">-empresa: str</tspan></text>
+<text x="462.0" y="283.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="462.0" dy="0">-puesto: str</tspan></text>
+<text x="462.0" y="297.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="462.0" dy="0">-tipo: str</tspan></text>
+<text x="462.0" y="311.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="462.0" dy="0">-fichas_requeridas: str</tspan></text>
+<text x="462.0" y="325.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="462.0" dy="0">-creado_en: datetime</tspan></text>
+<rect x="440" y="425" width="116.9375" height="128" fill="#FFF" stroke="#000"/>
+<rect x="440" y="425" width="116.9375" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="498.5" y="441.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="italic"><tspan x="498.5" dy="0">FichaClinica {abstract}</tspan></text>
+<text x="447.0" y="462.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="447.0" dy="0">-id: int</tspan></text>
+<text x="447.0" y="476.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="447.0" dy="0">-paciente_id: int</tspan></text>
+<text x="447.0" y="490.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="447.0" dy="0">-evaluacion_id: int</tspan></text>
+<text x="447.0" y="504.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="447.0" dy="0">-creado_en: datetime</tspan></text>
+<text x="447.0" y="518.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="447.0" dy="0">-registrado_por: str</tspan></text>
+<text x="447.0" y="532.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="447.0" dy="0">-responsable_id: int</tspan></text>
+<text x="447.0" y="546.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="447.0" dy="0">-responsable: str</tspan></text>
+<rect x="860" y="400" width="123.625" height="156" fill="#FFF" stroke="#000"/>
+<rect x="860" y="400" width="123.625" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="921.8" y="416.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="921.8" dy="0">Usuario</tspan></text>
+<text x="867.0" y="437.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-id: int</tspan></text>
+<text x="867.0" y="451.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-usuario: str {unique}</tspan></text>
+<text x="867.0" y="465.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-nombre: str</tspan></text>
+<text x="867.0" y="479.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-rol: str</tspan></text>
+<text x="867.0" y="493.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-especialidad: str</tspan></text>
+<text x="867.0" y="507.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-fichas_permitidas: str</tspan></text>
+<text x="867.0" y="521.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-pass_hash: str</tspan></text>
+<text x="867.0" y="535.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-activo: bool</tspan></text>
+<text x="867.0" y="549.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-debe_cambiar: bool</tspan></text>
+<rect x="860" y="20" width="112.28125" height="170" fill="#FFF" stroke="#000"/>
+<rect x="860" y="20" width="112.28125" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="916.1" y="36.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="916.1" dy="0">Auditoria</tspan></text>
+<text x="867.0" y="57.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-id: int</tspan></text>
+<text x="867.0" y="71.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-fecha: datetime</tspan></text>
+<text x="867.0" y="85.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-usuario: str</tspan></text>
+<text x="867.0" y="99.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-accion: str</tspan></text>
+<text x="867.0" y="113.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-tabla: str</tspan></text>
+<text x="867.0" y="127.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-paciente_id: int</tspan></text>
+<text x="867.0" y="141.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-evaluacion_id: int</tspan></text>
+<text x="867.0" y="155.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-campo: str</tspan></text>
+<text x="867.0" y="169.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-valor_anterior: text</tspan></text>
+<text x="867.0" y="183.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="867.0" dy="0">-valor_nuevo: text</tspan></text>
+<rect x="30" y="20" width="134.9375" height="156" fill="#FFF" stroke="#000"/>
+<rect x="30" y="20" width="134.9375" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="97.5" y="36.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="97.5" dy="0">Papelera</tspan></text>
+<text x="37.0" y="57.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-id: int</tspan></text>
+<text x="37.0" y="71.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-paciente_id: int</tspan></text>
+<text x="37.0" y="85.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-ci: str</tspan></text>
+<text x="37.0" y="99.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-nombre: str</tspan></text>
+<text x="37.0" y="113.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-eliminado_en: datetime</tspan></text>
+<text x="37.0" y="127.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-eliminado_por: str</tspan></text>
+<text x="37.0" y="141.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-datos: text (JSON)</tspan></text>
+<text x="37.0" y="155.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-restaurado_en: datetime</tspan></text>
+<text x="37.0" y="169.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-restaurado_por: str</tspan></text>
+<rect x="30" y="250" width="98.4375" height="114" fill="#FFF" stroke="#000"/>
+<rect x="30" y="250" width="98.4375" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="79.2" y="266.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="79.2" dy="0">ReglaSemaforo</tspan></text>
+<text x="37.0" y="287.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-id: int</tspan></text>
+<text x="37.0" y="301.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-patron: str</tspan></text>
+<text x="37.0" y="315.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-tipo: str</tspan></text>
+<text x="37.0" y="329.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-color: str</tspan></text>
+<text x="37.0" y="343.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-prioridad: int</tspan></text>
+<text x="37.0" y="357.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-activo: bool</tspan></text>
+<rect x="30" y="425" width="117.5" height="100" fill="#FFF" stroke="#000"/>
+<rect x="30" y="425" width="117.5" height="36" fill="#E6E6E6" stroke="#000"/>
+<text x="88.8" y="441.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="italic"><tspan x="88.8" dy="0">«tabla heredada»</tspan></text>
+<text x="88.8" y="455.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="88.8" dy="0">Doctor</tspan></text>
+<text x="37.0" y="476.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-id_doc: int</tspan></text>
+<text x="37.0" y="490.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-ci_doc: str {unique}</tspan></text>
+<text x="37.0" y="504.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-nombre_doc: str</tspan></text>
+<text x="37.0" y="518.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="37.0" dy="0">-especialidad: str</tspan></text>
+<rect x="230" y="425" width="120.828125" height="100" fill="#FFF" stroke="#000"/>
+<rect x="230" y="425" width="120.828125" height="36" fill="#E6E6E6" stroke="#000"/>
+<text x="290.4" y="441.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="italic"><tspan x="290.4" dy="0">«tabla heredada»</tspan></text>
+<text x="290.4" y="455.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="290.4" dy="0">Enfermera</tspan></text>
+<text x="237.0" y="476.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="237.0" dy="0">-id_enfe: int</tspan></text>
+<text x="237.0" y="490.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="237.0" dy="0">-ci_enfe: str {unique}</tspan></text>
+<text x="237.0" y="504.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="237.0" dy="0">-nombre_enfe: str</tspan></text>
+<text x="237.0" y="518.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="237.0" dy="0">-especialidad: str</tspan></text>
+<rect x="15" y="680" width="155" height="72" fill="#FFF" stroke="#000"/>
+<rect x="15" y="680" width="155" height="36" fill="#E6E6E6" stroke="#000"/>
+<text x="92.5" y="696.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="italic"><tspan x="92.5" dy="0">«P1 filiación»</tspan></text>
+<text x="92.5" y="710.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="92.5" dy="0">DeclaracionJurada</tspan></text>
+<text x="22.0" y="731.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">-edad: str</tspan></text>
+<text x="22.0" y="745.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">-sexo: str</tspan></text>
+<polyline points="92.5,680.0 92.5,650.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="180" y="680" width="155" height="72" fill="#FFF" stroke="#000"/>
+<rect x="180" y="680" width="155" height="36" fill="#E6E6E6" stroke="#000"/>
+<text x="257.5" y="696.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="italic"><tspan x="257.5" dy="0">«P2 antecedentes»</tspan></text>
+<text x="257.5" y="710.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="257.5" dy="0">AntecedentesP2</tspan></text>
+<text x="187.0" y="731.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="187.0" dy="0">-vista: str</tspan></text>
+<text x="187.0" y="745.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="187.0" dy="0">-alergias: str</tspan></text>
+<polyline points="257.5,680.0 257.5,650.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="345" y="680" width="155" height="72" fill="#FFF" stroke="#000"/>
+<rect x="345" y="680" width="155" height="36" fill="#E6E6E6" stroke="#000"/>
+<text x="422.5" y="696.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="italic"><tspan x="422.5" dy="0">«P3 hábitos»</tspan></text>
+<text x="422.5" y="710.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="422.5" dy="0">HabitosRiesgosP3</tspan></text>
+<text x="352.0" y="731.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="352.0" dy="0">-fuma: str</tspan></text>
+<text x="352.0" y="745.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="352.0" dy="0">-alcohol: str</tspan></text>
+<polyline points="422.5,680.0 422.5,650.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="510" y="680" width="155" height="58" fill="#FFF" stroke="#000"/>
+<rect x="510" y="680" width="155" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="587.5" y="696.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="587.5" dy="0">FichaOftalmologica</tspan></text>
+<text x="517.0" y="717.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="517.0" dy="0">-lentes: str</tspan></text>
+<text x="517.0" y="731.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="517.0" dy="0">-od_l_cc, oi_l_cc: str</tspan></text>
+<polyline points="587.5,680.0 587.5,650.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="680" y="680" width="155" height="44" fill="#FFF" stroke="#000"/>
+<rect x="680" y="680" width="155" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="757.5" y="696.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="757.5" dy="0">FichaPsicologia</tspan></text>
+<text x="687.0" y="717.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="687.0" dy="0">-resultado_psicologico: str</tspan></text>
+<polyline points="757.5,680.0 757.5,650.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="850" y="680" width="155" height="44" fill="#FFF" stroke="#000"/>
+<rect x="850" y="680" width="155" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="927.5" y="696.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="927.5" dy="0">FichaEspirometria</tspan></text>
+<text x="857.0" y="717.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="857.0" dy="0">-criterios_exclusion_1: str</tspan></text>
+<polyline points="927.5,680.0 927.5,650.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="1010" y="680" width="155" height="58" fill="#FFF" stroke="#000"/>
+<rect x="1010" y="680" width="155" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="1087.5" y="696.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="1087.5" dy="0">HistorialClinico</tspan></text>
+<text x="1017.0" y="717.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="1017.0" dy="0">-empresa: str</tspan></text>
+<text x="1017.0" y="731.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="1017.0" dy="0">-puesto: str</tspan></text>
+<polyline points="1087.5,680.0 1087.5,650.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="15" y="840" width="180" height="58" fill="#FFF" stroke="#000"/>
+<rect x="15" y="840" width="180" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="105.0" y="856.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="105.0" dy="0">FichaAltura</tspan></text>
+<text x="22.0" y="877.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">-acrofobia: str</tspan></text>
+<text x="22.0" y="891.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="22.0" dy="0">-hipertension: str</tspan></text>
+<polyline points="105.0,840.0 105.0,805.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="210" y="840" width="180" height="58" fill="#FFF" stroke="#000"/>
+<rect x="210" y="840" width="180" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="300.0" y="856.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="300.0" dy="0">FichaElectroencefalograma</tspan></text>
+<text x="217.0" y="877.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="217.0" dy="0">-epilepsia: str</tspan></text>
+<text x="217.0" y="891.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="217.0" dy="0">-convulsiones: str</tspan></text>
+<polyline points="300.0,840.0 300.0,805.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="405" y="840" width="180" height="58" fill="#FFF" stroke="#000"/>
+<rect x="405" y="840" width="180" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="495.0" y="856.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="495.0" dy="0">FichaAptitud</tspan></text>
+<text x="412.0" y="877.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="412.0" dy="0">-tipo_examen: str</tspan></text>
+<text x="412.0" y="891.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="412.0" dy="0">-resultado: str</tspan></text>
+<polyline points="495.0,840.0 495.0,805.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="600" y="840" width="180" height="58" fill="#FFF" stroke="#000"/>
+<rect x="600" y="840" width="180" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="690.0" y="856.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="690.0" dy="0">FichaAptitudFisica</tspan></text>
+<text x="607.0" y="877.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="607.0" dy="0">-resultado_fisico: str</tspan></text>
+<text x="607.0" y="891.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="607.0" dy="0">-resultado_psicologico: str</tspan></text>
+<polyline points="690.0,840.0 690.0,805.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="800" y="840" width="180" height="44" fill="#FFF" stroke="#000"/>
+<rect x="800" y="840" width="180" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="890.0" y="856.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="890.0" dy="0">FichaOsteomuscular</tspan></text>
+<text x="807.0" y="877.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="807.0" dy="0">-concepto_aptitud: str</tspan></text>
+<polyline points="890.0,840.0 890.0,805.0" fill="none" stroke="#000000" stroke-width="1"/>
+<rect x="995" y="840" width="180" height="58" fill="#FFF" stroke="#000"/>
+<rect x="995" y="840" width="180" height="22" fill="#E6E6E6" stroke="#000"/>
+<text x="1085.0" y="856.2" font-size="12" text-anchor="middle" font-weight="bold" font-style="normal"><tspan x="1085.0" dy="0">FichaCardiologia</tspan></text>
+<text x="1002.0" y="877.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="1002.0" dy="0">-hta: str</tspan></text>
+<text x="1002.0" y="891.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="1002.0" dy="0">-diagnostico_recomendaciones</tspan></text>
+<polyline points="1085.0,840.0 1085.0,805.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="92.5,650.0 1087.5,650.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="105.0,805.0 1085.0,805.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="7.0,805.0 7.0,650.0 92.5,650.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="105.0,805.0 7.0,805.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polyline points="498.5,650.0 498.5,553.0" fill="none" stroke="#000000" stroke-width="1"/>
+<polygon points="493.2,564.9 498.5,553.0 503.8,564.9" fill="#FFFFFF" stroke="#000000"/>
+<polygon points="528.4765625,120 534.4765625,130 528.4765625,140 522.4765625,130" fill="#000" stroke="#000"/>
+<polyline points="528.5,140.0 528.5,190.0" fill="none" stroke="#000000" stroke-width="1"/>
+<text x="536.5" y="154.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="536.5" dy="0">1</tspan></text>
+<text x="536.5" y="184.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="536.5" dy="0">0..*</tspan></text>
+<polygon points="516.484375,332 522.484375,342 516.484375,352 510.484375,342" fill="#000" stroke="#000"/>
+<polyline points="516.5,352.0 516.5,425.0" fill="none" stroke="#000000" stroke-width="1"/>
+<text x="524.5" y="366.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="524.5" dy="0">1</tspan></text>
+<text x="524.5" y="419.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="524.5" dy="0">0..*  {una por tipo de ficha}</tspan></text>
+<polyline points="470.0,90.0 420.0,90.0 420.0,465.0 440.0,465.0" fill="none" stroke="#000000" stroke-width="1"/>
+<text x="412.0" y="86.2" font-size="12" text-anchor="end" font-weight="normal" font-style="normal"><tspan x="412.0" dy="0">1</tspan></text>
+<text x="412.0" y="461.2" font-size="12" text-anchor="end" font-weight="normal" font-style="normal"><tspan x="412.0" dy="0">0..*</tspan></text>
+<polyline points="556.9,520.0 860.0,520.0" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="6,4"/>
+<polyline points="851.0,515.7 860.0,520.0 851.0,524.3" fill="none" stroke="#000000"/>
+<rect x="720.3" y="502.0" width="119.3" height="15" fill="#FFFFFF"/>
+<text x="780.0" y="514.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="780.0" dy="0">responsable_id (sin FK)</tspan></text>
+<polyline points="860.0,80.0 587.0,80.0" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="6,4"/>
+<polyline points="596.0,84.3 587.0,80.0 596.0,75.7" fill="none" stroke="#000000"/>
+<rect x="687.5" y="62.0" width="95.0" height="15" fill="#FFFFFF"/>
+<text x="735.0" y="74.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="735.0" dy="0">«registra cambios»</tspan></text>
+<polyline points="164.9,80.0 470.0,60.0" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="6,4"/>
+<polyline points="460.7,56.2 470.0,60.0 461.3,64.9" fill="none" stroke="#000000"/>
+<rect x="286.2" y="50.0" width="87.6" height="15" fill="#FFFFFF"/>
+<text x="330.0" y="62.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="330.0" dy="0">«conserva copia»</tspan></text></svg>

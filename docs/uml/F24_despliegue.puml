@@ -1,0 +1,25 @@
+@startuml F24_despliegue
+!include estilo.iuml
+node "Equipo del usuario" as PC {
+  node "Navegador web" as NAV
+}
+node "GitHub Pages\n«servidor de archivos estáticos»" as GP {
+  artifact "41 páginas HTML,\nconfig.js e imágenes" as WEB
+}
+node "Render · Web Service (plan gratuito)\n«Python 3.13»" as RW {
+  component "Uvicorn + FastAPI\n(api.main:app)" as API
+  artifact "Variables de entorno:\nDATABASE_URL, SECRET_KEY,\nOHS_CLAVES_INICIALES, ALLOWED_ORIGINS" as ENV
+}
+node "Render · PostgreSQL (plan gratuito)" as RD {
+  database "Base de datos\n(21 tablas)" as DB
+}
+node "GitHub\n«repositorio»" as GH {
+  artifact "PeterScar32/\nHISTORIAL_CLINICO_NUBE\n(rama main)" as REPO
+}
+NAV --> WEB : HTTPS
+NAV --> API : HTTPS / JSON\n(token Bearer)
+API --> DB : PostgreSQL (psycopg2)
+API ..> ENV : lee
+REPO ..> GP : publica
+REPO ..> RW : despliegue automático\nal confirmar en main
+@enduml

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="640" viewBox="0 0 620 640" font-family="Liberation Serif, Times New Roman, serif" fill="#000000"><rect width="620" height="640" fill="#FFFFFF"/><path d="M60,42 L60,20 L184.765625,20 L192.765625,42 Z" fill="#E6E6E6" stroke="#000"/>
+<rect x="60" y="42" width="500" height="143" fill="#FFFFFF" stroke="#000"/>
+<text x="68.0" y="35.2" font-size="12" text-anchor="start" font-weight="bold" font-style="normal"><tspan x="68.0" dy="0">Presentación «capa»</tspan></text>
+<rect x="194.5" y="73.0" width="231.0" height="84.0" rx="4" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="310.0" y="91.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="310.0" dy="0">41 páginas HTML5, CSS3 y JavaScript</tspan><tspan x="310.0" dy="14">(Bootstrap 5, Tailwind CSS)</tspan><tspan x="310.0" dy="14"></tspan><tspan x="310.0" dy="14">config.js: dirección de la API, sesión, token</tspan><tspan x="310.0" dy="14">y comprobación de permisos por página</tspan></text>
+<path d="M60,257 L60,235 L209.640625,235 L217.640625,257 Z" fill="#E6E6E6" stroke="#000"/>
+<rect x="60" y="257" width="500" height="153" fill="#FFFFFF" stroke="#000"/>
+<text x="68.0" y="250.2" font-size="12" text-anchor="start" font-weight="bold" font-style="normal"><tspan x="68.0" dy="0">Lógica y servicios «capa»</tspan></text>
+<rect x="188.5" y="300.0" width="243.0" height="70.0" rx="4" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="310.0" y="318.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="310.0" dy="0">Python 3.13, FastAPI y Uvicorn</tspan><tspan x="310.0" dy="14"></tspan><tspan x="310.0" dy="14">control de acceso por token y rol, rutas REST,</tspan><tspan x="310.0" dy="14">reglas del semáforo, auditoría y respaldo</tspan></text>
+<path d="M60,482 L60,460 L180.3125,460 L188.3125,482 Z" fill="#E6E6E6" stroke="#000"/>
+<rect x="60" y="482" width="500" height="138" fill="#FFFFFF" stroke="#000"/>
+<text x="68.0" y="475.2" font-size="12" text-anchor="start" font-weight="bold" font-style="normal"><tspan x="68.0" dy="0">Persistencia «capa»</tspan></text>
+<rect x="192.2" y="515.0" width="235.6" height="70.0" rx="4" fill="#F2F2F2" stroke="#000000" stroke-width="1"/>
+<text x="310.0" y="533.2" font-size="12" text-anchor="middle" font-weight="normal" font-style="normal"><tspan x="310.0" dy="0">SQLAlchemy 2.1 (psycopg2) y PostgreSQL</tspan><tspan x="310.0" dy="14"></tspan><tspan x="310.0" dy="14">21 tablas: trabajadores, evaluaciones, fichas,</tspan><tspan x="310.0" dy="14">usuarios, auditoría, papelera y reglas</tspan></text>
+<polyline points="310.0,185.0 310.0,235.0" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="6,4"/>
+<polyline points="314.3,226.0 310.0,235.0 305.7,226.0" fill="none" stroke="#000000"/>
+<rect x="318.0" y="202.0" width="118.1" height="15" fill="#FFFFFF"/>
+<text x="320.0" y="214.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="320.0" dy="0">HTTPS / JSON + token</tspan></text>
+<polyline points="310.0,410.0 310.0,460.0" fill="none" stroke="#000000" stroke-width="1" stroke-dasharray="6,4"/>
+<polyline points="314.3,451.0 310.0,460.0 305.7,451.0" fill="none" stroke="#000000"/>
+<rect x="318.0" y="427.0" width="63.3" height="15" fill="#FFFFFF"/>
+<text x="320.0" y="439.2" font-size="12" text-anchor="start" font-weight="normal" font-style="normal"><tspan x="320.0" dy="0">ORM / SQL</tspan></text></svg>

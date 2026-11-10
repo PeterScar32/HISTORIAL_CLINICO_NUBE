@@ -1,0 +1,37 @@
+@startuml F14_secuencia_registro
+!include estilo.iuml
+skinparam SequenceMessageAlignment left
+skinparam ParticipantPadding 12
+autonumber
+actor "Enfermería" as U
+boundary "registro_paciente.html" as P
+control "auth.control_acceso" as A
+control "main.py" as M
+entity "crud.py / models.py" as C
+database "PostgreSQL" as B
+
+U -> P : Ingresa nombres, apellidos y CI
+P -> A : GET /pacientes/buscar/{ci}\n(Authorization: Bearer token)
+A -> A : Validar token, usuario activo y rol
+A -> M : Petición autorizada
+M -> C : buscar_paciente(ci)
+C -> B : SELECT pacientes WHERE ci = :ci
+B --> C : fila o vacío
+alt CI registrado
+  M --> P : 200 paciente existente
+  P -> U : Aviso: el CI ya existe; ¿iniciar nueva evaluación?
+  U -> P : Acepta (no se crea otro paciente)
+else CI no registrado
+  M --> P : 404 Paciente no encontrado
+  U -> P : Presiona «Guardar registro»
+  P -> M : POST /pacientes/ {nombre, apellido, ci}
+  M -> C : create_paciente(datos)\n(codigo_paciente = CI normalizado)
+  C -> B : INSERT pacientes; INSERT auditoria (CREACION)
+  M --> P : 200 {id, existente: false}
+end
+P -> M : POST /evaluaciones/ {paciente_id, empresa, puesto,\ntipo, fecha, fichas_requeridas}
+M -> C : crear_evaluacion(datos)
+C -> B : INSERT evaluaciones
+M --> P : 200 {id de la evaluación}
+P -> U : Confirma y abre la declaración jurada (P1)
+@enduml
