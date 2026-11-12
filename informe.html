@@ -69,9 +69,16 @@
             .hoja { box-shadow: none; border-radius: 0; max-width: none; min-height: auto; }
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
-            table.campos td { white-space: pre-line; }
+        table.campos td { white-space: pre-line; }
+        table.res { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+        table.res th { text-align: left; background: #f8fafc; color: var(--tenue); font-weight: 700; border-bottom: 1px solid #cbd5e1; padding: 3px 6px; }
+        table.res td { border-bottom: 1px solid #e2e8f0; padding: 3px 6px; vertical-align: top; }
+        table.res tr { break-inside: avoid; page-break-inside: avoid; }
+        table.res tr.actual td { background: #eff6ff; font-weight: 700; }
+        .est-REGISTRADA { color: #047857; font-weight: 700; }
+        .est-PENDIENTE { color: #b45309; font-weight: 700; }
 </style>
-    <script src="config.js?v=11"></script>
+    <script src="config.js?v=12"></script>
 </head>
 <body>
 <div class="marco">
@@ -110,6 +117,8 @@
     const SECCIONES = [
         ["datos", "Datos del trabajador y de la evaluación", null],
         ["semaforo", "Semáforo: alertas y cumplimiento", null],
+        ["examenes", "Exámenes realizados y resultados principales", null],
+        ["evaluaciones", "Evaluaciones anteriores del trabajador", null],
         ["declaracion", "Declaración jurada · P1 Filiación", "declaracion"],
         ["antecedentes", "Declaración jurada · P2 Antecedentes", "antecedentes"],
         ["habitos", "Declaración jurada · P3 Hábitos y riesgos", "habitos"],
@@ -125,7 +134,7 @@
         ["osteomuscular", "Evaluación osteomuscular", "osteomuscular"],
     ];
     const INTERNOS = new Set(["id", "paciente_id", "evaluacion_id", "codigo_paciente", "creado_en", "registrado_por", "responsable_id", "responsable"]);
-    let exp = null, sem = null, cambios = [], evaluaciones = [];
+    let exp = null, sem = null, cambios = [], evaluaciones = [], semaforos = {};
 
     function etiqueta(campo) {
         const t = campo.replace(/_/g, " ").replace(/\s+/g, " ").trim();
@@ -171,6 +180,34 @@
             <div><span>Tipo de evaluación</span><strong>${esc(ev.tipo || "—")}</strong></div>
             <div><span>Fecha de evaluación</span><strong>${fecha(ev.fecha)}</strong></div>
         </div>`;
+    }
+
+    function seccionExamenes() {
+        if (!sem) return "";
+        const filas = sem.fichas.map(f => {
+            const res = f.conclusiones.length ? f.conclusiones.map(c => esc(c.valor)).join(" · ") : (f.estado === "REGISTRADA" ? '<span class="vacia">Sin conclusión en este formulario</span>' : "—");
+            return `<tr><td>${esc(f.nombre)}${f.requerida ? "" : ' <span class="vacia">(adicional)</span>'}</td>
+                <td class="est-${esc(f.estado)}">${f.estado === "REGISTRADA" ? "Realizado" : "Pendiente"}</td>
+                <td>${res}</td><td>${esc(f.profesional || "—")}</td><td>${fecha(f.fecha)}</td></tr>`;
+        }).join("");
+        return `<section><h3>Exámenes realizados y resultados principales</h3>
+            <table class="res"><thead><tr><th>Examen</th><th>Estado</th><th>Resultado registrado</th><th>Responsable</th><th>Fecha</th></tr></thead><tbody>${filas}</tbody></table>
+            <p class="meta">El resultado es la conclusión que registró el profesional en cada ficha; el sistema no la calcula ni la modifica. El detalle de cada examen figura en su sección.</p></section>`;
+    }
+
+    function seccionEvaluaciones() {
+        if (!evaluaciones.length) return "";
+        const t = { ROJO: "Alerta prioritaria", AMARILLO: "Requiere revisión", VERDE: "Sin alertas", GRIS: "Sin conclusión" };
+        const filas = evaluaciones.map(e => {
+            const s = semaforos[e.id];
+            const hechos = s ? s.fichas.filter(f => f.estado === "REGISTRADA").map(f => f.nombre.replace("Declaración jurada · ", "")) : [];
+            return `<tr class="${exp.evaluacion && e.id === exp.evaluacion.id ? "actual" : ""}"><td>${fecha(e.fecha)}</td><td>${esc(e.tipo || "—")}</td><td>${esc(e.empresa || "—")}</td>
+                <td>${s ? `<span class="punto ${esc(s.color)}"></span>${esc(t[s.color] || s.color)}` : "—"}</td>
+                <td>${s ? `${s.completitud.registradas}/${s.completitud.requeridas}` : "—"}</td><td>${esc(hechos.join(", ") || "—")}</td></tr>`;
+        }).join("");
+        return `<section><h3>Evaluaciones del trabajador</h3>
+            <table class="res"><thead><tr><th>Fecha</th><th>Tipo</th><th>Empresa</th><th>Semáforo</th><th>Requeridas</th><th>Exámenes realizados</th></tr></thead><tbody>${filas}</tbody></table>
+            <p class="meta">La fila resaltada es la evaluación de este informe. Para ver otra, elíjala en el selector de evaluación.</p></section>`;
     }
 
     function seccionSemaforo() {
@@ -249,6 +286,8 @@
         let html = cabecera("Informe de evaluación médico-ocupacional");
         if (sel.has("datos")) html += datosTrabajador();
         if (sel.has("semaforo")) html += seccionSemaforo();
+        if (sel.has("examenes")) html += seccionExamenes();
+        if (sel.has("evaluaciones")) html += seccionEvaluaciones();
         SECCIONES.filter(s => s[2] && sel.has(s[0])).forEach(s => { html += seccionFicha(s[2], s[1]); });
         if (document.getElementById("incluir-historial").checked) html += seccionCambios();
         return html + pie();
@@ -288,6 +327,8 @@
                 sem = await (await fetch(`${API}/semaforo/evaluacion/${exp.evaluacion.id}`)).json();
                 cambios = await (await fetch(`${API}/auditoria?evaluacion_id=${exp.evaluacion.id}`)).json();
             }
+            const lista = await Promise.all(evaluaciones.map(e => fetch(`${API}/semaforo/evaluacion/${e.id}`).then(r => r.ok ? r.json() : null).catch(() => null)));
+            evaluaciones.forEach((e, i) => { semaforos[e.id] = lista[i]; });
         } catch (e) {
             document.getElementById("hoja").innerHTML = '<p class="vacia">No se pudo cargar el expediente.</p>';
             return;

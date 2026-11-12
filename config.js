@@ -213,7 +213,7 @@ async function autocompletarFicha(pacienteId) {
             _poner("carnet_identidad", p.ci); _poner("sexo", sexo); _poner("edad", edad); _poner("puesto_cargo", ev.puesto);
             _poner({ PREOCUPACIONAL: "tipo_pre", PERIODICO: "tipo_per", RETIRO: "tipo_post", OTRO: "tipo_otro" }[tipo], true);
         } else if (pagina === "doc_osteomuscular.html") {
-            _poner("nombre_completo", completo); _poner("edad", edad); _poner("ci", p.ci); _poner("fecha", fecha);
+            _poner("nombre_completo", completo); _poner("edad", edad); _poner("ci", p.ci); _poner("fecha", fecha); _poner("fecha_firma", fecha);
             if (sexo.startsWith("M")) _poner("sexo_m", true);
             if (sexo.startsWith("F")) _poner("sexo_f", true);
         }
@@ -296,6 +296,12 @@ function vincularCampoPaciente() {
             const r = await fetch(`${CONFIG.API_BASE}/pacientes/buscar/${encodeURIComponent(ci)}`);
             if (!r.ok) throw new Error();
             const p = await r.json();
+            if (window._pacienteFicha && window._pacienteFicha !== p.id) {
+                fijarPacienteActual(p);
+                location.reload();
+                return;
+            }
+            window._pacienteFicha = p.id;
             fijarPacienteActual(p);
             etiqueta.style.color = "#047857";
             etiqueta.textContent = `✔ ${p.apellido} ${p.nombre}`;

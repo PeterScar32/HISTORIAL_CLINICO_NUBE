@@ -223,3 +223,18 @@ Los flujos del navegador requieren la API local en el puerto 8000 y las páginas
 - Excel: hoja «Exámenes por evaluación» con semáforo, cumplimiento, exámenes pendientes y una columna por examen (REALIZADO con su conclusión o PENDIENTE).
 
 **Pruebas:** API 100/100; navegador 171/171 (nuevo `tests/e2e_comentarios.py`, 18).
+
+## Incremento 11 · Verificación pedida por la revisión de tesis (11-11-2026)
+
+**Pedido:** revisar el autocompletado (prioridad alta), los resultados por especialidad y dejar evidencias para la tesis.
+
+**Problemas detectados**
+- Si en una ficha se cambiaba el CI por el de otro trabajador, los datos ya autocompletados del primero podían quedar en el formulario.
+- El informe mostraba el semáforo, pero no un resumen de qué exámenes se hicieron y su resultado, ni la lista de evaluaciones del trabajador.
+
+**Decisiones**
+- Al cambiar de trabajador dentro de una ficha, la página se recarga con el nuevo trabajador, de modo que no se mezclan datos.
+- Osteomuscular: la fecha de firma también se completa con la fecha de la evaluación.
+- Informe: secciones «Exámenes realizados y resultados principales» (estado, conclusión registrada por el profesional, responsable y fecha) y «Evaluaciones del trabajador». No se calculan ni modifican conclusiones.
+
+**Pruebas:** API 100/100; navegador 176/176 (`tests/e2e_comentarios.py`, 23).

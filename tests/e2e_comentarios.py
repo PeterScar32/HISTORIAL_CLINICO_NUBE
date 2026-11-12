@@ -134,6 +134,20 @@ with sync_playwright() as pw:
     page.wait_for_timeout(800)
     ok(v("puesto") == "OTRO PUESTO ESCRITO A MANO" or v("puesto").upper() == "OTRO PUESTO ESCRITO A MANO", "una ficha guardada conserva lo escrito y no se sobrescribe")
 
+    from sesion_e2e import _post
+    otro = _post("/pacientes/", {"nombre": "Carlos", "apellido": "Otro Ficticio", "ci": "9999544"}, SESION["token"])
+    _post("/evaluaciones/", {"paciente_id": otro["id"], "tipo": "PERIODICO", "empresa": "Empresa B Ficticia", "puesto": "Chofer"}, SESION["token"])
+    page.goto(f"{WEB}/doc_hiscli.html")
+    page.wait_for_function("document.getElementById('carnet_identidad').value === '%s'" % CI)
+    page.fill("#codigo_paciente", "9999544")
+    page.dispatch_event("#codigo_paciente", "change")
+    page.wait_for_function("document.getElementById('carnet_identidad').value === '9999544'", timeout=15000)
+    ok(v("nombre") == "OTRO FICTICIO CARLOS" and v("empresa") == "EMPRESA B FICTICIA" and v("puesto_cargo") == "CHOFER",
+       "al cambiar el CI en la ficha se cargan los datos del otro trabajador, sin mezclar")
+    ok(not page.is_checked("#tipo_pre") and page.is_checked("#tipo_per"), "el tipo de control corresponde al nuevo trabajador")
+    page.goto(f"{WEB}/lista_historial.html")
+    page.locator(f"tr:has-text('{CI}')").click()
+
     page.goto(f"{WEB}/lista_historial.html")
     page.locator(f"tr:has-text('{CI}') .btn-reporte").click()
     page.wait_for_url("**/informe.html")
@@ -141,6 +155,11 @@ with sync_playwright() as pw:
     texto = page.inner_text("body")
     ok("Occupational Health Services" not in texto, "el informe ya no dice «Occupational Health Services»")
     ok("SAMCO" in texto.upper() and "MINERA FICTICIA" in texto.upper(), "el informe muestra los trabajos anteriores")
+    fila = page.locator("table.res tr:has-text('Aptitud médico ocupacional')").first
+    ok(fila.count() == 1 and "Realizado" in fila.inner_text() and "APTO" in fila.inner_text(), "el informe resume los exámenes realizados con su resultado registrado")
+    ok(page.locator("table.res tr:has-text('Historia clínica')").first.inner_text().count("Pendiente") == 1, "el informe indica los exámenes pendientes")
+    ok("EVALUACIONES DEL TRABAJADOR" in texto.upper() and page.locator("table.res tr.actual").count() == 1, "el informe lista las evaluaciones del trabajador")
+    captura(page, "c03_informe_examenes")
     b.close()
 
 print("\nERRORES:", errores if errores else "ninguno")
