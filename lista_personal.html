@@ -42,7 +42,7 @@
         .nota { color: #94a3b8; font-size: 12px; line-height: 1.5; margin-top: 14px; }
         @media print { body { background: #fff; color: #000; padding: 0; } .barra, .acciones, .no-print { display: none !important; } .caja { border-color: #ccc; background: #fff; } th, .tenue { color: #333; } }
     </style>
-    <script src="config.js?v=12"></script>
+    <script src="config.js?v=13"></script>
 </head>
 <body>
 <div class="contenedor">
@@ -51,6 +51,7 @@
     <div class="barra no-print">
         <button class="principal" type="button" onclick="abrirNuevo()">➕ Nuevo profesional</button>
         <button class="sec" type="button" onclick="window.print()">🖨️ Imprimir listado</button>
+        <button class="sec" type="button" id="btn-papelera-personal" onclick="verPapelera()">🗑️ Papelera</button>
     </div>
     <div class="caja">
         <table>
@@ -130,7 +131,8 @@
                 <td class="no-print"><div class="acciones">
                     <button class="sec" type="button" onclick="abrirEdicion(${u.id})">Editar</button>
                     <button class="sec" type="button" onclick="restablecer(${u.id})">Nueva clave temporal</button>
-                    ${u.id === yo.id ? "" : `<button class="${u.activo ? "peligro" : "sec"}" type="button" onclick="alternar(${u.id}, ${!u.activo})">${u.activo ? "Desactivar" : "Activar"}</button>`}
+                    ${u.id === yo.id ? "" : `<button class="${u.activo ? "peligro" : "sec"}" type="button" onclick="alternar(${u.id}, ${!u.activo})">${u.activo ? "Desactivar" : "Activar"}</button>
+                    <button class="peligro btn-eliminar-personal" type="button" onclick="eliminar(${u.id})">🗑️ Eliminar</button>`}
                 </div></td>
             </tr>`).join("");
     }
@@ -208,6 +210,41 @@
         const r = await fetch(`${API}/auth/usuarios/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ activo }) });
         if (!r.ok) { const d = await r.json(); alert(d.detail || "No se pudo actualizar"); }
         cargar();
+    }
+
+    async function eliminar(id) {
+        const u = usuarios.find(x => x.id === id);
+        if (!confirm(`¿Enviar a ${u.nombre} a la papelera?\n\nNo podrá ingresar al sistema. Las fichas y los cambios que registró se conservan a su nombre, y puede restaurarse desde 🗑️ Papelera.`)) return;
+        const r = await fetch(`${API}/auth/usuarios/${id}`, { method: "DELETE" });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) { alert(d.detail || "No se pudo eliminar"); return; }
+        cargar();
+    }
+
+    async function verPapelera() {
+        const cuerpo = panelLateral("Papelera · personal eliminado", "El personal eliminado no puede ingresar al sistema, pero sus fichas y cambios se conservan a su nombre. Al restaurarlo recupera su usuario, rol y contraseña.");
+        const r = await fetch(`${API}/papelera/personal`);
+        if (!r.ok) { cuerpo.innerHTML = '<div class="pl-vacio">Solo los médicos pueden ver la papelera.</div>'; return; }
+        const items = await r.json();
+        cuerpo.innerHTML = items.length ? `<div id="filasPapelera">${items.map(x => `
+            <div class="pl-item${x.restaurado_en ? " pl-restaurado" : ""}">
+                <div class="pl-nombre">${esc(x.nombre)}</div>
+                <div class="pl-dato">Usuario ${esc(x.usuario)} · ${esc(ROL_TXT[x.rol] || x.rol || "")}${x.especialidad ? " · " + esc(x.especialidad) : ""}</div>
+                <div class="pl-dato">Eliminado el ${fechaServidor(x.eliminado_en).toLocaleString("es-BO")}${x.eliminado_por ? " por " + esc(x.eliminado_por) : ""}</div>
+                <div class="pl-pie">${x.restaurado_en
+                    ? `<span class="pl-dato">Restaurado el ${fechaServidor(x.restaurado_en).toLocaleString("es-BO")}${x.restaurado_por ? " por " + esc(x.restaurado_por) : ""}</span>`
+                    : `<span></span><button type="button" class="pl-restaurar" onclick="restaurar(${x.id})">Restaurar</button>`}</div>
+            </div>`).join("")}</div>`
+            : '<div class="pl-vacio" id="filasPapelera">La papelera está vacía.</div>';
+    }
+
+    async function restaurar(id) {
+        if (!confirm("¿Restaurar a esta persona? Recupera su usuario, rol y contraseña.")) return;
+        const r = await fetch(`${API}/papelera/${id}/restaurar`, { method: "POST" });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) { alert("No se pudo restaurar: " + (d.detail || r.status)); return; }
+        await cargar();
+        verPapelera();
     }
 
     window.addEventListener("load", cargar);

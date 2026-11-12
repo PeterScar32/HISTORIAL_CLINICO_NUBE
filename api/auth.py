@@ -247,9 +247,44 @@ def profesionales(db: Session = Depends(get_db)):
     return [{"id": u.id, "nombre": u.nombre, "cargo": u.cargo, "especialidad": u.especialidad, "rol": u.rol} for u in us]
 
 
+def en_papelera(db: Session) -> dict:
+    from .auditoria import Papelera
+    items = {}
+    for x in db.query(Papelera).filter(Papelera.paciente_id.is_(None), Papelera.restaurado_en.is_(None)).all():
+        for f in json.loads(x.datos).get("usuarios", []):
+            items[f["id"]] = x
+    return items
+
+
+def usuario_disponible(db: Session, usuario_id: int) -> Usuario:
+    u = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+    if not u or u.id in en_papelera(db):
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return u
+
+
 @router.get("/auth/usuarios")
 def listar_usuarios(db: Session = Depends(get_db)):
-    return [publico(u) | {"activo": u.activo} for u in db.query(Usuario).order_by(Usuario.orden, Usuario.id).all()]
+    ocultos = en_papelera(db)
+    return [publico(u) | {"activo": u.activo} for u in db.query(Usuario).order_by(Usuario.orden, Usuario.id).all() if u.id not in ocultos]
+
+
+@router.delete("/auth/usuarios/{usuario_id}")
+def eliminar_usuario(usuario_id: int, request: Request, db: Session = Depends(get_db)):
+    from .auditoria import Papelera, registrar_eliminacion, usuario_actual as quien
+    u = usuario_disponible(db, usuario_id)
+    if u.id == getattr(request.state, "usuario", {}).get("uid"):
+        raise HTTPException(status_code=400, detail="No puede eliminarse a sí mismo")
+    instantanea = {k: v for k, v in publico(u).items() if k != "debe_cambiar"} | {"activo": bool(u.activo)}
+    u.activo = False
+    if not db.query(Usuario).filter(Usuario.rol == ROL_MEDICO, Usuario.activo.is_(True)).count():
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Debe quedar al menos un médico activo")
+    db.add(Papelera(paciente_id=None, ci=u.usuario, nombre=u.nombre, eliminado_por=quien(db.connection()),
+                    datos=json.dumps({"usuarios": [instantanea]}, ensure_ascii=False)))
+    registrar_eliminacion(db, "usuarios", u.id, None, f"{u.nombre} · usuario {u.usuario} · enviado a la papelera")
+    db.commit()
+    return {"eliminado": True}
 
 
 def _datos_usuario(data: dict):
@@ -297,9 +332,7 @@ def crear_usuario(data: dict, db: Session = Depends(get_db)):
 
 @router.put("/auth/usuarios/{usuario_id}")
 def editar_usuario(usuario_id: int, data: dict, request: Request, db: Session = Depends(get_db)):
-    u = db.query(Usuario).filter(Usuario.id == usuario_id).first()
-    if not u:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    u = usuario_disponible(db, usuario_id)
     campos = _datos_usuario(data)
     actual = getattr(request.state, "usuario", {}).get("uid")
     if u.id == actual and (campos.get("activo") is False or campos.get("rol", ROL_MEDICO) != ROL_MEDICO):
@@ -317,9 +350,7 @@ def editar_usuario(usuario_id: int, data: dict, request: Request, db: Session = 
 
 @router.post("/auth/usuarios/{usuario_id}/restablecer")
 def restablecer(usuario_id: int, data: dict, db: Session = Depends(get_db)):
-    u = db.query(Usuario).filter(Usuario.id == usuario_id).first()
-    if not u:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    u = usuario_disponible(db, usuario_id)
     temporal = str(data.get("temporal", "")) or secrets.token_urlsafe(6)
     u.pass_hash = hash_clave(temporal)
     u.debe_cambiar = True
