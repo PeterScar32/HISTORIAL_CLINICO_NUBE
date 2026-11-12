@@ -519,6 +519,46 @@ function verDesdeConsulta(i) {
     window.location.href = "informe.html";
 }
 
+function panelLateral(titulo, descripcion) {
+    if (!document.getElementById("pl-estilos")) {
+        const st = document.createElement("style");
+        st.id = "pl-estilos";
+        st.textContent = `
+            .pl-fondo { position: fixed; inset: 0; background: rgba(2, 6, 23, .6); z-index: 10000; opacity: 0; transition: opacity .2s; }
+            .pl-panel { position: fixed; top: 0; right: 0; height: 100%; width: min(620px, 100vw); box-sizing: border-box; background: #0f172a; color: #e2e8f0; border-left: 1px solid #334155;
+                z-index: 10001; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .25s ease; box-shadow: -12px 0 40px rgba(0, 0, 0, .45);
+                font-family: "Segoe UI", system-ui, sans-serif; }
+            .pl-abierto .pl-fondo { opacity: 1; } .pl-abierto .pl-panel { transform: none; }
+            .pl-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid #1e293b; }
+            .pl-cabecera h3 { margin: 0; font-size: 15px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #f8fafc; }
+            .pl-panel .pl-cerrar { padding: 0; line-height: 1; letter-spacing: 0; font-weight: 400; background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 10px; width: 36px; height: 36px; font-size: 18px; cursor: pointer; }
+            .pl-desc { margin: 0; padding: 12px 20px 0; font-size: 12px; color: #94a3b8; line-height: 1.5; }
+            .pl-cuerpo { flex: 1; overflow-y: auto; padding: 14px 20px 24px; }
+            .pl-item { background: #111c33; border: 1px solid #1e293b; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+            .pl-item.pl-restaurado { opacity: .55; }
+            .pl-nombre { font-weight: 800; font-size: 14px; color: #fff; }
+            .pl-dato { font-size: 12px; color: #94a3b8; margin-top: 3px; }
+            .pl-pie { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+            .pl-panel .pl-restaurar { letter-spacing: 0; background: #16a34a; color: #fff; border: none; border-radius: 9px; padding: 7px 14px; font-weight: 800; font-size: 12px; cursor: pointer; }
+            .pl-vacio { color: #94a3b8; font-size: 13px; padding: 20px 0; text-align: center; }`;
+        document.head.appendChild(st);
+    }
+    document.getElementById("pl-raiz")?.remove();
+    const raiz = document.createElement("div");
+    raiz.id = "pl-raiz";
+    raiz.innerHTML = `<div class="pl-fondo"></div><aside class="pl-panel" role="dialog" aria-modal="true" aria-label="${esc(titulo)}">
+        <div class="pl-cabecera"><h3>${esc(titulo)}</h3><button type="button" class="pl-cerrar" aria-label="Cerrar">✕</button></div>
+        ${descripcion ? `<p class="pl-desc">${esc(descripcion)}</p>` : ""}<div class="pl-cuerpo" id="pl-cuerpo"><div class="pl-vacio">Cargando…</div></div></aside>`;
+    document.body.appendChild(raiz);
+    const cerrar = () => { raiz.classList.remove("pl-abierto"); document.removeEventListener("keydown", tecla); setTimeout(() => raiz.remove(), 250); };
+    const tecla = e => { if (e.key === "Escape") cerrar(); };
+    raiz.querySelector(".pl-fondo").onclick = cerrar;
+    raiz.querySelector(".pl-cerrar").onclick = cerrar;
+    document.addEventListener("keydown", tecla);
+    requestAnimationFrame(() => raiz.classList.add("pl-abierto"));
+    return raiz.querySelector("#pl-cuerpo");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     barraNavegacion();
     ocultarEnlacesNoPermitidos();

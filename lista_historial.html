@@ -42,11 +42,8 @@
         .buscador { display: flex; gap: 10px; padding: 14px 16px; border-bottom: 1px solid #1e293b; flex-wrap: wrap; }
         .buscador input { flex: 1; min-width: 220px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
         .buscador button { background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 10px; padding: 8px 14px; font-weight: 800; font-size: 12px; }
-        #papelera { display: none; padding: 14px 16px; border-top: 1px solid #1e293b; }
-        #papelera h3 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #94a3b8; }
-        #papelera table td, #papelera table th { font-size: .78rem; text-transform: none; }
     </style>
-    <script src="config.js?v=12"></script>
+    <script src="config.js?v=13"></script>
 </head>
 <body>
 
@@ -77,11 +74,6 @@
                     </thead>
                     <tbody id="listaPacientes"></tbody>
                 </table>
-            </div>
-            <div id="papelera">
-                <h3>Papelera · pacientes eliminados</h3>
-                <p style="font-size:12px;color:#94a3b8">Al eliminar un paciente se guarda una copia completa de su expediente. Desde aquí se puede restaurar con todas sus evaluaciones y fichas.</p>
-                <div class="table-responsive"><table class="table mb-0"><thead><tr><th>CI</th><th>Paciente</th><th>Evaluaciones</th><th>Eliminado</th><th>Restaurado</th><th></th></tr></thead><tbody id="filasPapelera"></tbody></table></div>
             </div>
         </div>
     </div>
@@ -183,18 +175,20 @@
     }
 
     async function verPapelera() {
-        const caja = document.getElementById('papelera');
-        caja.style.display = caja.style.display === 'block' ? 'none' : 'block';
-        if (caja.style.display === 'none') return;
+        const cuerpo = panelLateral("Papelera · pacientes eliminados", "Al eliminar un paciente se guarda una copia completa de su expediente. Desde aquí se puede restaurar con todas sus evaluaciones, fichas y archivos.");
         const r = await fetch(`${API}/papelera`);
-        if (!r.ok) { document.getElementById('filasPapelera').innerHTML = '<tr><td colspan="6">Solo los médicos pueden ver la papelera.</td></tr>'; return; }
+        if (!r.ok) { cuerpo.innerHTML = '<div class="pl-vacio">Solo los médicos pueden ver la papelera.</div>'; return; }
         const items = await r.json();
-        document.getElementById('filasPapelera').innerHTML = items.length ? items.map(x => `
-            <tr><td>${esc(x.ci)}</td><td>${esc(x.nombre)}</td><td>${x.evaluaciones}</td>
-            <td>${fechaServidor(x.eliminado_en).toLocaleString('es-BO')}<div style="color:#94a3b8">${esc(x.eliminado_por || '')}</div></td>
-            <td>${x.restaurado_en ? fechaServidor(x.restaurado_en).toLocaleString('es-BO') + '<div style="color:#94a3b8">' + esc(x.restaurado_por || '') + '</div>' : '—'}</td>
-            <td>${x.restaurado_en ? '' : `<button class="btn btn-sm btn-outline-light" onclick="restaurar(${x.id})">Restaurar</button>`}</td></tr>`).join('')
-            : '<tr><td colspan="6">La papelera está vacía.</td></tr>';
+        cuerpo.innerHTML = items.length ? `<div id="filasPapelera">${items.map(x => `
+            <div class="pl-item${x.restaurado_en ? ' pl-restaurado' : ''}">
+                <div class="pl-nombre">${esc(x.nombre)}</div>
+                <div class="pl-dato">CI ${esc(x.ci)} · ${x.evaluaciones} evaluación(es)${x.adjuntos ? ` · ${x.adjuntos} archivo(s)` : ''}</div>
+                <div class="pl-dato">Eliminado el ${fechaServidor(x.eliminado_en).toLocaleString('es-BO')}${x.eliminado_por ? ' por ' + esc(x.eliminado_por) : ''}</div>
+                <div class="pl-pie">${x.restaurado_en
+                    ? `<span class="pl-dato">Restaurado el ${fechaServidor(x.restaurado_en).toLocaleString('es-BO')}${x.restaurado_por ? ' por ' + esc(x.restaurado_por) : ''}</span>`
+                    : `<span></span><button type="button" class="pl-restaurar" onclick="restaurar(${x.id})">Restaurar</button>`}</div>
+            </div>`).join('')}</div>`
+            : '<div class="pl-vacio" id="filasPapelera">La papelera está vacía.</div>';
     }
 
     async function restaurar(id) {

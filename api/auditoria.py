@@ -266,12 +266,38 @@ def enviar_a_papelera(db: Session, p) -> Papelera:
     return item
 
 
+@router.get("/papelera/personal")
+def ver_papelera_personal(db: Session = Depends(get_db)):
+    salida = []
+    for x in db.query(Papelera).filter(Papelera.paciente_id.is_(None)).order_by(desc(Papelera.id)).all():
+        u = (json.loads(x.datos).get("usuarios") or [{}])[0]
+        salida.append({"id": x.id, "usuario": x.ci, "nombre": x.nombre, "rol": u.get("rol"), "especialidad": u.get("especialidad"),
+                       "cargo": u.get("cargo"), "eliminado_en": x.eliminado_en, "eliminado_por": x.eliminado_por,
+                       "restaurado_en": x.restaurado_en, "restaurado_por": x.restaurado_por})
+    return salida
+
+
+def restaurar_personal(db: Session, item):
+    from .auth import Usuario
+    u = (json.loads(item.datos).get("usuarios") or [{}])[0]
+    fila = db.query(Usuario).filter(Usuario.id == u.get("id")).first()
+    if not fila:
+        raise HTTPException(status_code=404, detail="El usuario ya no existe")
+    fila.activo = bool(u.get("activo", True))
+    item.restaurado_en = datetime.datetime.utcnow()
+    item.restaurado_por = usuario_actual(db.connection())
+    db.add(Auditoria(usuario=item.restaurado_por, accion="RESTAURACION", tabla="usuarios", registro_id=fila.id,
+                     valor_nuevo=f"{item.nombre} · usuario {item.ci}"))
+    db.commit()
+    return {"restaurado": True, "usuario_id": fila.id}
+
+
 @router.get("/papelera")
 def ver_papelera(db: Session = Depends(get_db)):
     return [{"id": x.id, "paciente_id": x.paciente_id, "ci": x.ci, "nombre": x.nombre, "eliminado_en": x.eliminado_en,
              "eliminado_por": x.eliminado_por, "restaurado_en": x.restaurado_en, "restaurado_por": x.restaurado_por,
              "evaluaciones": len(json.loads(x.datos).get("evaluaciones", [])), "adjuntos": len(json.loads(x.datos).get("adjuntos", []))}
-            for x in db.query(Papelera).order_by(desc(Papelera.id)).all()]
+            for x in db.query(Papelera).filter(Papelera.paciente_id.isnot(None)).order_by(desc(Papelera.id)).all()]
 
 
 @router.post("/papelera/{item_id}/restaurar")
@@ -279,6 +305,8 @@ def restaurar_paciente(item_id: int, db: Session = Depends(get_db)):
     item = db.query(Papelera).filter(Papelera.id == item_id).first()
     if not item or item.restaurado_en:
         raise HTTPException(status_code=404, detail="Elemento no disponible para restaurar")
+    if item.paciente_id is None:
+        return restaurar_personal(db, item)
     if db.query(models.Paciente).filter((models.Paciente.ci == item.ci) | (models.Paciente.id == item.paciente_id)).first():
         raise HTTPException(status_code=409, detail="Ya existe un paciente con ese CI; no se puede restaurar sin duplicar")
     datos = json.loads(item.datos)

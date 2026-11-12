@@ -238,3 +238,16 @@ Los flujos del navegador requieren la API local en el puerto 8000 y las páginas
 - Informe: secciones «Exámenes realizados y resultados principales» (estado, conclusión registrada por el profesional, responsable y fecha) y «Evaluaciones del trabajador». No se calculan ni modifican conclusiones.
 
 **Pruebas:** API 100/100; navegador 176/176 (`tests/e2e_comentarios.py`, 23).
+
+## Incremento 12 · Papelera en panel lateral y papelera del personal (12-11-2026)
+
+**Pedido:** que la papelera no se abra al final de la página y que el personal también tenga papelera.
+
+**Decisiones**
+- La papelera se abre en un panel a la derecha (en el celular ocupa toda la pantalla), sin desplazar la lista. Se cierra con ✕, con Escape o tocando fuera.
+- Personal: botón «🗑️ Eliminar» y botón «🗑️ Papelera» en Personal y accesos. Eliminar no borra a la persona de la base: la desactiva, la oculta de la lista y guarda una copia en la papelera. Sus fichas y cambios se conservan a su nombre.
+- Restaurar devuelve usuario, rol, especialidad, contraseña y el estado que tenía (activo o desactivado).
+- Reglas: solo el perfil médico; nadie puede eliminarse a sí mismo; debe quedar al menos un médico activo; mientras está en la papelera no se puede editar ni cambiar su clave. Eliminación y restauración quedan en la auditoría.
+- No se cambió la estructura de la base: se usa la tabla `papelera` existente.
+
+**Pruebas:** API 106/106 (nuevo `tests/test_papelera_personal.py`, 6); navegador 187/187 (nuevo `tests/e2e_papelera.py`, 11).
